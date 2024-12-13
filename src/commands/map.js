@@ -1,67 +1,55 @@
 import { glob } from 'glob';
-import fs from 'fs/promises';
 import path from 'path';
-import { executePrompt } from '../lib/llm.js';
+import fs from 'fs/promises';
+import { Task } from '../lib/task.js';
 import { Logger } from '../lib/logger.js';
 import { CliRenderer } from '../lib/renderers/cli.js';
 
 export async function mapCommand(prompt, options) {
   const logger = new Logger({ verbose: options.verbose });
   
-  const context = options.context || "*.*";
   try {
-    if (!context) {
+    if (!options.context) {
       logger.error('Error: --context option is required');
       process.exit(1);
     }
 
-    logger.info(context);
-    const files = await glob(context, { 
+    const files = await glob(options.context, { 
       absolute: true 
     });
     
     if (files.length === 0) {
-      logger.info(`No files found matching pattern: ${context}`);
+      logger.info(`No files found matching pattern: ${options.context}`);
       return;
     }
 
     logger.info(`Found ${files.length} files to process`);
+
+    const renderer = new CliRenderer({ 
+      raw: options.raw,
+      showStats: true
+    });
 
     for (const filePath of files) {
       const relativePath = path.relative(process.cwd(), filePath);
       logger.info(`\nProcessing: ${relativePath}`);
 
       const content = await fs.readFile(filePath, 'utf-8');
-      const contextPrompt = `
-File: ${relativePath}
-Content:
-\`\`\`
-${content}
-\`\`\`
-
-Task: ${prompt}
-
-Please provide the complete transformed file content.`;
-
-      logger.prompt(contextPrompt);
-
-      const renderer = new CliRenderer({ 
-        raw: options.raw,
-        showStats: true
+      const task = new Task({
+        prompt: `${prompt}\n\nFile to process: ${relativePath}`,
+        context: [{ path: relativePath, content }],
+        system: options.system
       });
-      
-      await executePrompt(
-        contextPrompt, 
-        (chunk) => renderer.render(chunk),
-        { 
-          ...options
-          // output: options.output || path.dirname(filePath) 
-        }
-      );
 
-      renderer.cleanup();
+      renderer.attach(task.toolProcessor);
+
+      await task.execute({ 
+        ...options,
+        output: options.output || path.dirname(filePath)
+      });
     }
 
+    renderer.cleanup();
     logger.success('\nAll files processed successfully');
 
   } catch (error) {

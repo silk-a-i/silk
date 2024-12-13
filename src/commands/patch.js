@@ -8,6 +8,6 @@ export async function patchCommand(prompt, options) {
     context: '**/*', // All files
   };
 
-  // Delegate to doCommand with modified options
+  // Use the same doCommand with patch-specific options
   return doCommand(prompt, patchOptions);
 }

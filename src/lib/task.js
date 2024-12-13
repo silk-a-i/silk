@@ -1,7 +1,9 @@
+import { ToolProcessor } from './tools/ToolProcessor.js';
+import { basicTools } from './tools/basicTools.js';
+import { executePrompt } from './llm.js';
 import fs from 'fs/promises';
 import { glob } from 'glob';
 import path from 'path';
-
 // File utilities
 export async function loadPromptFromFile(filePath) {
   try {
@@ -52,15 +54,28 @@ ${content}
 \`\`\``;
 }
 
-// Main Task class
 export class Task {
-  prompt = '';
-  context = [];
-  system = '';
-  completed = false;
+  constructor({ prompt, context = [], system = '' }) {
+    this.prompt = prompt;
+    this.context = context;
+    this.system = system;
+    this.toolProcessor = new ToolProcessor(basicTools);
+  }
 
-  constructor(obj = {}) {
-    Object.assign(this, obj);
+  get fullSystem() {
+    const toolSystem = this.toolProcessor.getToolingPrompt();
+    return `${this.system}${toolSystem}`;
+  }
+
+  async execute(options = {}) {
+    const result = await executePrompt(
+      this.prompt,
+      (chunk) => this.toolProcessor.process(chunk),
+      { ...options, system: this.fullSystem }
+    );
+
+    this.toolProcessor.cleanup();
+    return result;
   }
 
   async resolveContext() {

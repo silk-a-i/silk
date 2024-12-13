@@ -6,6 +6,8 @@ export class Logger {
   }
 
   info(message) {
+    if (!this.verbose) return
+    
     console.log(chalk.blue(message));
   }
 
@@ -18,16 +20,16 @@ export class Logger {
   }
 
   debug(message) {
-    if (this.verbose) {
-      console.log(chalk.gray('Debug:'), message);
-    }
+    if (!this.verbose) return
+    
+    console.log(chalk.gray('Debug:'), message);
   }
 
-  prompt(prompt) {
-    if (this.verbose) {
-      console.log(chalk.yellow('\nPrompt used:'));
-      console.log(chalk.gray(prompt));
-      console.log(); // Empty line for better readability
-    }
+  prompt(prompt = "") {
+    if (!this.verbose) return
+
+    console.log(chalk.yellow('\nPrompt used:'));
+    console.log(chalk.gray(prompt));
+    console.log(); // Empty line for better readability
   }
 }

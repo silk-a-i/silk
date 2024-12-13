@@ -1,19 +1,23 @@
 import { getAIClient } from './ai/client.js';
-import { ActionProcessor } from './processors/action.js';
 import { Logger } from './logger.js';
 
 export const SYSTEM_PROMPT = 
 `You are a helpful AI assistant that helps with coding tasks. 
-Be brief and clear in your requests. 
-> IMPORTANT Always return the full file content in the response.
-> IMPORTANT available actions are: 'create'
-> IMPORTANT always use the <action> and </action> tag.
+Be brief and clear in your requests.
 
-Examples:
-<action do="create" file="index.html">
+You can use the following tools to perform actions:
+- create: Create or update files
+
+Example usage:
+<silk.action tool="create" path="index.html">
 <div>Hello World</div>
-</action>
+</silk.action>
 
+You can also use file blocks:
+##### \`script.js\`
+\`\`\`javascript
+console.log('Hello');
+\`\`\`
 `;
 
 export async function executePrompt(prompt, onProgress, options = {}) {
@@ -21,13 +25,12 @@ export async function executePrompt(prompt, onProgress, options = {}) {
   const client = getAIClient();
 
   try {
-    // Log model info
     logger.info(`Using model: ${client.config.model}`);
     
     const messages = [
       {
         role: 'system',
-        content: SYSTEM_PROMPT
+        content: options.system || SYSTEM_PROMPT
       },
       {
         role: 'user',
@@ -36,15 +39,11 @@ export async function executePrompt(prompt, onProgress, options = {}) {
     ];
 
     const stream = await client.createCompletion({ messages });
-    const processor = new ActionProcessor(options);
-    
     let fullContent = '';
     
     for await (const chunk of stream) {
       if (chunk) {
         fullContent += chunk;
-        await processor.process(chunk);
-        
         if (onProgress) {
           onProgress(chunk);
         }

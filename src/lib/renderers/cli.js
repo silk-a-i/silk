@@ -5,11 +5,7 @@ export class CliRenderer {
   constructor(options = {}) {
     this.raw = options.raw || false;
     this.showStats = options.showStats !== false;
-    this.buffer = '';
-    this.lineBuffer = '';
-    this.inAction = false;
-    this.currentAction = null;
-    this.spinner = null;
+    this.spinners = new Map();
     this.stats = {
       totalBytes: 0,
       textBytes: 0,
@@ -18,84 +14,73 @@ export class CliRenderer {
     };
   }
 
-  processLine(line) {
+  attach(toolProcessor) {
     if (this.raw) {
-      process.stdout.write(line + '\n');
-      this.stats.totalBytes += Buffer.from(line + '\n').length;
-      return;
+      // In raw mode, only handle text events
+      toolProcessor.on('chunk', text => {
+        process.stdout.write(text);
+        this.stats.textBytes += Buffer.from(text).length;
+      });
+      
+      return this;
     }
 
-    // Check for action tags
-    const createMatch = line.match(/<action do="create" file="([^"]+)">/);
-    const modifyMatch = line.match(/<action do="modify" file="([^"]+)">/);
-    const deleteMatch = line.match(/<action do="delete" file="([^"]+)">/);
-
-    if (createMatch || modifyMatch || deleteMatch) {
-      this.inAction = true;
-      this.stats.actions++;
-      const [, filename] = createMatch || modifyMatch || deleteMatch;
-      const action = createMatch ? 'Creating' : modifyMatch ? 'Modifying' : 'Deleting';
-      this.currentAction = { type: action.toLowerCase(), file: filename };
-      this.spinner = ora({
-        text: `${action} ${chalk.cyan(filename)}...`,
+    // Normal mode with full processing
+    toolProcessor.on('tool:start', ({ tool, path }) => {
+      const spinner = ora({
+        text: `${tool.name}: ${chalk.cyan(path)}...`,
         color: 'yellow'
       }).start();
-      return;
-    }
+      
+      this.spinners.set(path, spinner);
+      this.stats.actions++;
+    });
 
-    if (line.includes('</action>') && this.inAction) {
-      this.inAction = false;
-      if (this.currentAction) {
-        const { type, file } = this.currentAction;
-        const actionColor = type === 'creating' ? 'green' : type === 'modifying' ? 'blue' : 'red';
-        const actionText = type === 'creating' ? 'Created' : type === 'modifying' ? 'Modified' : 'Deleted';
-        this.spinner?.succeed(chalk[actionColor](`${actionText} ${file}`));
+    toolProcessor.on('tool:progress', ({ tool, path, content }) => {
+      const spinner = this.spinners.get(path);
+      if (spinner) {
+        spinner.text = `${tool.name}: ${chalk.cyan(path)}... (${content.length} bytes)`;
       }
-      this.spinner = null;
-      this.currentAction = null;
-      return;
-    }
+    });
 
-    const lineBytes = Buffer.from(line + '\n').length;
-    this.stats.totalBytes += lineBytes;
+    toolProcessor.on('tool:finish', ({ tool, path }) => {
+      const spinner = this.spinners.get(path);
+      if (spinner) {
+        spinner.succeed(chalk.green(`${tool.name}: ${path} completed`));
+        this.spinners.delete(path);
+      }
+    });
 
-    if (!this.inAction) {
-      this.stats.textBytes += lineBytes;
-      process.stdout.write(line + '\n');
-    }
-  }
+    toolProcessor.on('text', text => {
+      process.stdout.write(text);
+      this.stats.textBytes += Buffer.from(text).length;
+    });
 
-  render(chunk) {
-    this.buffer += chunk;
-    this.lineBuffer += chunk;
-
-    const lines = this.lineBuffer.split('\n');
-    this.lineBuffer = lines.pop() || '';
-
-    for (const line of lines) {
-      this.processLine(line);
-    }
+    return this;
   }
 
   cleanup() {
-    if (this.lineBuffer) {
-      this.processLine(this.lineBuffer);
-      this.lineBuffer = '';
+    if (this.raw) {
+      return; // No cleanup needed in raw mode
     }
 
-    if (this.spinner) {
-      this.spinner.stop();
-      this.spinner = null;
+    // Stop any active spinners
+    for (const spinner of this.spinners.values()) {
+      spinner.stop();
     }
+    this.spinners.clear();
 
-    if (this.showStats && !this.raw) {
-      const elapsedTime = ((Date.now() - this.stats.startTime) / 1000).toFixed(1);
-      console.log(chalk.cyan('\nStats:'));
-      console.log(chalk.gray('├─') + ` Time: ${elapsedTime}s`);
-      console.log(chalk.gray('├─') + ` Total: ${this.formatBytes(this.stats.totalBytes)}`);
-      console.log(chalk.gray('├─') + ` Text: ${this.formatBytes(this.stats.textBytes)}`);
-      console.log(chalk.gray('└─') + ` Actions: ${this.stats.actions}`);
+    if (this.showStats) {
+      this.displayStats();
     }
+  }
+
+  displayStats() {
+    const elapsedTime = ((Date.now() - this.stats.startTime) / 1000).toFixed(1);
+    console.log(chalk.cyan('\nStats:'));
+    console.log(chalk.gray('├─') + ` Time: ${elapsedTime}s`);
+    console.log(chalk.gray('├─') + ` Text: ${this.formatBytes(this.stats.textBytes)}`);
+    console.log(chalk.gray('└─') + ` Actions: ${this.stats.actions}`);
   }
 
   formatBytes(bytes) {
@@ -103,12 +88,5 @@ export class CliRenderer {
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
     return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
-  }
-
-  getStats() {
-    return {
-      ...this.stats,
-      elapsedTime: (Date.now() - this.stats.startTime) / 1000
-    };
   }
 }
