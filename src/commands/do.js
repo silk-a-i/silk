@@ -22,7 +22,6 @@ export async function doCommand(root, promptOrFile, options = {}) {
     // If root is provided, resolve paths relative to it
     if (root) {
       process.chdir(root);
-      // options.output = options.output ? path.join(root, options.output) : root;
     }
     
     // Extract prompt from input or default file
