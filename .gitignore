@@ -5,3 +5,4 @@ dist
 .todo
 .env
 .DS_Store
+.silk/config.json
