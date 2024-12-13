@@ -44,7 +44,7 @@ export async function createCommand(root, promptOrFile, options = {}) {
       },
       {
         role: 'user',
-        content: await task.render()
+        content: task.render()
       }
     ];
 
@@ -63,7 +63,7 @@ export async function createCommand(root, promptOrFile, options = {}) {
     } else {
       // Default markdown format
       console.log(`# System Prompt\n\n${task.fullSystem}\n`);
-      console.log(`# User Prompt\n\n${await task.render()}`);
+      console.log(`# User Prompt\n\n${task.render()}`);
     }
 
   } catch (error) {

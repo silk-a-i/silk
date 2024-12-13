@@ -8,6 +8,7 @@ import { initCommand } from './commands/init.js';
 import { prepCommand } from './commands/prep.js';
 import { packCommand } from './commands/pack.js';
 import { createCommand } from './commands/create.js';
+import { infoCommand } from './commands/info.js';
 import { addSharedOptions } from './lib/options.js';
 
 program
@@ -19,6 +20,11 @@ program
   .command('init')
   .description('Initialize a new Silk project')
   .action(initCommand);
+
+program
+  .command('info')
+  .description('Show current configuration')
+  .action(infoCommand);
 
 program
   .command('create')
@@ -58,11 +64,13 @@ addSharedOptions(
     .description('Execute a task with current directory as output and all files as context')
 ).action(patchCommand);
 
-program
-  .command('chat')
-  .argument('[root]', 'root directory')
-  .description('Start interactive chat mode')
-  .action(chatCommand);
+addSharedOptions(
+  program
+    .command('chat')
+    .argument('[root]', 'root directory')
+    .description('Start interactive chat mode')
+    .action(chatCommand)
+)
 
 addSharedOptions(
   program

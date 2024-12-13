@@ -14,7 +14,7 @@ export class Task {
     return `${this.system}${toolSystem}`;
   }
 
-  async render() {
+  render() {
     const userPrompt = Array.isArray(this.prompt) ? 
       this.prompt.find(m => m.role === 'user')?.content || '' : 
       this.prompt;

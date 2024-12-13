@@ -29,7 +29,6 @@ export async function extractPrompt(promptOrFile) {
 
     return promptOrFile;
   } catch (error) {
-    logger.error(`Failed to extract prompt: ${error.message}`);
-    process.exit(1);
+    throw new Error(`Failed to extract prompt: ${error.message}`);
   }
 }

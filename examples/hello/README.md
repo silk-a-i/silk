@@ -1,6 +1,7 @@
 ```sh
-silk do ./dist "create a html webpage"
+silk info
+silk patch ./public "Create a website"
+silk patch ./public "Add prefer-color-scheme style"
 
-silk patch ./dist "create a html webpage"
-silk patch ./dist "set a better title"
+silk chat ./public
 ```

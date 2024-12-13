@@ -1,7 +1,5 @@
 import ora from 'ora';
-import path from 'path';
 import { Task } from '../lib/task.js';
-import { validatePrompt } from '../lib/validation.js';
 import { CliRenderer } from '../lib/renderers/cli.js';
 import { Logger } from '../lib/logger.js';
 import { gatherContext } from '../lib/utils.js';
@@ -10,6 +8,7 @@ import { createBasicTools } from '../lib/tools/basicTools.js';
 import { FileStats } from '../lib/stats.js';
 import { TaskExecutor } from '../lib/TaskExecutor.js';
 import { loadConfig } from '../lib/config/load.js';
+import fs from 'fs';
 
 export async function doCommand(root, promptOrFile, options = {}) {
   const logger = new Logger({ verbose: options.verbose });
@@ -26,9 +25,12 @@ export async function doCommand(root, promptOrFile, options = {}) {
     const config = await loadConfig();
     logger.debug(`Using provider: ${config.provider}`);
     logger.debug(`Using model: ${config.model}`);
+    logger.debug(`Using root: ${root}`);
 
     // If root is provided, resolve paths relative to it
     if (root) {
+      // Create directory
+      fs.mkdirSync(root, { recursive: true });
       process.chdir(root);
     }
     
@@ -67,7 +69,8 @@ export async function doCommand(root, promptOrFile, options = {}) {
     const executor = new TaskExecutor(options);
     const result = await executor.execute(task, { ...options, config });
     
-    renderer.cleanup();
+    console.log('Task completed');
+    // renderer.cleanup();
     return result;
 
   } catch (error) {

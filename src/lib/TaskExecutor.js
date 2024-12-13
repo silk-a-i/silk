@@ -18,7 +18,7 @@ export class TaskExecutor {
       },
       {
         role: 'user',
-        content: await task.render()
+        content: task.render()
       }
     ];
 
