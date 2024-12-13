@@ -3,31 +3,18 @@ import { Logger } from './logger.js';
 
 export class TaskExecutor {
   constructor(options = {}) {
-    this.logger = new Logger({ verbose: options.verbose });
+    this.logger = new Logger(options);
   }
 
   async execute(task, options = {}) {
-    if (!options.config) {
-      throw new Error('Config is required for task execution');
-    }
+    if (!options.config) throw new Error('Config required');
 
     const messages = [
-      {
-        role: 'system',
-        content: task.fullSystem
-      },
-      {
-        role: 'user',
-        content: task.render()
-      }
+      { role: 'system', content: task.fullSystem },
+      { role: 'user', content: task.render() }
     ];
 
     this.logger.messages(messages);
-
-    return executeMessages(
-      messages,
-      (chunk) => task.toolProcessor.process(chunk),
-      options
-    );
+    return executeMessages(messages, chunk => task.toolProcessor.process(chunk), options);
   }
 }

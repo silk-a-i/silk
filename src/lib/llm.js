@@ -1,4 +1,4 @@
-import { getAIClient } from './ai/client.js';
+import { AIClient } from './ai/client.js';
 import { Logger } from './logger.js';
 
 export async function executeMessages(messages = [], onProgress, options = {}) {
@@ -7,7 +7,7 @@ export async function executeMessages(messages = [], onProgress, options = {}) {
   }
   
   const logger = new Logger({ verbose: options.verbose });
-  const client = await getAIClient(options.config);
+  const client = new AIClient(options.config);
 
   try {
     logger.info(`Using model: ${client.config.model}`);

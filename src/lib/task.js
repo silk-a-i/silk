@@ -4,14 +4,13 @@ import { createBasicTools } from './tools/basicTools.js';
 export class Task {
   constructor({ prompt, context = [], system = '', tools = [] }) {
     this.prompt = prompt;
-    this.context = context;
+    this.context = context; 
     this.system = system;
     this.toolProcessor = new ToolProcessor(tools.length ? tools : createBasicTools());
   }
 
   get fullSystem() {
-    const toolSystem = this.toolProcessor.getToolingPrompt();
-    return `${this.system}${toolSystem}`;
+    return `${this.system}${this.toolProcessor.getToolingPrompt()}`;
   }
 
   render() {
@@ -19,11 +18,6 @@ export class Task {
       this.prompt.find(m => m.role === 'user')?.content || '' : 
       this.prompt;
 
-    return `
-# Intent
-${userPrompt}
-
-# Context (${this.context.length} files)
-${this.context.map(file => file.render()).join('\n')}`;
+    return `# Intent\n${userPrompt}\n\n# Context (${this.context.length} files)\n${this.context.map(f => f.render()).join('\n')}`;
   }
 }
