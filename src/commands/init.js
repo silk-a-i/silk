@@ -3,19 +3,7 @@ import chalk from 'chalk';
 import { createConfig } from '../lib/config/create.js';
 import { validateConfig } from '../lib/validation.js';
 import { Logger } from '../lib/logger.js';
-
-const PROVIDERS = {
-  OLLAMA: {
-    name: 'Ollama',
-    baseUrl: 'http://localhost:11434/v1',
-    defaultModel: 'llama3.1'
-  },
-  OPENAI: {
-    name: 'OpenAI',
-    baseUrl: 'https://api.openai.com/v1',
-    defaultModel: 'gpt-3.5-turbo'
-  }
-};
+import { PROVIDERS } from '../lib/constants.js';
 
 export async function initCommand() {
   const logger = new Logger();
@@ -26,17 +14,17 @@ export async function initCommand() {
         type: 'list',
         name: 'provider',
         message: 'Select your AI provider:',
-        choices: [
-          { name: 'Ollama (Local)', value: 'OLLAMA' },
-          { name: 'OpenAI', value: 'OPENAI' }
-        ]
+        choices: Object.entries(PROVIDERS).map(([key, provider]) => ({
+          name: provider.displayName,
+          value: key // Use the key (OLLAMA, OPENAI, etc.) instead of provider.name
+        }))
       },
       {
         type: 'input',
         name: 'apiKey',
         message: 'Enter your API key:',
-        default: (answers) => answers.provider === 'OLLAMA' ? 'sk-dummy-key' : undefined,
-        when: (answers) => answers.provider === 'OPENAI'
+        when: (answers) => PROVIDERS[answers.provider].requiresApiKey,
+        default: (answers) => PROVIDERS[answers.provider].requiresApiKey ? undefined : 'sk-dummy-key'
       },
       {
         type: 'input',
@@ -52,7 +40,7 @@ export async function initCommand() {
       baseUrl: provider.baseUrl,
       model: answers.model,
       apiKey: answers.apiKey || 'sk-dummy-key',
-      provider: answers.provider.toLowerCase()
+      provider: provider.value
     };
 
     // Validate the configuration

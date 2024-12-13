@@ -7,6 +7,7 @@ import { mapCommand } from './commands/map.js';
 import { initCommand } from './commands/init.js';
 import { prepCommand } from './commands/prep.js';
 import { packCommand } from './commands/pack.js';
+import { createCommand } from './commands/create.js';
 import { addSharedOptions } from './lib/options.js';
 
 program
@@ -18,6 +19,14 @@ program
   .command('init')
   .description('Initialize a new Silk project')
   .action(initCommand);
+
+program
+  .command('create')
+  .argument('[root]', 'root directory')
+  .argument('[prompt]', 'prompt or file')
+  .option('-f, --format <format>', 'output format (md/json)', 'md')
+  .description('Create a prompt without executing it')
+  .action(createCommand);
 
 program
   .command('prep')

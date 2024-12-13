@@ -1,3 +1,5 @@
+import { PROVIDERS } from './constants.js';
+
 export function validatePrompt(prompt) {
   if (!prompt || typeof prompt !== 'string') {
     throw new Error('Prompt must be a non-empty string');
@@ -17,9 +19,15 @@ export function validateConfig(config) {
     }
   }
 
+  // Find provider by value
+  const provider = Object.values(PROVIDERS).find(p => p.value === config.provider);
+  if (!provider) {
+    throw new Error(`Invalid provider: ${config.provider}`);
+  }
+
   // Validate provider-specific requirements
-  if (config.provider === 'openai' && !config.apiKey) {
-    throw new Error('API key is required for OpenAI');
+  if (provider.requiresApiKey && !config.apiKey) {
+    throw new Error(`API key is required for ${provider.name}`);
   }
 
   // Validate URL format

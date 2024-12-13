@@ -1,8 +1,9 @@
 export class AIResponseStream {
-  constructor(response) {
+  constructor(response, provider) {
     this.reader = response.body.getReader();
     this.decoder = new TextDecoder();
     this.buffer = '';
+    this.provider = provider;
   }
 
   async *[Symbol.asyncIterator]() {
@@ -12,7 +13,8 @@ export class AIResponseStream {
         
         if (done) {
           if (this.buffer) {
-            yield this.parseChunk(this.buffer);
+            const content = this.parseChunk(this.buffer);
+            if (content) yield content;
           }
           break;
         }
@@ -49,7 +51,18 @@ export class AIResponseStream {
 
     try {
       const parsed = JSON.parse(data);
-      return parsed.choices?.[0]?.delta?.content || '';
+      
+      switch (this.provider) {
+        case 'anthropic':
+          return parsed.delta?.text || '';
+        
+        case 'openai':
+          return parsed.choices?.[0]?.delta?.content || '';
+        
+        case 'ollama':
+        default:
+          return parsed.choices?.[0]?.delta?.content || '';
+      }
     } catch (error) {
       return null;
     }

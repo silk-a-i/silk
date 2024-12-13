@@ -1,7 +1,25 @@
-import { glob } from 'glob';
+import { glob } from 'glob-gitignore';
 import fs from 'fs/promises';
 import path from 'path';
 import { File } from './File.js';
+
+const DEFAULT_IGNORE = [
+  'node_modules/**',
+  'dist/**',
+  'build/**',
+  '.git/**',
+  'coverage/**',
+  'test/**',
+  '.silk/**',
+  '.silk.json',
+  '.silk.md',
+  '.env',
+  '.DS_Store',
+  'yarn.lock',
+  'package-lock.json',
+  'npm-debug.log',
+  'pnpm-lock.yaml',
+];
 
 export async function loadPromptFromFile(filePath) {
   try {
@@ -20,19 +38,20 @@ export async function isFile(path) {
   }
 }
 
+export function getGlobOptions(options = {}) {
+  return {
+    nodir: true,
+    dot: true,
+    ...options,
+    ignore: [...DEFAULT_IGNORE, ...(options.ignore || [])],
+  };
+}
+
 export async function gatherContext(contextGlob, options = {}) {
   if (!contextGlob) return [];
   
   try {
-    const files = await glob(contextGlob, {
-      ignore: [
-        'node_modules/**', 'dist/**', 'build/**', 
-        'coverage/**', 'test/**', ".silk/**", ".silk.json", ".silk.md",
-        '.env', '.gitignore', '.DS_Store', 'yarn.lock', 'package-lock.json',
-        ...options.ignore || []
-      ],
-      ...options
-    });
+    const files = await glob(contextGlob, getGlobOptions(options));
 
     const fileObjects = await Promise.all(
       files.map(async filePath => {

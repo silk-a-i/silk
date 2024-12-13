@@ -7,7 +7,7 @@ export async function executeMessages(messages = [], onProgress, options = {}) {
   }
   
   const logger = new Logger({ verbose: options.verbose });
-  const client = getAIClient();
+  const client = await getAIClient(options.config);
 
   try {
     logger.info(`Using model: ${client.config.model}`);

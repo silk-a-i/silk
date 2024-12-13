@@ -1,6 +1,5 @@
 import { ToolProcessor } from './tools/ToolProcessor.js';
 import { createBasicTools } from './tools/basicTools.js';
-import { executePrompt, executeMessages } from './llm.js';
 
 export class Task {
   constructor({ prompt, context = [], system = '', tools = [] }) {
@@ -13,22 +12,6 @@ export class Task {
   get fullSystem() {
     const toolSystem = this.toolProcessor.getToolingPrompt();
     return `${this.system}${toolSystem}`;
-  }
-
-  async execute(options = {}) {
-    if (Array.isArray(this.prompt)) {
-      return executeMessages(
-        this.prompt,
-        (chunk) => this.toolProcessor.process(chunk),
-        options
-      );
-    }
-
-    return executePrompt(
-      await this.render(),
-      (chunk) => this.toolProcessor.process(chunk),
-      { ...options, system: this.fullSystem }
-    );
   }
 
   async render() {

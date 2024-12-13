@@ -1,38 +1,62 @@
-export class Stats {
+export class FileStats {
   constructor() {
     this.reset();
   }
 
   reset() {
-    this.contextSize = 0;
-    this.promptSize = 0;
-    this.startTime = Date.now();
+    this.totalSize = 0;
+    this.byExtension = {};
+    this.sizeByExtension = {};
+    this.largestFile = null;
   }
 
-  addContext(size) {
-    this.contextSize += size;
+  addFile(filePath, content) {
+    const size = Buffer.from(content).length;
+    const ext = getExtension(filePath);
+    
+    this.totalSize += size;
+    this.byExtension[ext] = (this.byExtension[ext] || 0) + 1;
+    this.sizeByExtension[ext] = (this.sizeByExtension[ext] || 0) + size;
+    
+    if (size > (this.largestFile?.size || 0)) {
+      this.largestFile = { path: filePath, size };
+    }
   }
 
-  addPrompt(size) {
-    this.promptSize += size;
-  }
+  getSummary(logger) {
+    logger.stats('Stats', [
+      { label: 'Total size', value: formatBytes(this.totalSize) },
+      { label: 'Files', value: Object.values(this.byExtension).reduce((a, b) => a + b, 0) }
+    ]);
 
-  getElapsedTime() {
-    return Date.now() - this.startTime;
-  }
+    if (Object.keys(this.byExtension).length > 0) {
+      logger.stats('Files by Type', 
+        Object.entries(this.byExtension)
+          .sort(([, a], [, b]) => b - a)
+          .map(([ext, count]) => ({
+            label: ext,
+            value: `${count} (${formatBytes(this.sizeByExtension[ext])})`
+          }))
+      );
+    }
 
-  getSummary() {
-    return {
-      contextSize: this.formatBytes(this.contextSize),
-      promptSize: this.formatBytes(this.promptSize),
-      elapsedTime: `${(this.getElapsedTime() / 1000).toFixed(2)}s`
-    };
+    if (this.largestFile) {
+      logger.stats('Largest File', [{
+        label: this.largestFile.path,
+        value: formatBytes(this.largestFile.size)
+      }]);
+    }
   }
+}
 
-  formatBytes(bytes) {
-    if (bytes === 0) return '0 B';
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
-  }
+export function formatBytes(bytes) {
+  if (bytes === 0) return '0 B';
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
+}
+
+function getExtension(filePath) {
+  const ext = filePath.split('.').pop() || 'no-ext';
+  return ext.toLowerCase();
 }

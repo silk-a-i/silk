@@ -30,6 +30,14 @@ export class Logger {
     console.log();
   }
 
+  stats(title, items) {
+    console.log(chalk.cyan(`\n${title}:`));
+    items.forEach(({ label, value }, i, arr) => {
+      const prefix = i === arr.length - 1 ? '└─' : '├─';
+      console.log(chalk.gray(prefix) + ` ${label}: ${value}`);
+    });
+  }
+
   messages(messages) {
     if (!this.verbose) return;
     
@@ -43,7 +51,7 @@ export class Logger {
 
       console.log(roleColor(`[${message.role}]`));
       console.log(chalk.gray(message.content));
-      console.log(); // Empty line between messages
+      console.log();
     });
   }
 }

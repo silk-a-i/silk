@@ -1,15 +1,13 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import { PROVIDERS, DEFAULT_PROVIDER } from '../constants.js';
 
 const DEFAULT_CONFIG = {
-  baseUrl: 'http://localhost:11434/v1',
+  baseUrl: DEFAULT_PROVIDER.baseUrl,
   apiKey: 'sk-dummy-key',
-  model: 'llama3.1',
-  provider: 'ollama'
+  model: DEFAULT_PROVIDER.defaultModel,
+  provider: DEFAULT_PROVIDER.value
 };
 
 export async function loadConfig() {
@@ -25,23 +23,42 @@ export async function loadConfig() {
       provider: process.env.SILK_PROVIDER
     };
 
-    // Try to load config file
+    // Try to load config file from .silk/config.json
     let fileConfig = {};
     try {
-      const configContent = await fs.readFile('.silk.json', 'utf-8');
+      const configPath = path.join(process.cwd(), '.silk', 'config.json');
+      const configContent = await fs.readFile(configPath, 'utf-8');
       fileConfig = JSON.parse(configContent);
     } catch (error) {
-      // Ignore file not found errors
+      // Try fallback to .silk.json in root if .silk/config.json doesn't exist
+      try {
+        const fallbackPath = path.join(process.cwd(), '.silk.json');
+        const configContent = await fs.readFile(fallbackPath, 'utf-8');
+        fileConfig = JSON.parse(configContent);
+      } catch {
+        // Ignore file not found errors
+      }
     }
 
     // Merge configs with precedence: env > file > default
-    return {
+    const config = {
       ...DEFAULT_CONFIG,
       ...fileConfig,
       ...Object.fromEntries(
         Object.entries(envConfig).filter(([_, v]) => v !== undefined)
       )
     };
+
+    // Validate provider
+    const provider = Object.values(PROVIDERS).find(p => p.value === config.provider);
+    if (!provider) {
+      console.warn(`Warning: Invalid provider '${config.provider}', using default`);
+      config.provider = DEFAULT_PROVIDER.value;
+      config.baseUrl = DEFAULT_PROVIDER.baseUrl;
+      config.model = DEFAULT_PROVIDER.defaultModel;
+    }
+
+    return config;
   } catch (error) {
     console.warn(`Warning: Error loading config - ${error.message}`);
     return DEFAULT_CONFIG;
