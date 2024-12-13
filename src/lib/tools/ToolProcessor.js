@@ -1,22 +1,5 @@
 import { EventEmitter } from 'events';
-
-const prompt = `
-You are a helpful AI assistant that helps with coding tasks. 
-Be brief and clear in your requests.
-
-# Example usage:
-
-<silk.action tool="create" path="index.html">
-...
-</silk.action>
-<silk.action tool="create" path="data.json">
-{}
-</silk.action>
-
-You can also use file blocks:
-##### \`script.js\`
-\`\`\`javascript
-console.log('Hello');`
+import { silkPrompt } from './prompt.js';
 
 export class ToolProcessor extends EventEmitter {
   constructor(tools = []) {
@@ -41,16 +24,16 @@ export class ToolProcessor extends EventEmitter {
   }
 
   getToolingPrompt() {
-    const availableTools =  Array.from(this.tools.values())
-      .map(tool => tool.getDescription())
+    const availableTools = Array.from(this.tools.values())
+      .map(tool => `- ${tool.name}: ${tool.description}`)
       .join('\n');
 
     return `
-    ${prompt}
+    ${silkPrompt}
 
     # Available Tools
     ${availableTools}
-    `
+    `;
   }
 
   process(chunk) {
@@ -121,7 +104,6 @@ export class ToolProcessor extends EventEmitter {
       blockContent: ''
     };
 
-    tool.onStart({ path });
     this.emit('tool:start', { tool, path });
   }
 
@@ -151,7 +133,6 @@ export class ToolProcessor extends EventEmitter {
       blockContent: ''
     };
 
-    tool.onStart({ path });
     this.emit('tool:start', { tool, path });
   }
 

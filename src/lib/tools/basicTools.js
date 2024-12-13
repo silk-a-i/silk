@@ -2,34 +2,37 @@ import fs from 'fs/promises';
 import path from 'path';
 import { Tool } from './Tool.js';
 
-export const createTool = new Tool({
-  name: 'create',
-  description: 'Create a new file or update an existing file',
-  pattern: /<silk\.action\s+tool="create"/,
-  onStart: ({ path }) => {
-    // console.log(`Creating ${path}...`);
-  },
-  async onFinish (ctx) {
-    const { content } = ctx;
-    const dir = path.dirname(ctx.path);
-    await fs.mkdir(dir, { recursive: true });
-    await fs.writeFile(ctx.path, content);
-  }
-});
+export function createBasicTools(options = {}) {
+  const outputDir = options.output || '';
+  
+  return [
+    new Tool({
+      name: 'create',
+      description: 'Create a new file',
+      pattern: /<silk\.action\s+tool="create"/,
+      async onFinish(ctx) {
+        const fullPath = path.join(outputDir, ctx.path);
+        const dir = path.dirname(fullPath);
+        await fs.mkdir(dir, { recursive: true });
+        await fs.writeFile(fullPath, ctx.content);
+      }
+    }),
 
-export const diffTool = new Tool({
-  name: 'diff',
-  description: 'Apply changes to an existing file',
-  pattern: /<silk\.action\s+tool="diff"/,
-  onStart: ({ path }) => {
-    // console.log(`Modifying ${path}...`);
-  },
-  onFinish: async ({ path, content }) => {
-    // Apply diff logic here
-  }
-});
-
-export const basicTools = [
-  createTool,
-  diffTool
-];
+    new Tool({
+      name: 'modify',
+      description: 'Modify an existing file',
+      pattern: /<silk\.action\s+tool="modify"/,
+      async onFinish(ctx) {
+        const fullPath = path.join(outputDir, ctx.path);
+        
+        try {
+          // Check if file exists
+          await fs.access(fullPath);
+          await fs.writeFile(fullPath, ctx.content);
+        } catch (error) {
+          throw new Error(`Cannot modify ${fullPath}: file does not exist`);
+        }
+      }
+    })
+  ];
+}

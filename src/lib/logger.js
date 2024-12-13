@@ -6,8 +6,7 @@ export class Logger {
   }
 
   info(message) {
-    if (!this.verbose) return
-    
+    if (!this.verbose) return;
     console.log(chalk.blue(message));
   }
 
@@ -20,16 +19,31 @@ export class Logger {
   }
 
   debug(message) {
-    if (!this.verbose) return
-    
+    if (!this.verbose) return;
     console.log(chalk.gray('Debug:'), message);
   }
 
-  prompt(prompt = "") {
-    if (!this.verbose) return
-
+  prompt(prompt) {
+    if (!this.verbose) return;
     console.log(chalk.yellow('\nPrompt used:'));
     console.log(chalk.gray(prompt));
-    console.log(); // Empty line for better readability
+    console.log();
+  }
+
+  messages(messages) {
+    if (!this.verbose) return;
+    
+    console.log(chalk.yellow('\nMessages:'));
+    messages.forEach(message => {
+      const roleColor = {
+        system: chalk.magenta,
+        user: chalk.cyan,
+        assistant: chalk.green
+      }[message.role] || chalk.white;
+
+      console.log(roleColor(`[${message.role}]`));
+      console.log(chalk.gray(message.content));
+      console.log(); // Empty line between messages
+    });
   }
 }

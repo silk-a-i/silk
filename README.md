@@ -49,66 +49,22 @@ Or create a `.silk.json` file:
 
 ## Usage
 
-### Quick Tasks
+```sh
+# Do command
+silk do ./my-project "create an app"
+silk do ./my-project  # uses design.md
 
-Execute single tasks with natural language prompts:
+# Patch command
+silk patch ./my-project "update styles"
+silk patch ./my-project  # uses design.md
 
-```bash
-# Generate content
-silk create "1 jokes in json"
-silk create "a hello world html page"
-## Set output directory
-silk create "a snake game" --output output/ 
-## Add context 
-silk create "a summary" --context "**/*.js"
+# Chat command
+silk chat ./my-project  # all operations happen in project dir
 
-# Patch
-silk patch "update all console.log to use debug"
-
-# Patch files in current directory
-silk create "a hello world html page"
-echo "Continue?"
-read
-silk patch "add a dark theme"
+# Map command
+silk map ./my-project "convert to typescript" --context "**/*.js"
+silk map ./my-project --context "**/*.js"  # uses design.md
 ```
-
-### Conversions
-Run over each file a given prompt.
-```bash
-silk map "convert to vue" --context "**/*.jsx"
-silk map "convert to vue3 using script setup" --context "**/*.jsx" -o src/
-```
-
-### Interactive mode
-
-```bash
-silk chat
-> "3 jokes in json"
-> "add 2 more jokes"
-> exit
-```
-
-## Command Reference
-
-Options for all commands:
-- `-o, --output <dir>`: Output directory for generated files (default: "output")
-- `-c, --context <glob>`: File glob pattern to process
-- `-v, --verbose`: Adds additional information including the used prompt
-- `-r, --raw`: Show raw LLM output without formatting
-
-### `silk init`
-Prompts the user for which model provider to use and creates a new silk project.
-
-### `silk create <prompt>`
-
-Execute a single task.
-
-### `silk patch <prompt>`
-
-Same as `do` command but defaults to:
-- Output directory: Current directory (.)
-- Context: All files (**/*)
-
 
 ### `silk chat`
 

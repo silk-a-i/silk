@@ -1,43 +1,18 @@
 import { getAIClient } from './ai/client.js';
 import { Logger } from './logger.js';
 
-export const SYSTEM_PROMPT = 
-`You are a helpful AI assistant that helps with coding tasks. 
-Be brief and clear in your requests.
-
-You can use the following tools to perform actions:
-- create: Create or update files
-
-Example usage:
-<silk.action tool="create" path="index.html">
-<div>Hello World</div>
-</silk.action>
-
-You can also use file blocks:
-##### \`script.js\`
-\`\`\`javascript
-console.log('Hello');
-\`\`\`
-`;
-
-export async function executePrompt(prompt, onProgress, options = {}) {
+export async function executeMessages(messages = [], onProgress, options = {}) {
+  if(!messages.length) {
+    throw new Error('No messages provided');
+  }
+  
   const logger = new Logger({ verbose: options.verbose });
   const client = getAIClient();
 
   try {
     logger.info(`Using model: ${client.config.model}`);
+    logger.messages(messages);
     
-    const messages = [
-      {
-        role: 'system',
-        content: options.system || SYSTEM_PROMPT
-      },
-      {
-        role: 'user',
-        content: prompt
-      }
-    ];
-
     const stream = await client.createCompletion({ messages });
     let fullContent = '';
     
@@ -54,4 +29,19 @@ export async function executePrompt(prompt, onProgress, options = {}) {
   } catch (error) {
     throw new Error(`LLM execution failed: ${error.message}`);
   }
+}
+
+export async function executePrompt(prompt, onProgress, options = {}) {
+  const messages = [
+    {
+      role: 'system',
+      content: options.system
+    },
+    {
+      role: 'user',
+      content: prompt
+    }
+  ];
+
+  return executeMessages(messages, onProgress, options);
 }
