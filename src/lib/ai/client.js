@@ -35,7 +35,6 @@ export class AIClient {
 
   formatRequestBody(messages, provider) {
     const base = {
-      ...this.config,
       model: this.config.model,
       stream: true,
       temperature: this.config.temperature || 0,
