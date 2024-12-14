@@ -5,7 +5,6 @@ import { CliRenderer } from '../lib/renderers/cli.js';
 import { extractPrompt } from '../lib/prompt-extractor.js';
 import { createBasicTools } from '../lib/tools/basicTools.js';
 import { gatherContext } from '../lib/utils.js';
-import { File } from '../lib/File.js';
 
 export async function mapCommand(root, promptOrFile, options) {
   const logger = new Logger({ verbose: options.verbose });
