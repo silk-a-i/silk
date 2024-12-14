@@ -81,7 +81,13 @@ export async function loadConfig() {
     const fileConfig = configPath ? JSON.parse(await fs.readFile(configPath, 'utf-8')) : {};
 
     const config = mergeConfigs(DEFAULT_CONFIG, fileConfig, envConfig);
-    return validateProvider(config);
+    const validatedConfig = validateProvider(config);
+
+    // Add configPath to the config object
+    return {
+      ...validatedConfig,
+      configPath
+    };
   } catch (error) {
     console.warn(`Warning: Error loading config - ${error.message}`);
     return DEFAULT_CONFIG;
