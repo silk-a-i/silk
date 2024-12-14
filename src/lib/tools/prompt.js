@@ -21,5 +21,7 @@ body {
 }
 </silk.action>
 
-> IMPORTANT: End with ALL DONE
+# Delete a file:
+<silk.action tool="delete" path="style.css"></silk.action>
+
 `;
