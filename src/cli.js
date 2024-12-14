@@ -9,6 +9,7 @@ import { prepCommand } from './commands/prep.js';
 import { packCommand } from './commands/pack.js';
 import { createCommand } from './commands/create.js';
 import { infoCommand } from './commands/info.js';
+import { parseCommand } from './commands/parse.js';
 import { addSharedOptions } from './lib/options.js';
 
 program
@@ -33,6 +34,12 @@ program
   .option('-f, --format <format>', 'output format (md/json)', 'md')
   .description('Create a prompt without executing it')
   .action(createCommand);
+
+program
+  .command('parse')
+  .argument('[file]', 'file to parse')
+  .description('Parse markdown file into individual files')
+  .action(parseCommand);
 
 program
   .command('prep')
