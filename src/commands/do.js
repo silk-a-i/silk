@@ -9,6 +9,7 @@ import { FileStats } from '../lib/stats.js';
 import { TaskExecutor } from '../lib/TaskExecutor.js';
 import { loadConfig } from '../lib/config/load.js';
 import fs from 'fs';
+import { logConfiguration } from './info.js';
 
 export async function doCommand(root, promptOrFile, options = {}) {
   const logger = new Logger({ verbose: options.verbose });
@@ -23,9 +24,8 @@ export async function doCommand(root, promptOrFile, options = {}) {
 
     // Load configuration first
     const config = await loadConfig();
-    logger.debug(`Using provider: ${config.provider}`);
-    logger.debug(`Using model: ${config.model}`);
-    logger.debug(`Using root: ${root}`);
+
+    logConfiguration(config, logger);
 
     // If root is provided, resolve paths relative to it
     if (root) {
