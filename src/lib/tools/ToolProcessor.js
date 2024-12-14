@@ -6,16 +6,16 @@ export class ToolProcessor extends EventEmitter {
     super();
     this.tools = new Map();
     this.buffer = '';
-    
+
     // Track current state
     this.currentState = {
       inAction: false,
       inFileBlock: false,
       currentTool: null,
-      currentPath: null,
+      args: {},
       blockContent: ''
     };
-    
+
     tools.forEach(tool => this.register(tool));
   }
 
@@ -38,13 +38,13 @@ export class ToolProcessor extends EventEmitter {
 
   process(chunk) {
     this.buffer += chunk;
-    
+
     this.emit('chunk', chunk);
-    
+
     // Process complete lines
     const lines = this.buffer.split('\n');
     this.buffer = lines.pop() || ''; // Keep last incomplete line in buffer
-    
+
     for (const line of lines) {
       this.processLine(line);
     }
@@ -52,10 +52,10 @@ export class ToolProcessor extends EventEmitter {
 
   processLine(line) {
     // Check for action start
-    const actionStart = line.match(/<silk\.action\s+tool="([^"]+)"\s+path="([^"]+)">/);
+    const actionStart = line.match(/<silk\.action\s+([^>]+)>/);
     if (actionStart) {
-      const [, toolName, path] = actionStart;
-      this.startAction(toolName, path);
+      const args = this.extractArgs(actionStart[1]);
+      this.startAction(args);
       return;
     }
 
@@ -69,7 +69,7 @@ export class ToolProcessor extends EventEmitter {
     const fileBlockStart = line.match(/#{5}\s+`([^`]+)`/);
     if (fileBlockStart) {
       const [, path] = fileBlockStart;
-      this.startFileBlock(path);
+      this.startFileBlock({ path });
       return;
     }
 
@@ -92,28 +92,38 @@ export class ToolProcessor extends EventEmitter {
     }
   }
 
-  startAction(toolName, path) {
-    const tool = this.tools.get(toolName);
+  extractArgs(argString) {
+    const args = {};
+    const regex = /(\w+)="([^"]+)"/g;
+    let match;
+    while ((match = regex.exec(argString)) !== null) {
+      args[match[1]] = match[2];
+    }
+    return args;
+  }
+
+  startAction(args) {
+    const tool = this.tools.get(args.tool);
     if (!tool) return;
 
     this.currentState = {
       inAction: true,
       inFileBlock: false,
       currentTool: tool,
-      currentPath: path,
+      args,
       blockContent: ''
     };
 
-    this.emit('tool:start', { tool, path });
+    this.emit('tool:start', { tool, ...args });
   }
 
   endAction() {
-    const { currentTool, currentPath, blockContent } = this.currentState;
-    if (currentTool && currentPath) {
-      currentTool.onFinish({ path: currentPath, content: blockContent });
+    const { currentTool, args, blockContent } = this.currentState;
+    if (currentTool) {
+      currentTool.onFinish({ ...args, content: blockContent });
       this.emit('tool:finish', { 
+        ...args,
         tool: currentTool, 
-        path: currentPath, 
         content: blockContent 
       });
     }
@@ -121,7 +131,7 @@ export class ToolProcessor extends EventEmitter {
     this.resetState();
   }
 
-  startFileBlock(path) {
+  startFileBlock(args) {
     const tool = this.tools.get('create');
     if (!tool) return;
 
@@ -129,21 +139,21 @@ export class ToolProcessor extends EventEmitter {
       inAction: false,
       inFileBlock: true,
       currentTool: tool,
-      currentPath: path,
+      args,
       blockContent: ''
     };
 
-    this.emit('tool:start', { tool, path });
+    this.emit('tool:start', { tool, ...args });
   }
 
   endFileBlock() {
-    const { currentTool, currentPath, blockContent } = this.currentState;
-    if (currentTool && currentPath) {
-      currentTool.onFinish({ path: currentPath, content: blockContent });
-      this.emit('tool:finish', { 
-        tool: currentTool, 
-        path: currentPath, 
-        content: blockContent 
+    const { currentTool, args, blockContent } = this.currentState;
+    if (currentTool) {
+      currentTool.onFinish({ ...args, content: blockContent });
+      this.emit('tool:finish', {
+        ...args,
+        tool: currentTool,
+        content: blockContent
       });
     }
 
@@ -155,7 +165,7 @@ export class ToolProcessor extends EventEmitter {
       inAction: false,
       inFileBlock: false,
       currentTool: null,
-      currentPath: null,
+      args: {},
       blockContent: ''
     };
   }
