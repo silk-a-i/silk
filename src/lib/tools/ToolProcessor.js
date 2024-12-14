@@ -114,7 +114,7 @@ export class ToolProcessor extends EventEmitter {
       blockContent: ''
     };
 
-    this.emit('tool:start', { tool, ...args });
+    this.emit('tool:start', { ...args, tool });
   }
 
   endAction() {
@@ -143,7 +143,7 @@ export class ToolProcessor extends EventEmitter {
       blockContent: ''
     };
 
-    this.emit('tool:start', { tool, ...args });
+    this.emit('tool:start', { ...args, tool });
   }
 
   endFileBlock() {
