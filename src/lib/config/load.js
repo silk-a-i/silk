@@ -7,58 +7,81 @@ const DEFAULT_CONFIG = {
   baseUrl: DEFAULT_PROVIDER.baseUrl,
   apiKey: 'sk-dummy-key',
   model: DEFAULT_PROVIDER.defaultModel,
-  provider: DEFAULT_PROVIDER.value
+  provider: DEFAULT_PROVIDER.value,
+  include: []
 };
+
+async function findConfigFile(startDir) {
+  let currentDir = startDir;
+
+  while (currentDir !== path.parse(currentDir).root) {
+    const silkDir = path.join(currentDir, '.silk');
+    const configPath = path.join(silkDir, 'config.json');
+    const fallbackPath = path.join(currentDir, '.silk.json');
+
+    if (await fileExists(configPath)) return configPath;
+    if (await fileExists(fallbackPath)) return fallbackPath;
+
+    currentDir = path.dirname(currentDir);
+  }
+
+  return null;
+}
+
+async function fileExists(filePath) {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function getEnvConfig() {
+  dotenv.config();
+
+  return {
+    baseUrl: process.env.SILK_BASE_URL,
+    apiKey: process.env.SILK_API_KEY,
+    model: process.env.SILK_MODEL,
+    provider: process.env.SILK_PROVIDER,
+    include: process.env.SILK_INCLUDE ? process.env.SILK_INCLUDE.split(',') : undefined
+  };
+}
+
+function mergeConfigs(...configs) {
+  return configs.reduce((acc, config) => {
+    return {
+      ...acc,
+      ...Object.fromEntries(Object.entries(config).filter(([_, v]) => v !== undefined))
+    };
+  }, {});
+}
+
+function validateProvider(config) {
+  const provider = Object.values(PROVIDERS).find(p => p.value === config.provider);
+
+  if (!provider) {
+    console.warn(`Warning: Invalid provider '${config.provider}', using default`);
+    return {
+      ...config,
+      provider: DEFAULT_PROVIDER.value,
+      baseUrl: DEFAULT_PROVIDER.baseUrl,
+      model: DEFAULT_PROVIDER.defaultModel
+    };
+  }
+
+  return config;
+}
 
 export async function loadConfig() {
   try {
-    // Load environment variables
-    dotenv.config();
+    const envConfig = getEnvConfig();
+    const configPath = await findConfigFile(process.cwd());
+    const fileConfig = configPath ? JSON.parse(await fs.readFile(configPath, 'utf-8')) : {};
 
-    // Check for environment variables
-    const envConfig = {
-      baseUrl: process.env.SILK_BASE_URL,
-      apiKey: process.env.SILK_API_KEY,
-      model: process.env.SILK_MODEL,
-      provider: process.env.SILK_PROVIDER
-    };
-
-    // Try to load config file from .silk/config.json
-    let fileConfig = {};
-    try {
-      const configPath = path.join(process.cwd(), '.silk', 'config.json');
-      const configContent = await fs.readFile(configPath, 'utf-8');
-      fileConfig = JSON.parse(configContent);
-    } catch (error) {
-      // Try fallback to .silk.json in root if .silk/config.json doesn't exist
-      try {
-        const fallbackPath = path.join(process.cwd(), '.silk.json');
-        const configContent = await fs.readFile(fallbackPath, 'utf-8');
-        fileConfig = JSON.parse(configContent);
-      } catch {
-        // Ignore file not found errors
-      }
-    }
-
-    // Merge configs with precedence: env > file > default
-    const config = {
-      ...DEFAULT_CONFIG,
-      ...fileConfig,
-      ...Object.fromEntries(
-        Object.entries(envConfig).filter(([_, v]) => v !== undefined)
-      )
-    };
-
-    // Validate provider
-    const provider = Object.values(PROVIDERS).find(p => p.value === config.provider);
-    if (!provider) {
-      console.warn(`Warning: Invalid provider '${config.provider}', using default`);
-      config.provider = DEFAULT_PROVIDER.value;
-      config.baseUrl = DEFAULT_PROVIDER.baseUrl;
-      config.model = DEFAULT_PROVIDER.defaultModel;
-    }
-
-    return config;
+    const config = mergeConfigs(DEFAULT_CONFIG, fileConfig, envConfig);
+    return validateProvider(config);
   } catch (error) {
     console.warn(`Warning: Error loading config - ${error.message}`);
     return DEFAULT_CONFIG;
