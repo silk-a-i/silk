@@ -8,10 +8,11 @@ export class FileStats {
     this.byExtension = {};
     this.sizeByExtension = {};
     this.largestFile = null;
+    this.fileMetadata = new Map(); // Store file metadata
   }
 
-  addFile(filePath, content) {
-    const size = Buffer.from(content).length;
+  addFile(filePath, content, metadata = {}) {
+    const size = metadata.size || Buffer.from(content).length;
     const ext = getExtension(filePath);
     
     this.totalSize += size;
@@ -21,6 +22,14 @@ export class FileStats {
     if (size > (this.largestFile?.size || 0)) {
       this.largestFile = { path: filePath, size };
     }
+
+    // Store metadata
+    this.fileMetadata.set(filePath, {
+      size,
+      createdAt: metadata.createdAt || new Date(),
+      modifiedAt: metadata.modifiedAt || new Date(),
+      ...metadata
+    });
   }
 
   getSummary(logger) {

@@ -1,10 +1,10 @@
 import { loadConfig } from '../lib/config/load.js';
 import { Logger } from '../lib/logger.js';
 import { PROVIDERS } from '../lib/constants.js';
-import { gatherContext } from '../lib/utils.js';
-import { FileStats } from '../lib/stats.js';
+import { gatherContextInfo } from '../lib/utils.js';
+import { FileStats, formatBytes } from '../lib/stats.js';
 
-export async function infoCommand() {
+export async function infoCommand(options) {
   const logger = new Logger();
   
   try {
@@ -14,13 +14,15 @@ export async function infoCommand() {
     logger.stats('Configuration', [
       { label: 'Provider', value: provider?.displayName || config.provider },
       { label: 'Model', value: config.model },
-      { label: 'Base URL', value: config.baseUrl }
+      { label: 'Base URL', value: config.baseUrl },
+      { label: 'include', value: config.include },
+      { label: 'max_tokens', value: config.max_tokens }
     ]);
 
-    // Add file stats
-    const files = await gatherContext('**/*');
+    // Add file stats using gatherContextInfo
+    const files = await gatherContextInfo(config.include || '**/*', options);
     const stats = new FileStats();
-    files.forEach(file => stats.addFile(file.path, file.content));
+    files.forEach(file => stats.addFile(file.path, null, file)); // Use size directly
     stats.getSummary(logger);
 
   } catch (error) {

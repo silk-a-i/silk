@@ -21,23 +21,6 @@ const DEFAULT_IGNORE = [
   'pnpm-lock.yaml',
 ];
 
-export async function loadPromptFromFile(filePath) {
-  try {
-    return await fs.readFile(filePath, 'utf-8');
-  } catch (error) {
-    throw new Error(`Failed to read prompt file: ${error.message}`);
-  }
-}
-
-export async function isFile(path) {
-  try {
-    const stats = await fs.stat(path);
-    return stats.isFile();
-  } catch {
-    return false;
-  }
-}
-
 export function getGlobOptions(options = {}) {
   return {
     nodir: true,
@@ -47,20 +30,61 @@ export function getGlobOptions(options = {}) {
   };
 }
 
-export async function gatherContext(contextGlob, options = {}) {
-  if (!contextGlob) return [];
+async function loadFileContent(filePath) {
+  try {
+    const content = await fs.readFile(filePath, 'utf-8');
+    return new File(
+      path.relative(process.cwd(), filePath),
+      content
+    );
+  } catch (error) {
+    console.warn(`Warning: Could not read file ${filePath}: ${error.message}`);
+    return null;
+  }
+}
+
+export async function gatherContext(patterns, options = {}) {
+  if (!patterns) return [];
   
   try {
-    const files = await glob(contextGlob, getGlobOptions(options));
+    // Handle single pattern or array of patterns
+    const globs = Array.isArray(patterns) ? patterns : [patterns];
+    const allFiles = new Set();
 
+    // Gather files from each pattern
+    const files = await glob(globs, getGlobOptions(options));
+    files.forEach(file => allFiles.add(file));
+
+    // Load file contents
     const fileObjects = await Promise.all(
-      files.map(async filePath => {
+      Array.from(allFiles).map(loadFileContent)
+    );
+
+    return fileObjects.filter(Boolean);
+  } catch (error) {
+    console.warn(`Warning: Error gathering context: ${error.message}`);
+    return [];
+  }
+}
+
+export async function gatherContextInfo(patterns, options = {}) {
+  if (!patterns) return [];
+  
+  try {
+    const globs = Array.isArray(patterns) ? patterns : [patterns];
+    const allFiles = new Set();
+
+    const files = await glob(globs, getGlobOptions(options));
+    files.forEach(file => allFiles.add(file));
+
+    const fileInfos = await Promise.all(
+      Array.from(allFiles).map(async filePath => {
         try {
-          const content = await fs.readFile(filePath, 'utf-8');
-          return new File(
-            path.relative(process.cwd(), filePath),
-            content
-          );
+          const stats = await fs.stat(filePath);
+          return {
+            path: path.relative(process.cwd(), filePath),
+            size: stats.size
+          };
         } catch (error) {
           console.warn(`Warning: Could not read file ${filePath}: ${error.message}`);
           return null;
@@ -68,9 +92,9 @@ export async function gatherContext(contextGlob, options = {}) {
       })
     );
 
-    return fileObjects.filter(Boolean);
+    return fileInfos.filter(Boolean);
   } catch (error) {
-    console.warn(`Warning: Error gathering context: ${error.message}`);
+    console.warn(`Warning: Error gathering context info: ${error.message}`);
     return [];
   }
 }
