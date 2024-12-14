@@ -21,10 +21,12 @@ export class AIClient {
 
     if (provider.value === 'anthropic') headers['anthropic-version'] = '2023-06-01';
 
+    const body = this.formatRequestBody(messages, provider);
+
     const response = await fetch(`${this.config.baseUrl}${provider.endpoint}`, {
       method: 'POST',
       headers,
-      body: JSON.stringify(this.formatRequestBody(messages, provider))
+      body: JSON.stringify(body)
     });
 
     if (!response.ok) throw new Error(`AI request failed (${response.status}): ${await response.text()}`);
@@ -33,22 +35,24 @@ export class AIClient {
 
   formatRequestBody(messages, provider) {
     const base = {
+      ...this.config,
       model: this.config.model,
       stream: true,
-      temperature: 0
+      temperature: this.config.temperature || 0,
+      max_tokens: this.config.max_tokens || 2 * 1024,
     };
 
     switch(provider.value) {
       case 'anthropic':
         const system = messages.find(m => m.role === 'system')?.content || '';
         const lastUser = messages.filter(m => m.role === 'user').pop();
-        return { ...base, messages: [{ role: 'user', content: lastUser.content }], system, max_tokens: 8 * 1024 };
+        return { ...base, messages: [{ role: 'user', content: lastUser.content }], system };
       
       case 'openai':
-        return { ...base, messages, max_tokens: 8 * 1024 };
+        return { ...base, messages };
       
       default: // ollama
-        return { ...base, messages, num_ctx: 8 * 1024 };
+        return { ...base, messages };
     }
   }
 }
