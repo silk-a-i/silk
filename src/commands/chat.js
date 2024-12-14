@@ -61,8 +61,8 @@ export async function chatCommand(root, options) {
           renderer.attach(task.toolProcessor);
           await executor.execute(task, { ...options, config });
 
-          // renderer.cleanup();
-          // process.stdout.write('\n\n');
+          renderer.cleanup();
+          process.stdout.write('\n\n');
         } catch (error) {
           logger.error(`Error: ${error.message}`);
         }

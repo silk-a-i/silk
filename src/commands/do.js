@@ -69,8 +69,7 @@ export async function doCommand(root, promptOrFile, options = {}) {
     const executor = new TaskExecutor(options);
     const result = await executor.execute(task, { ...options, config });
     
-    console.log('Task completed');
-    // renderer.cleanup();
+    renderer.cleanup();
     return result;
 
   } catch (error) {

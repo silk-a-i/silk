@@ -1,4 +1,3 @@
-import chalk from 'chalk';
 import { loadConfig } from '../lib/config/load.js';
 import { Logger } from '../lib/logger.js';
 import { PROVIDERS } from '../lib/constants.js';
