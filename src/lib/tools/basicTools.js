@@ -1,4 +1,4 @@
-import fs from 'fs/promises';
+import fs from 'node:fs';
 import path from 'path';
 import { Tool } from './Tool.js';
 
@@ -10,11 +10,11 @@ export function createBasicTools(options = {}) {
       name: 'create',
       description: 'Create a new file',
       pattern: /<silk\.action\s+tool="create"/,
-      async onFinish(ctx) {
+      onFinish(ctx) {
         const fullPath = path.join(outputDir, ctx.path);
         const dir = path.dirname(fullPath);
-        await fs.mkdir(dir, { recursive: true });
-        await fs.writeFile(fullPath, ctx.content);
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(fullPath, ctx.content);
       }
     }),
 
@@ -22,15 +22,28 @@ export function createBasicTools(options = {}) {
       name: 'modify',
       description: 'Modify an existing file',
       pattern: /<silk\.action\s+tool="modify"/,
-      async onFinish(ctx) {
+      onFinish(ctx) {
         const fullPath = path.join(outputDir, ctx.path);
         
         try {
-          // Check if file exists
-          await fs.access(fullPath);
-          await fs.writeFile(fullPath, ctx.content);
+          fs.accessSync(fullPath);
+          fs.writeFileSync(fullPath, ctx.content);
         } catch (error) {
           throw new Error(`Cannot modify ${fullPath}: file does not exist`);
+        }
+      }
+    }),
+
+    new Tool({
+      name: 'delete',
+      description: 'Delete a file',
+      pattern: /<silk\.action\s+tool="delete"/,
+      onFinish(ctx) {
+        const fullPath = path.join(outputDir, ctx.path);
+        try {
+          fs.unlinkSync(fullPath);
+        } catch (error) {
+          throw new Error(`Cannot delete ${fullPath}: ${error.message}`);
         }
       }
     })
