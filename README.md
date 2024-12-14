@@ -20,7 +20,7 @@ Silk is a command-line tool that leverages Large Language Models (LLMs) to help 
 
 ```bash
 # Install globally
-npm install -g silk-cli
+npm install -g https://github.com/silk-a-i/silk-cli.git
 
 # Or use directly with npx
 npx silk-cli
