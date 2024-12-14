@@ -25,23 +25,10 @@ export async function executeMessages(messages = [], onProgress, options = {}) {
       }
     }
 
+    onProgress("\n");
+
     return fullContent;
   } catch (error) {
     throw new Error(`LLM execution failed: ${error.message}`);
   }
-}
-
-export async function executePrompt(prompt, onProgress, options = {}) {
-  const messages = [
-    {
-      role: 'system',
-      content: options.system
-    },
-    {
-      role: 'user',
-      content: prompt
-    }
-  ];
-
-  return executeMessages(messages, onProgress, options);
 }
