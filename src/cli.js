@@ -19,6 +19,7 @@ program
 
 program
   .command('init')
+  .argument('[root]', 'root directory')
   .description('Initialize a new Silk project')
   .action(initCommand);
 

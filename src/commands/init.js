@@ -4,11 +4,19 @@ import { createConfig } from '../lib/config/create.js';
 import { validateConfig } from '../lib/validation.js';
 import { Logger } from '../lib/logger.js';
 import { PROVIDERS } from '../lib/constants.js';
+import fs from 'fs';
 
-export async function initCommand() {
+export async function initCommand(root) {
   const logger = new Logger();
 
   try {
+    // If root is provided, resolve paths relative to it
+    if (root) {
+      // Create directory
+      fs.mkdirSync(root, { recursive: true });
+      process.chdir(root);
+    }
+
     const answers = await inquirer.prompt([
       {
         type: 'list',
@@ -35,7 +43,7 @@ export async function initCommand() {
     ]);
 
     const provider = PROVIDERS[answers.provider];
-    
+
     const config = {
       baseUrl: provider.baseUrl,
       model: answers.model,
@@ -53,7 +61,7 @@ export async function initCommand() {
     logger.info('\nYou can now use Silk with the following commands:');
     logger.info(chalk.cyan('\n  silk do "create a hello world program"'));
     logger.info(chalk.cyan('  silk chat'));
-    
+
   } catch (error) {
     logger.error(`Failed to initialize: ${error.message}`);
     process.exit(1);
