@@ -67,6 +67,7 @@ addSharedOptions(
 addSharedOptions(
   program
     .command('patch')
+    .alias('run')
     .argument('[root]', 'root directory')
     .argument('[prompt]', 'prompt or file')
     .description('Execute a task with current directory as output and all files as context')
