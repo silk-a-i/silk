@@ -8,7 +8,9 @@ const DEFAULT_CONFIG = {
   apiKey: 'sk-dummy-key',
   model: DEFAULT_PROVIDER.defaultModel,
   provider: DEFAULT_PROVIDER.value,
-  include: []
+  include: [
+    '**/*'
+  ]
 };
 
 async function findConfigFile(startDir) {
@@ -41,11 +43,7 @@ function getEnvConfig() {
   dotenv.config();
 
   return {
-    baseUrl: process.env.SILK_BASE_URL,
     apiKey: process.env.SILK_API_KEY,
-    model: process.env.SILK_MODEL,
-    provider: process.env.SILK_PROVIDER,
-    include: process.env.SILK_INCLUDE ? process.env.SILK_INCLUDE.split(',') : undefined
   };
 }
 
@@ -82,7 +80,7 @@ export async function loadConfig() {
 
     const config = mergeConfigs(DEFAULT_CONFIG, fileConfig, envConfig);
     const validatedConfig = validateProvider(config);
-
+    
     // Add configPath to the config object
     return {
       ...validatedConfig,
