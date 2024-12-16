@@ -47,15 +47,7 @@ export async function gatherContext(patterns, options = {}) {
   if (!patterns) return [];
   
   try {
-    // Handle single pattern or array of patterns
-    const globs = Array.isArray(patterns) ? patterns : [patterns];
-    const allFiles = new Set();
-
-    // Gather files from each pattern
-    const files = await glob(globs, getGlobOptions(options));
-    files.forEach(file => allFiles.add(file));
-
-    // Load file contents
+    const allFiles = await gatherFiles(patterns, options);
     const fileObjects = await Promise.all(
       Array.from(allFiles).map(loadFileContent)
     );
@@ -71,12 +63,7 @@ export async function gatherContextInfo(patterns, options = {}) {
   if (!patterns) return [];
   
   try {
-    const globs = Array.isArray(patterns) ? patterns : [patterns];
-    const allFiles = new Set();
-
-    const files = await glob(globs, getGlobOptions(options));
-    files.forEach(file => allFiles.add(file));
-
+    const allFiles = await gatherFiles(patterns, options);
     const fileInfos = await Promise.all(
       Array.from(allFiles).map(async filePath => {
         try {
@@ -97,4 +84,15 @@ export async function gatherContextInfo(patterns, options = {}) {
     console.warn(`Warning: Error gathering context info: ${error.message}`);
     return [];
   }
+}
+
+async function gatherFiles(patterns, options) {
+  const globs = Array.isArray(patterns) ? patterns : [patterns];
+  const allFiles = new Set();
+
+  const globOptions = getGlobOptions(options);
+  const files = await glob(globs, globOptions);
+  files.forEach(file => allFiles.add(file));
+
+  return allFiles;
 }
