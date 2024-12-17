@@ -7,7 +7,7 @@ Silk is a command-line tool that leverages Large Language Models (LLMs) to help 
 - 🚀 Quick task execution with natural language
 - 💬 Interactive chat mode
 - 📝 Process tasks from files
-- 📤 Output to files or clipboard
+- 📤 Output to files
 - 🔄 Support for multiple LLM providers
 - 🎯 Focused on developer productivity
 
