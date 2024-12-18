@@ -4,7 +4,7 @@ import { Logger } from '../lib/logger.js';
 import { CliRenderer } from '../lib/renderers/cli.js';
 import { extractPrompt } from '../lib/prompt-extractor.js';
 import { createBasicTools } from '../lib/tools/basicTools.js';
-import { gatherContext } from '../lib/utils.js';
+import { gatherContextInfo, resolveContent } from '../lib/utils.js';
 
 export async function mapCommand(root, promptOrFile, options) {
   const logger = new Logger({ verbose: options.verbose });
@@ -30,7 +30,8 @@ export async function mapCommand(root, promptOrFile, options) {
       process.exit(1);
     }
 
-    const files = await gatherContext(options.context);
+    const contextInfo = await gatherContextInfo(options.context);
+    const files = await resolveContent(contextInfo);
     
     if (files.length === 0) {
       logger.info(`No files found matching pattern: ${options.context}`);

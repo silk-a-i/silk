@@ -2,7 +2,7 @@ import { loadConfig } from '../lib/config/load.js';
 import { Logger } from '../lib/logger.js';
 import { PROVIDERS } from '../lib/constants.js';
 import { gatherContextInfo } from '../lib/utils.js';
-import { FileStats, formatBytes } from '../lib/stats.js';
+import { FileStats } from '../lib/stats.js';
 
 export function logConfiguration(config, logger) {
   const provider = Object.values(PROVIDERS).find(p => p.value === config.provider);
@@ -23,7 +23,6 @@ export async function infoCommand(options) {
     const config = await loadConfig();
     logConfiguration(config, logger);
 
-    // Add file stats using gatherContextInfo
     const files = await gatherContextInfo(config.include || '**/*', options);
     const stats = new FileStats();
     files.forEach(file => stats.addFile(file.path, null, file)); // Use size directly

@@ -90,15 +90,4 @@ export async function resolveContent(fileInfos) {
   );
 }
 
-// @deprecated Use gatherContextInfo + resolveContent instead
-export async function gatherContext(patterns, options = {}) {
-  if (!patterns) return [];
-  
-  try {
-    const fileInfos = await gatherContextInfo(patterns, options);
-    return resolveContent(fileInfos);
-  } catch (error) {
-    console.warn(`Warning: Error gathering context: ${error.message}`);
-    return [];
-  }
-}
+// Remove deprecated function since it's replaced by gatherContextInfo + resolveContent
