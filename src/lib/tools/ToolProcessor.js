@@ -2,6 +2,9 @@ import { EventEmitter } from 'events';
 import { SYSTEM } from './prompt.js';
 
 export class ToolProcessor extends EventEmitter {
+  // @todo use the tagName property to define the tag name
+  tagName = 'silk.action';
+
   constructor(tools = []) {
     super();
     this.tools = new Map();
@@ -11,7 +14,7 @@ export class ToolProcessor extends EventEmitter {
     this.currentState = {
       inAction: false,
       inFileBlock: false,
-      currentTool: null,
+      tool: null,
       args: {},
       blockContent: ''
     };
@@ -52,7 +55,7 @@ export class ToolProcessor extends EventEmitter {
 
   processLine(line) {
     // Check for action start
-    const actionStart = line.match(/<silk\.action\s+([^>]+)>/);
+    const actionStart = line.match(new RegExp(`<${this.tagName}\\s+([^>]+)>`));
     if (actionStart) {
       const args = this.extractArgs(actionStart[1]);
       this.startAction(args);
@@ -60,7 +63,7 @@ export class ToolProcessor extends EventEmitter {
     }
 
     // Check for action end
-    if (line.includes('</silk.action>')) {
+    if (line.includes(`</${this.tagName}>`)) {
       this.endAction();
       return;
     }
@@ -86,6 +89,7 @@ export class ToolProcessor extends EventEmitter {
     // Accumulate content
     if (this.currentState.inAction || this.currentState.inFileBlock) {
       this.currentState.blockContent += line + '\n';
+      this.emit('tool:progress', { ...this.currentState, line }); // Emit progress event
     } else {
       // Regular text
       this.emit('text', line + '\n');
@@ -109,7 +113,7 @@ export class ToolProcessor extends EventEmitter {
     this.currentState = {
       inAction: true,
       inFileBlock: false,
-      currentTool: tool,
+      tool,
       args,
       blockContent: ''
     };
@@ -118,12 +122,12 @@ export class ToolProcessor extends EventEmitter {
   }
 
   endAction() {
-    const { currentTool, args, blockContent } = this.currentState;
-    if (currentTool) {
-      currentTool.onFinish({ ...args, content: blockContent });
+    const { tool, args, blockContent } = this.currentState;
+    if (tool) {
+      tool.onFinish({ ...args, content: blockContent });
       this.emit('tool:finish', { 
         ...args,
-        tool: currentTool, 
+        tool, 
         content: blockContent 
       });
     }
@@ -138,7 +142,7 @@ export class ToolProcessor extends EventEmitter {
     this.currentState = {
       inAction: false,
       inFileBlock: true,
-      currentTool: tool,
+      tool,
       args,
       blockContent: ''
     };
@@ -147,12 +151,12 @@ export class ToolProcessor extends EventEmitter {
   }
 
   endFileBlock() {
-    const { currentTool, args, blockContent } = this.currentState;
-    if (currentTool) {
-      currentTool.onFinish({ ...args, content: blockContent });
+    const { tool, args, blockContent } = this.currentState;
+    if (tool) {
+      tool.onFinish({ ...args, content: blockContent });
       this.emit('tool:finish', {
         ...args,
-        tool: currentTool,
+        tool,
         content: blockContent
       });
     }
@@ -164,7 +168,7 @@ export class ToolProcessor extends EventEmitter {
     this.currentState = {
       inAction: false,
       inFileBlock: false,
-      currentTool: null,
+      tool: null,
       args: {},
       blockContent: ''
     };
