@@ -9,26 +9,22 @@ export async function executeMessages(messages = [], onProgress, options = {}) {
   const logger = new Logger({ verbose: options.verbose });
   const client = new AIClient(options);
 
-  try {
-    logger.info(`Using model: ${client.config.model}`);
-    logger.messages(messages);
-    
-    const stream = await client.createCompletion({ messages });
-    let fullContent = '';
-    
-    for await (const chunk of stream) {
-      if (chunk) {
-        fullContent += chunk;
-        if (onProgress) {
-          onProgress(chunk);
-        }
+  logger.info(`Using model: ${client.config.model}`);
+  logger.messages(messages);
+  
+  const stream = await client.createCompletion({ messages });
+  let fullContent = '';
+  
+  for await (const chunk of stream) {
+    if (chunk) {
+      fullContent += chunk;
+      if (onProgress) {
+        onProgress(chunk);
       }
     }
-
-    onProgress("\n");
-
-    return fullContent;
-  } catch (error) {
-    throw new Error(`LLM execution failed: ${error.message}`);
   }
+
+  onProgress("\n");
+
+  return fullContent;
 }
