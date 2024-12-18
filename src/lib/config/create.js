@@ -11,12 +11,7 @@ export async function createConfig(config) {
     
     // Create .silk/config.json
     const configPath = path.join('.silk', 'config.json');
-    const silkConfig = {
-      baseUrl: config.baseUrl,
-      model: config.model,
-      apiKey: config.apiKey,
-      provider: config.provider
-    };
+    const silkConfig = config
 
     await fs.writeFile(
       configPath,

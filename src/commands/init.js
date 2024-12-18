@@ -5,26 +5,30 @@ import { validateConfig } from '../lib/validation.js';
 import { Logger } from '../lib/logger.js';
 import { PROVIDERS } from '../lib/constants.js';
 import fs from 'fs';
+import path from 'path';
 
 export async function initCommand(root) {
   const logger = new Logger();
 
   try {
-    // If root is provided, resolve paths relative to it
-    if (root) {
-      // Create directory
-      fs.mkdirSync(root, { recursive: true });
-      process.chdir(root);
-    }
-
     const answers = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'root',
+        message: 'Project directory:',
+        default: root || '.',
+        validate: input => {
+          if (!input) return 'Directory is required';
+          return true;
+        }
+      },
       {
         type: 'list',
         name: 'provider',
         message: 'Select your AI provider:',
         choices: Object.entries(PROVIDERS).map(([key, provider]) => ({
           name: provider.displayName,
-          value: key // Use the key (OLLAMA, OPENAI, etc.) instead of provider.name
+          value: key
         }))
       },
       {
@@ -35,12 +39,22 @@ export async function initCommand(root) {
         default: (answers) => PROVIDERS[answers.provider].requiresApiKey ? undefined : 'sk-dummy-key'
       },
       {
-        type: 'input',
+        type: 'list',
         name: 'model',
-        message: 'Enter the model name:',
-        default: (answers) => PROVIDERS[answers.provider].defaultModel
+        message: 'Select the model:',
+        choices: (answers) => {
+          const provider = PROVIDERS[answers.provider];
+          return provider.models?.map(m => ({
+            name: m.displayName || m.name,
+            value: m.name
+          })) || [provider.defaultModel];
+        }
       }
     ]);
+
+    const projectDir = path.resolve(answers.root);
+    fs.mkdirSync(projectDir, { recursive: true });
+    // process.chdir(projectDir);
 
     const provider = PROVIDERS[answers.provider];
 
@@ -49,12 +63,10 @@ export async function initCommand(root) {
       apiKey: answers.apiKey || 'sk-dummy-key',
       provider: provider.value,
       model: answers.model,
+      root: answers.root
     };
 
-    // Validate the configuration
     validateConfig(config);
-
-    // Create the configuration files
     await createConfig(config);
 
     logger.success('Configuration created successfully!');
