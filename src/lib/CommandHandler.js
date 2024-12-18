@@ -30,7 +30,7 @@ export class CommandHandler {
       this.logger.prompt(prompt);
 
       // Get context info first for stats
-      const contextInfo = await gatherContextInfo(options.context || '**/*');
+      const contextInfo = await gatherContextInfo(options.include || '**/*');
       // Display stats
       const stats = new FileStats();
       contextInfo.forEach(file => stats.addFile(file.path, null, file));
