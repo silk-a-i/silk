@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events';
-import { silkPrompt } from './prompt.js';
+import { SYSTEM } from './prompt.js';
 
 export class ToolProcessor extends EventEmitter {
   constructor(tools = []) {
@@ -29,7 +29,7 @@ export class ToolProcessor extends EventEmitter {
       .join('\n');
 
     return `
-    ${silkPrompt}
+    ${SYSTEM}
 
     # Available Tools
     ${availableTools}
