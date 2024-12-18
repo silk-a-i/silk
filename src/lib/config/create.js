@@ -20,6 +20,7 @@ export async function createConfig(config) {
     
     logger.info(`Created ${configPath}`);
 
+    return configPath;
   } catch (error) {
     throw new Error(`Failed to create configuration: ${error.message}`);
   }

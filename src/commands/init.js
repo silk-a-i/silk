@@ -67,9 +67,10 @@ export async function initCommand(root) {
     };
 
     validateConfig(config);
-    await createConfig(config);
+    const configPath = await createConfig(config);
 
     logger.success('Configuration created successfully!');
+    logger.success(configPath);
     logger.info('\nYou can now use Silk with the following commands:');
     logger.info(chalk.cyan('\n  silk do "create a hello world program"'));
     logger.info(chalk.cyan('  silk chat'));
