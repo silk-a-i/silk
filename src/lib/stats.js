@@ -60,7 +60,7 @@ export class FileStats {
           value: formatBytes(size)
         }));
 
-      logger.stats(`Largest ${showLargestFiles} Files`, largestFiles);
+      logger.stats(`Largest Files`, largestFiles);
     }
   }
 }
