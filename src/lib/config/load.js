@@ -13,9 +13,21 @@ const DEFAULT_CONFIG = {
   include: ['**/*']
 };
 
-async function findConfigFile(startDir) {
-  let currentDir = startDir;
+async function findConfigFile(startDir, configPath) {
+  // If explicit config path provided, use it
+  if (configPath) {
+    const fullPath = path.resolve(configPath);
+    if (await fileExists(fullPath)) {
+      return {
+        path: fullPath,
+        type: path.extname(fullPath).slice(1) || 'json'
+      };
+    }
+    throw new Error(`Config file not found: ${configPath}`);
+  }
 
+  // Otherwise search for config files
+  let currentDir = startDir;
   while (currentDir !== path.parse(currentDir).root) {
     const silkDir = path.join(currentDir, '.silk');
     const configPaths = [
@@ -88,10 +100,10 @@ function validateProvider(config) {
   return config;
 }
 
-export async function loadConfig() {
+export async function loadConfig(options = {}) {
   try {
     const envConfig = getEnvConfig();
-    const configFile = await findConfigFile(process.cwd());
+    const configFile = await findConfigFile(process.cwd(), options.config);
     
     let fileConfig = {};
     if (configFile) {

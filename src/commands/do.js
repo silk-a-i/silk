@@ -5,7 +5,7 @@ import { logConfiguration } from './info.js';
 export async function doCommand(promptOrFile, options = {}) {
   const handler = new CommandHandler(options);
 
-  const config = await loadConfig();
+  const config = await loadConfig({ config: options.config });
   logConfiguration(config, handler.logger);
 
   return handler.execute(promptOrFile, { ...options, ...config });

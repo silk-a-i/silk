@@ -7,5 +7,5 @@ export function addSharedOptions(command) {
     .option('-d, --dry', 'Run the command without any processing', false)
     .option('--root', 'Specify root', false)
     .option('-s, --stats', 'Show stats', false)
-    // .option('-j, --json', 'Output in JSON format', false)
+    .option('--config <path>', 'Path to config file')
 }
