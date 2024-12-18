@@ -1,0 +1,6 @@
+{
+  "apiKey": "sk-dummy-key",
+  "model": "ollama/llama3.1",
+  "root": "public",
+  "max_tokens": 4000
+}

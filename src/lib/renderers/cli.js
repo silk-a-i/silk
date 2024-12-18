@@ -16,16 +16,15 @@ export class CliRenderer {
 
   attach(toolProcessor) {
     if (this.raw) {
-      // In raw mode, only handle text events
       toolProcessor.on('chunk', text => {
         process.stdout.write(text);
         this.stats.textBytes += Buffer.from(text).length;
+        this.stats.totalBytes += Buffer.from(text).length;
       });
       
       return this;
     }
 
-    // Normal mode with full processing
     toolProcessor.on('tool:start', ({ tool, path }) => {
       const spinner = ora({
         text: `${tool.name}: ${chalk.cyan(path)}...`,
@@ -36,10 +35,15 @@ export class CliRenderer {
       this.stats.actions++;
     });
 
-    toolProcessor.on('tool:progress', ({ tool, path, content }) => {
+    toolProcessor.on('tool:progress', (context) => {
+      const { tool, args, blockContent } = context;
+      const {path} = args
       const spinner = this.spinners.get(path);
-      if (spinner) {
-        spinner.text = `${tool.name}: ${chalk.cyan(path)}... (${content.length} bytes)`;
+
+      if (spinner && tool) {
+        const bytes = Buffer.from(blockContent).length;
+        this.stats.totalBytes += bytes;
+        spinner.text = `${tool.name}: ${chalk.cyan(path)}... (${this.formatBytes(bytes)})`;
       }
     });
 
@@ -54,6 +58,7 @@ export class CliRenderer {
     toolProcessor.on('text', text => {
       process.stdout.write(text);
       this.stats.textBytes += Buffer.from(text).length;
+      this.stats.totalBytes += Buffer.from(text).length;
     });
 
     return this;
@@ -61,10 +66,9 @@ export class CliRenderer {
 
   cleanup() {
     if (this.raw) {
-      return; // No cleanup needed in raw mode
+      return;
     }
 
-    // Stop any active spinners
     for (const spinner of this.spinners.values()) {
       spinner.stop();
     }
@@ -80,6 +84,7 @@ export class CliRenderer {
     console.log(chalk.cyan('\nStats:'));
     console.log(chalk.gray('├─') + ` Time: ${elapsedTime}s`);
     console.log(chalk.gray('├─') + ` Text: ${this.formatBytes(this.stats.textBytes)}`);
+    console.log(chalk.gray('├─') + ` Total: ${this.formatBytes(this.stats.totalBytes)}`);
     console.log(chalk.gray('└─') + ` Actions: ${this.stats.actions}`);
   }
 

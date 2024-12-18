@@ -52,7 +52,6 @@ addSharedOptions(
     .alias('do')
     .alias('build')
     .alias('create')
-    // .argument('[root]', 'root directory')
     .argument('[prompt]', 'prompt or file')
     .description('Execute a single task')
 ).action(doCommand);

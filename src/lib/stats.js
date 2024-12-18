@@ -32,7 +32,9 @@ export class FileStats {
     });
   }
 
-  getSummary(logger) {
+  getSummary(logger, options = {}) {
+    const { showLargestFiles = 3 } = options;
+
     logger.stats('Context stats', [
       { label: 'Total size', value: formatBytes(this.totalSize) },
       { label: 'Files', value: Object.values(this.byExtension).reduce((a, b) => a + b, 0) }
@@ -49,11 +51,16 @@ export class FileStats {
       );
     }
 
-    if (this.largestFile) {
-      logger.stats('Largest File', [{
-        label: this.largestFile.path,
-        value: formatBytes(this.largestFile.size)
-      }]);
+    if (this.fileMetadata.size > 0) {
+      const largestFiles = Array.from(this.fileMetadata.entries())
+        .sort(([, a], [, b]) => b.size - a.size)
+        .slice(0, showLargestFiles)
+        .map(([path, { size }]) => ({
+          label: path,
+          value: formatBytes(size)
+        }));
+
+      logger.stats(`Largest ${showLargestFiles} Files`, largestFiles);
     }
   }
 }
