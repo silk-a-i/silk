@@ -20,7 +20,7 @@ export async function infoCommand(options) {
   const logger = new Logger();
   
   try {
-    const config = await loadConfig();
+    const config = await loadConfig({ config: options.config });
     logConfiguration(config, logger);
 
     const files = await gatherContextInfo(config.include || '**/*', options);
