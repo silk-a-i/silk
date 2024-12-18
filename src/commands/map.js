@@ -23,7 +23,8 @@ export async function mapCommand(root, promptOrFile, options) {
     }
 
     // Extract prompt from input or default file
-    const prompt = await extractPrompt(promptOrFile);
+    const configRoot = path.dirname(this.options.configPath);
+    const prompt = await extractPrompt(promptOrFile, configRoot);
     
     if (!options.context) {
       logger.error('Error: --context option is required');

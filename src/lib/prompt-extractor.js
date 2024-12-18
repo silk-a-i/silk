@@ -1,6 +1,5 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { Logger } from './logger.js';
 
 async function tryReadFile(filePath) {
   try {
@@ -10,13 +9,11 @@ async function tryReadFile(filePath) {
   }
 }
 
-export async function extractPrompt(promptOrFile) {
-  const logger = new Logger();
-  
+export async function extractPrompt(promptOrFile, configRoot = '.') {
   try {
     // If no prompt given, look for default files
     if (!promptOrFile) {
-      const designPath = path.join('.silk', 'design.md');
+      const designPath = path.join(configRoot, 'design.md');
       const content = await tryReadFile(designPath);
       if (!content) {
         throw new Error('No prompt provided and no .silk/design.md found');
@@ -29,7 +26,7 @@ export async function extractPrompt(promptOrFile) {
     if (content) return content;
 
     // Check if it's a prompt name in .silk folder
-    const silkPath = path.join('.silk', `${promptOrFile}.md`);
+    const silkPath = path.join(configRoot, `${promptOrFile}.md`);
     const silkContent = await tryReadFile(silkPath);
     if (silkContent) return silkContent;
 

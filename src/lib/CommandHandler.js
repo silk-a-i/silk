@@ -8,6 +8,7 @@ import { gatherContextInfo, resolveContent } from './utils.js';
 import { FileStats } from './stats.js';
 import { CommandOptions } from './CommandOptions.js';
 import fs from 'fs';
+import path from 'path';
 
 export class CommandHandler {
   constructor(options = {}) {
@@ -21,7 +22,8 @@ export class CommandHandler {
 
     this.logger.info(JSON.stringify({ root, promptOrFile, options: this.options }, null, 2));
 
-    const prompt = await extractPrompt(promptOrFile);
+    const configRoot = path.dirname(this.options.configPath);
+    const prompt = await extractPrompt(promptOrFile, configRoot);
 
     await this.setupRoot(root);
     this.logger.info(`Project root: ${process.cwd()}`);
