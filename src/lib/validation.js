@@ -37,5 +37,15 @@ export function validateConfig(config) {
     throw new Error('Invalid base URL format');
   }
 
+  // Validate models if specified
+  if (config.models && !Array.isArray(config.models)) {
+    throw new Error('Models must be an array');
+  }
+
+  // Validate current model is in models list if specified
+  if (config.models?.length && !config.models.includes(config.model)) {
+    throw new Error(`Current model '${config.model}' not found in models list`);
+  }
+
   return true;
 }

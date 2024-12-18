@@ -7,7 +7,7 @@ export class TaskExecutor {
   }
 
   async execute(task, options = {}) {
-    if (!options.config) throw new Error('Config required');
+    if (!options) throw new Error('Config required');
 
     const messages = [
       { role: 'system', content: task.fullSystem },

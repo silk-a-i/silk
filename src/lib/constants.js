@@ -1,6 +1,18 @@
 export const PROVIDERS = {
+  SILK: {
+    name: 'Silk',
+    value: 'silk',
+    baseUrl: 'https://cloud.silk-labs.com',
+    defaultModel: 'silk',
+    displayName: 'Silk',
+    endpoint: '',
+    models: [
+      { name: 'silk-fast', displayName: 'Silk Fast' },
+      { name: 'silk-smart', displayName: 'Silk Smart' }
+    ]
+  },
   OLLAMA: {
-    name: 'Ollama',
+    name: 'Ollama (Local)',
     value: 'ollama',
     baseUrl: 'http://localhost:11434/v1',
     defaultModel: 'llama3.1',
@@ -21,11 +33,15 @@ export const PROVIDERS = {
     name: 'Anthropic',
     value: 'anthropic',
     baseUrl: 'https://api.anthropic.com/v1',
-    defaultModel: 'claude-2',
     requiresApiKey: true,
     displayName: 'Anthropic',
-    endpoint: '/messages'
+    website: 'https://docs.anthropic.com/en/docs/about-claude/models',
+    endpoint: '/messages',
+    models: [
+      { name: 'claude-3-5-sonnet-20241022' },
+      { name: 'claude-3-5-haiku-20241022' }
+    ]
   }
 };
 
-export const DEFAULT_PROVIDER = PROVIDERS.OLLAMA;
+export const DEFAULT_PROVIDER = PROVIDERS.SILK;

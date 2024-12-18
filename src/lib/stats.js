@@ -33,7 +33,7 @@ export class FileStats {
   }
 
   getSummary(logger) {
-    logger.stats('Stats', [
+    logger.stats('Context stats', [
       { label: 'Total size', value: formatBytes(this.totalSize) },
       { label: 'Files', value: Object.values(this.byExtension).reduce((a, b) => a + b, 0) }
     ]);

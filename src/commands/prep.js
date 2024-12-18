@@ -59,7 +59,7 @@ This project was prepared using Silk CLI.
 To generate files based on the design document:
 
 \`\`\`sh
-silk do .silk/design.md --output output/
+silk build
 \`\`\`
 `;
 

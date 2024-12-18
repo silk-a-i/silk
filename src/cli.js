@@ -1,13 +1,11 @@
 #!/usr/bin/env node
 import { program } from 'commander';
 import { doCommand } from './commands/do.js';
-import { patchCommand } from './commands/patch.js';
 import { chatCommand } from './commands/chat.js';
 import { mapCommand } from './commands/map.js';
 import { initCommand } from './commands/init.js';
 import { prepCommand } from './commands/prep.js';
 import { packCommand } from './commands/pack.js';
-import { createCommand } from './commands/create.js';
 import { infoCommand } from './commands/info.js';
 import { parseCommand } from './commands/parse.js';
 import { addSharedOptions } from './lib/options.js';
@@ -27,14 +25,6 @@ program
   .command('info')
   .description('Show current configuration')
   .action(infoCommand);
-
-program
-  .command('create')
-  .argument('[root]', 'root directory')
-  .argument('[prompt]', 'prompt or file')
-  .option('-f, --format <format>', 'output format (md/json)', 'md')
-  .description('Create a prompt without executing it')
-  .action(createCommand);
 
 program
   .command('parse')
@@ -57,21 +47,24 @@ program
 
 addSharedOptions(
   program
-    .command('do')
-    .argument('[root]', 'root directory')
-    .argument('[prompt]', 'prompt or file')
+    .command('run')
+    .alias('patch')
+    .alias('do')
+    .alias('build')
     .alias('create')
+    // .argument('[root]', 'root directory')
+    .argument('[prompt]', 'prompt or file')
     .description('Execute a single task')
 ).action(doCommand);
 
 addSharedOptions(
   program
-    .command('patch')
-    .alias('run')
-    .argument('[root]', 'root directory')
+    .command('prompt')
     .argument('[prompt]', 'prompt or file')
-    .description('Execute a task with current directory as output and all files as context')
-).action(patchCommand);
+    .description('Execute a single task')
+).action(function(prompt, options) {
+  doCommand('.', prompt, options);
+})
 
 addSharedOptions(
   program
@@ -83,7 +76,8 @@ addSharedOptions(
 
 addSharedOptions(
   program
-    .command('map')
+    .command('each')
+    .alias('map')
     .argument('[root]', 'root directory')
     .argument('[prompt]', 'prompt or file')
     .description('Run a prompt over multiple files')

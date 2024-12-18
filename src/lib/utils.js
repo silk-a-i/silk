@@ -43,20 +43,11 @@ async function loadFileContent(filePath) {
   }
 }
 
-export async function gatherContext(patterns, options = {}) {
-  if (!patterns) return [];
-  
-  try {
-    const allFiles = await gatherFiles(patterns, options);
-    const fileObjects = await Promise.all(
-      Array.from(allFiles).map(loadFileContent)
-    );
-
-    return fileObjects.filter(Boolean);
-  } catch (error) {
-    console.warn(`Warning: Error gathering context: ${error.message}`);
-    return [];
-  }
+async function gatherFiles(patterns, options) {
+  const globs = Array.isArray(patterns) ? patterns : [patterns];
+  const globOptions = getGlobOptions(options);
+  const files = await glob(globs, globOptions);
+  return new Set(files);
 }
 
 export async function gatherContextInfo(patterns, options = {}) {
@@ -70,7 +61,8 @@ export async function gatherContextInfo(patterns, options = {}) {
           const stats = await fs.stat(filePath);
           return {
             path: path.relative(process.cwd(), filePath),
-            size: stats.size
+            size: stats.size,
+            content: null // Content is loaded on demand
           };
         } catch (error) {
           console.warn(`Warning: Could not read file ${filePath}: ${error.message}`);
@@ -86,13 +78,16 @@ export async function gatherContextInfo(patterns, options = {}) {
   }
 }
 
-async function gatherFiles(patterns, options) {
-  const globs = Array.isArray(patterns) ? patterns : [patterns];
-  const allFiles = new Set();
-
-  const globOptions = getGlobOptions(options);
-  const files = await glob(globs, globOptions);
-  files.forEach(file => allFiles.add(file));
-
-  return allFiles;
+export async function resolveContent(fileInfos) {
+  return Promise.all(
+    fileInfos.map(async info => {
+      if (!info.content) {
+        const file = await loadFileContent(info.path);
+        return file;
+      }
+      return new File(info.path, info.content);
+    })
+  );
 }
+
+// Remove deprecated function since it's replaced by gatherContextInfo + resolveContent
