@@ -53,6 +53,9 @@ export class AIResponseStream {
       const parsed = JSON.parse(data);
       
       switch (this.provider) {
+        case 'silk':
+          return parsed.response || '';
+        
         case 'anthropic':
           return parsed.delta?.text || '';
         
