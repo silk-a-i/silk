@@ -16,42 +16,38 @@ export class CommandHandler {
     this.executor = new TaskExecutor(this.options);
   }
 
-  async execute(promptOrFile = "", options = {}) {
-    try {
-      const {root} = options
-      this.logger.info(JSON.stringify({root, promptOrFile, options}, null, 2));
+  async execute(promptOrFile = "") {
+    const { root, include, dry } = this.options;
 
-      const prompt = await extractPrompt(promptOrFile);
+    this.logger.info(JSON.stringify({ root, promptOrFile, options: this.options }, null, 2));
 
-      await this.setupRoot(root);
-      this.logger.info(`Project root: ${process.cwd()}`);
-      
-      // Display prompt
-      this.logger.prompt(prompt);
+    const prompt = await extractPrompt(promptOrFile);
 
-      // Get context info first for stats
-      const contextInfo = await gatherContextInfo(options.include || '**/*');
-      // Display stats
-      const stats = new FileStats();
-      contextInfo.forEach(file => stats.addFile(file.path, null, file));
-      stats.getSummary(this.logger);
+    await this.setupRoot(root);
+    this.logger.info(`Project root: ${process.cwd()}`);
+    
+    // Display prompt
+    this.logger.prompt(prompt);
 
-      // Now resolve full content
-      const context = await resolveContent(contextInfo);
-      const tools = createBasicTools({ output: this.options.output });
+    // Get context info first for stats
+    const contextInfo = await gatherContextInfo(include || '**/*');
+    
+    // Display stats
+    const stats = new FileStats();
+    contextInfo.forEach(file => stats.addFile(file.path, null, file));
+    stats.getSummary(this.logger);
 
-      const task = new Task({ prompt, context, tools });
-      const renderer = new CliRenderer(this.options).attach(task.toolProcessor);
+    // Now resolve full content
+    const context = await resolveContent(contextInfo);
+    const tools = createBasicTools({ output: this.options.output });
 
-      if(!options.dry) {
-        await this.executor.execute(task, options);
-      }
-      renderer.cleanup();
+    const task = new Task({ prompt, context, tools });
+    const renderer = new CliRenderer(this.options).attach(task.toolProcessor);
 
-    } catch (error) {
-      this.logger.error(error.message);
-      throw error;
+    if (!dry) {
+      await this.executor.execute(task, this.options);
     }
+    renderer.cleanup();
   }
 
   async setupRoot(root) {

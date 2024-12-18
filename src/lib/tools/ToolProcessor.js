@@ -2,7 +2,6 @@ import { EventEmitter } from 'events';
 import { SYSTEM } from './prompt.js';
 
 export class ToolProcessor extends EventEmitter {
-  // @todo use the tagName property to define the tag name
   tagName = 'silk.action';
 
   constructor(tools = []) {
