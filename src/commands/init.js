@@ -46,9 +46,9 @@ export async function initCommand(root) {
 
     const config = {
       baseUrl: provider.baseUrl,
-      model: answers.model,
       apiKey: answers.apiKey || 'sk-dummy-key',
-      provider: provider.value
+      provider: provider.value,
+      model: answers.model,
     };
 
     // Validate the configuration

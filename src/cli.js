@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 import { program } from 'commander';
 import { doCommand } from './commands/do.js';
-import { patchCommand } from './commands/patch.js';
 import { chatCommand } from './commands/chat.js';
 import { mapCommand } from './commands/map.js';
 import { initCommand } from './commands/init.js';
@@ -57,21 +56,24 @@ program
 
 addSharedOptions(
   program
-    .command('do')
-    .argument('[root]', 'root directory')
-    .argument('[prompt]', 'prompt or file')
+    .command('run')
+    .alias('patch')
+    .alias('do')
+    .alias('build')
     .alias('create')
+    // .argument('[root]', 'root directory')
+    .argument('[prompt]', 'prompt or file')
     .description('Execute a single task')
 ).action(doCommand);
 
 addSharedOptions(
   program
-    .command('patch')
-    .alias('run')
-    .argument('[root]', 'root directory')
+    .command('prompt')
     .argument('[prompt]', 'prompt or file')
-    .description('Execute a task with current directory as output and all files as context')
-).action(patchCommand);
+    .description('Execute a single task')
+).action(function(prompt, options) {
+  doCommand('.', prompt, options);
+})
 
 addSharedOptions(
   program
@@ -83,7 +85,8 @@ addSharedOptions(
 
 addSharedOptions(
   program
-    .command('map')
+    .command('each')
+    .alias('map')
     .argument('[root]', 'root directory')
     .argument('[prompt]', 'prompt or file')
     .description('Run a prompt over multiple files')
