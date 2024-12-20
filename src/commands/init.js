@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import { createConfig } from '../lib/config/create.js';
 import { validateConfig } from '../lib/validation.js';
 import { Logger } from '../lib/logger.js';
-import { PROVIDERS } from '../lib/constants.js';
+import { INIT_PROViDERS as PROVIDERS } from '../lib/constants.js';
 import fs from 'fs';
 import path from 'path';
 
