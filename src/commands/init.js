@@ -1,7 +1,6 @@
 import inquirer from 'inquirer';
 import chalk from 'chalk';
 import { createConfig } from '../lib/config/create.js';
-import { validateConfig } from '../lib/validation.js';
 import { Logger } from '../lib/logger.js';
 import { INIT_PROViDERS as PROVIDERS } from '../lib/constants.js';
 import fs from 'fs';
@@ -26,22 +25,26 @@ export async function initCommand(root) {
         type: 'list',
         name: 'provider',
         message: 'Select your AI provider:',
-        choices: Object.entries(PROVIDERS).map(([key, provider]) => ({
-          name: provider.displayName,
-          value: key
-        }))
+        choices: [
+          ...Object.entries(PROVIDERS).map(([key, provider]) => ({
+            name: provider.displayName,
+            value: key
+          })),
+          { name: 'Other (manual config)', value: 'other' }
+        ]
       },
       {
         type: 'input',
         name: 'apiKey',
         message: 'Enter your API key:',
-        when: (answers) => PROVIDERS[answers.provider].requiresApiKey,
-        default: (answers) => PROVIDERS[answers.provider].requiresApiKey ? undefined : 'sk-dummy-key'
+        when: (answers) => answers.provider !== 'other' && PROVIDERS[answers.provider]?.requiresApiKey,
+        default: (answers) => PROVIDERS[answers.provider]?.requiresApiKey ? undefined : 'sk-dummy-key'
       },
       {
         type: 'list',
         name: 'model',
         message: 'Select the model:',
+        when: (answers) => answers.provider !== 'other',
         choices: (answers) => {
           const provider = PROVIDERS[answers.provider];
           return provider.models?.map(m => ({
@@ -54,19 +57,19 @@ export async function initCommand(root) {
 
     const projectDir = path.resolve(answers.root);
     fs.mkdirSync(projectDir, { recursive: true });
-    // process.chdir(projectDir);
 
-    const provider = PROVIDERS[answers.provider];
+    if (answers.provider === 'other') {
+      logger.info('\nPlease manually configure your provider in .silk/config.json');
+      answers.model = 'openai/gpt-3.5-turbo';
+      answers.apiKey = 'sk-dummy-key';
+    }
 
     const config = {
-      baseUrl: provider.baseUrl,
       apiKey: answers.apiKey || 'sk-dummy-key',
-      provider: provider.value,
       model: answers.model,
       root: answers.root
     };
 
-    validateConfig(config);
     const configPath = await createConfig(config);
 
     logger.success('Configuration created successfully!');
