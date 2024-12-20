@@ -1,4 +1,4 @@
-import { program } from 'commander';
+import { Command, program } from 'commander';
 import readline from 'readline';
 import chalk from 'chalk';
 import { Task } from '../lib/task.js';
@@ -9,7 +9,7 @@ import { TaskExecutor } from '../lib/TaskExecutor.js';
 import { infoCommand } from './info.js';
 import fs from 'fs';
 
-export async function chatCommand(root, options) {
+export async function chatCommand(options = {}) {
   const logger = new Logger({ verbose: options.verbose });
   let rl;
 
@@ -18,10 +18,12 @@ export async function chatCommand(root, options) {
     logger.debug(`Using provider: ${config.provider}`);
     logger.debug(`Using model: ${config.model}`);
 
+    const { root } = config;
     if (root) {
       fs.mkdirSync(root, { recursive: true });
       process.chdir(root);
     }
+    logger.info(`Project root: ${process.cwd()}`);
 
     rl = readline.createInterface({
       input: process.stdin,
@@ -32,6 +34,7 @@ export async function chatCommand(root, options) {
       raw: options.raw,
       showStats: options.stats
     });
+
     const executor = new TaskExecutor(options);
 
     logger.info('Starting interactive chat mode (type "exit" to quit, "info" for config)');
@@ -59,7 +62,7 @@ export async function chatCommand(root, options) {
           });
 
           renderer.attach(task.toolProcessor);
-          await executor.execute(task, { ...options, config });
+          await executor.execute(task, config);
 
           renderer.cleanup();
           process.stdout.write('\n\n');
