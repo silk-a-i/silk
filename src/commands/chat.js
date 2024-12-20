@@ -63,6 +63,7 @@ export async function chatCommand(options = new CommandOptions()) {
 
   chatProgram
     .command('info')
+    .alias('i')
     .description('Show config info')
     .action(async () => {
       await infoCommand();
@@ -90,9 +91,9 @@ export async function chatCommand(options = new CommandOptions()) {
       })
     })
 
-  function handleCommand(input) {
+  async function handleCommand(input) {
     try {
-      chatProgram.parse(input.split(' '), { from: 'user' })
+      await chatProgram.parseAsync(input.split(' '), { from: 'user' })
       return true
     } catch (err) {
       console.error(`Error: ${err.message}`)
@@ -129,11 +130,10 @@ export async function chatCommand(options = new CommandOptions()) {
 
   const askQuestion = () => {
     rl.question('> ', async (input = "") => {
-      console.log(input)
       const trimmedInput = input.trim()
 
       if (trimmedInput.startsWith('$')) {
-        handleCommand(trimmedInput.substring(1))
+        await handleCommand(trimmedInput.substring(1))
         askQuestion()
         return
       }
