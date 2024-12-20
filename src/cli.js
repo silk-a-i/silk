@@ -68,7 +68,6 @@ addSharedOptions(
 addSharedOptions(
   program
     .command('chat')
-    .argument('[root]', 'root directory')
     .description('Start interactive chat mode')
     .action(chatCommand)
 )
@@ -77,7 +76,6 @@ addSharedOptions(
   program
     .command('each')
     .alias('map')
-    .argument('[root]', 'root directory')
     .argument('[prompt]', 'prompt or file')
     .description('Run a prompt over multiple files')
 ).action(mapCommand);
