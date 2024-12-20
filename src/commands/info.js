@@ -12,11 +12,12 @@ export function logConfiguration(config, logger) {
     { label: 'Model', value: config.model },
     { label: 'Base URL', value: config.baseUrl },
     { label: 'include', value: config.include },
+    { label: 'root', value: config.root },
     { label: 'max_tokens', value: config.max_tokens }
   ]);
 }
 
-export async function infoCommand(options) {
+export async function infoCommand(options = {}) {
   const logger = new Logger();
   
   try {
