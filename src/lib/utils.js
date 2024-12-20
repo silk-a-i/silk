@@ -62,7 +62,7 @@ export async function gatherContextInfo(patterns, options = {}) {
           return {
             path: path.relative(process.cwd(), filePath),
             size: stats.size,
-            content: null // Content is loaded on demand
+            content: null
           };
         } catch (error) {
           console.warn(`Warning: Could not read file ${filePath}: ${error.message}`);
@@ -89,5 +89,3 @@ export async function resolveContent(fileInfos) {
     })
   );
 }
-
-// Remove deprecated function since it's replaced by gatherContextInfo + resolveContent
