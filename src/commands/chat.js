@@ -8,77 +8,144 @@ import { loadConfig } from '../lib/config/load.js';
 import { TaskExecutor } from '../lib/TaskExecutor.js';
 import { infoCommand } from './info.js';
 import fs from 'fs';
+import { CommandOptions } from '../lib/CommandOptions.js';
+import { gatherContextInfo, resolveContent } from '../lib/utils.js';
+import { createBasicTools } from '../lib/tools/basicTools.js';
+import { FileStats } from '../lib/stats.js';
 
-export async function chatCommand(options = {}) {
+export async function chatCommand(options = new CommandOptions()) {
   const logger = new Logger({ verbose: options.verbose });
   let rl;
 
-  try {
-    const config = await loadConfig();
-    logger.debug(`Using provider: ${config.provider}`);
-    logger.debug(`Using model: ${config.model}`);
+  const config = await loadConfig();
+  logger.debug(`Using provider: ${config.provider}`);
+  logger.debug(`Using model: ${config.model}`);
 
-    const { root } = config;
-    if (root) {
-      fs.mkdirSync(root, { recursive: true });
-      process.chdir(root);
-    }
-    logger.info(`Project root: ${process.cwd()}`);
-
-    rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout
-    });
-
-    const renderer = new CliRenderer({
-      raw: options.raw,
-      showStats: options.stats
-    });
-
-    const executor = new TaskExecutor(options);
-
-    logger.info('Starting interactive chat mode (type "exit" to quit, "info" for config)');
-
-    const askQuestion = () => {
-      rl.question('> ', async (input) => {
-        if (input.toLowerCase() === 'exit') {
-          rl.close();
-          return;
-        }
-
-        if (input.toLowerCase() === 'info') {
-          await infoCommand();
-          askQuestion();
-          return;
-        }
-
-        try {
-          logger.prompt(input);
-          process.stdout.write(chalk.blue('Response: '));
-
-          const task = new Task({
-            prompt: input,
-            context: []
-          });
-
-          renderer.attach(task.toolProcessor);
-          await executor.execute(task, config);
-
-          renderer.cleanup();
-          process.stdout.write('\n\n');
-        } catch (error) {
-          logger.error(`Error: ${error.message}`);
-        }
-
-        askQuestion();
-      });
-    };
-
-    askQuestion();
-
-  } catch (error) {
-    logger.error(`Failed to start chat: ${error.message}`);
-    if (rl) rl.close();
-    process.exit(1);
+  const state = {
+    config,
+    options,
+    /** @type {Array<{ role: string, content: string }>} */
+    history: [],
+    files: [],
+    model: ''
   }
+
+  const { root } = config;
+  if (root) {
+    fs.mkdirSync(root, { recursive: true });
+    process.chdir(root);
+  }
+  logger.info(`Project root: ${process.cwd()}`);
+
+  rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  const renderer = new CliRenderer({
+    raw: options.raw,
+    showStats: options.stats
+  });
+
+  const executor = new TaskExecutor(options);
+
+  logger.info('Starting chat mode (type "exit" to quit, "$info" for config)');
+
+  const chatProgram = new Command();
+  chatProgram.exitOverride();
+
+  chatProgram
+    .command('exit')
+    .description('Exit the chat')
+    .action(() => {
+      rl.close();
+    });
+
+  chatProgram
+    .command('info')
+    .description('Show config info')
+    .action(async () => {
+      await infoCommand();
+    });
+
+  chatProgram
+    .command('state')
+    .alias('s')
+    .description('Show internal state')
+    .action(async () => {
+      console.log(state)
+    });
+
+  chatProgram
+    .command('history')
+    .description('Show chat history')
+    .action((options, command) => {
+      if (!state.history?.length) {
+        console.log('No chat history')
+        return
+      }
+      state.history.forEach((entry, i) => {
+        console.log(`\n[${i + 1}] User: ${entry.prompt}`)
+        console.log(`    Assistant: ${entry.response.substring(0, 100)}...`)
+      })
+    })
+
+  function handleCommand(input) {
+    try {
+      chatProgram.parse(input.split(' '), { from: 'user' })
+      return true
+    } catch (err) {
+      console.error(`Error: ${err.message}`)
+      return false
+    }
+  }
+
+  async function handlePrompt(input = "") {
+    state.history.push({ role: 'user', content: input })
+
+    logger.prompt(input);
+    process.stdout.write(chalk.blue('Response: '));
+
+    // Get context info first for stats
+    const contextInfo = await gatherContextInfo(config.include);
+
+    // Display stats
+    // const stats = new FileStats();
+    // contextInfo.forEach(file => stats.addFile(file.path, null, file));
+    // stats.getSummary(this.logger);
+
+    const context = await resolveContent(contextInfo);
+    const tools = createBasicTools({ output: '.' });
+    const task = new Task({ prompt: input, context, tools });
+
+    renderer.attach(task.toolProcessor);
+    const resp = await executor.execute(task, config);
+
+    state.history.push({ role: 'assistent', content: resp })
+
+    renderer.cleanup();
+    process.stdout.write('\n\n');
+  }
+
+  const askQuestion = () => {
+    rl.question('> ', async (input = "") => {
+      console.log(input)
+      const trimmedInput = input.trim()
+
+      if (trimmedInput.startsWith('$')) {
+        handleCommand(trimmedInput.substring(1))
+        askQuestion()
+        return
+      }
+
+      try {
+        await handlePrompt(input);
+      } catch (error) {
+        logger.error(`Error: ${error.message}`);
+      }
+      askQuestion();
+    });
+  };
+
+  askQuestion();
 }
