@@ -44,7 +44,6 @@ export class CommandHandler {
     // Check limits
     try {
       contextInfo.forEach(file => this.limitChecker.checkFile(file.path, file.size));
-      console.log(this.limitChecker)
     } catch (e) {
       console.log()
       this.logger.error(e.message);
