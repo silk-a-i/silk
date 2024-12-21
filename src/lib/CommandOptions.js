@@ -9,7 +9,9 @@ export class CommandOptions {
   include = ['**/*']
   /** path to the config file */
   configPath='.'
-
+  root = ''
+  dry = false
+  
   constructor(options = {}) {
     Object.assign(this, options);
   }
