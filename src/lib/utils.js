@@ -85,7 +85,11 @@ export async function resolveContent(fileInfos) {
         const file = await loadFileContent(info.path);
         return file;
       }
-      return new File(info.path, info.content);
+      const file = new File({
+        path: info.path,
+        content: info.content,
+      })
+      return file;
     })
   );
 }
