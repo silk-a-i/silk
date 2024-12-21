@@ -33,10 +33,10 @@ export function getGlobOptions(options = {}) {
 async function loadFileContent(filePath) {
   try {
     const content = await fs.readFile(filePath, 'utf-8');
-    return new File(
-      path.relative(process.cwd(), filePath),
+    return new File({
+      path: path.relative(process.cwd(), filePath),
       content
-    );
+    });
   } catch (error) {
     console.warn(`Warning: Could not read file ${filePath}: ${error.message}`);
     return null;
