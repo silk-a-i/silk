@@ -7,6 +7,7 @@ import { createBasicTools } from './tools/basicTools.js';
 import { gatherContextInfo, resolveContent } from './utils.js';
 import { FileStats } from './stats.js';
 import { CommandOptions } from './CommandOptions.js';
+import { LimitChecker } from './LimitChecker.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -15,6 +16,7 @@ export class CommandHandler {
     this.options = new CommandOptions(options);
     this.logger = new Logger(this.options);
     this.executor = new TaskExecutor(this.options);
+    this.limitChecker = new LimitChecker(options);
   }
 
   async execute(promptOrFile = "") {
@@ -32,16 +34,31 @@ export class CommandHandler {
     this.logger.prompt(prompt);
 
     // Get context info first for stats
-    const contextInfo = await gatherContextInfo(include || '**/*');
+    const contextInfo = await gatherContextInfo(include);
     
     // Display stats
     const stats = new FileStats();
     contextInfo.forEach(file => stats.addFile(file.path, null, file));
     stats.getSummary(this.logger);
+  
+    // Check limits
+    try {
+      contextInfo.forEach(file => this.limitChecker.checkFile(file.path, file.size));
+      console.log(this.limitChecker)
+    } catch (e) {
+      console.log()
+      this.logger.error(e.message);
+      this.logger.hint('Reduce the context or increase the limits in the config file.');
+      console.log()
+      return;
+    }
 
     // Now resolve full content
     const context = await resolveContent(contextInfo);
-    const tools = createBasicTools({ output: this.options.output });
+
+    const tools = createBasicTools({ 
+      output: this.options.output,
+    });
 
     const task = new Task({ prompt, context, tools });
     const renderer = new CliRenderer(this.options).attach(task.toolProcessor);

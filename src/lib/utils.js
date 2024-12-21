@@ -59,11 +59,11 @@ export async function gatherContextInfo(patterns, options = {}) {
       Array.from(allFiles).map(async filePath => {
         try {
           const stats = await fs.stat(filePath);
-          return {
+          return new File({
             path: path.relative(process.cwd(), filePath),
             size: stats.size,
             content: null
-          };
+          })
         } catch (error) {
           console.warn(`Warning: Could not read file ${filePath}: ${error.message}`);
           return null;

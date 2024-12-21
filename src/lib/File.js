@@ -1,9 +1,12 @@
 import path from 'path';
 
 export class File {
-  constructor(filePath, content) {
-    this.path = filePath;
-    this.content = content;
+  path = '';
+  size = 0;
+  content=''
+
+  constructor(obj = {}) {
+    Object.assign(this, obj);
   }
 
   render() {
