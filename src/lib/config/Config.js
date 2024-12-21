@@ -1,12 +1,10 @@
 import fs from 'fs/promises';
 import path from 'path';
 import dotenv from 'dotenv';
-import yaml from 'yaml';
 import { PROVIDERS, DEFAULT_PROVIDER } from '../constants.js';
 
 export class Config {
   static DEFAULT_CONFIG = {
-    // baseUrl: null,
     apiKey: 'sk-dummy-key', 
     model: DEFAULT_PROVIDER.defaultModel,
     provider: DEFAULT_PROVIDER.value,
@@ -14,15 +12,14 @@ export class Config {
     include: ['**/*']
   };
 
-  async load(options = {}) {
+  async load(path = "") {
     const envConfig = this.loadEnvConfig();
-    const configFile = await this.findConfigFile(process.cwd(), options.config);
+    const configFile = await this.findConfigFile(process.cwd(), path);
     const fileConfig = await this.loadConfigFile(configFile);
 
     const config = this.mergeConfigs(Config.DEFAULT_CONFIG, fileConfig, envConfig);
     const validatedConfig = this.validateProvider(config);
     
-    // Extract provider/model from model string if in format 'provider/model'
     if (validatedConfig.model && validatedConfig.model.includes('/')) {
       const [provider, model] = validatedConfig.model.split('/');
       validatedConfig.provider = provider;
@@ -44,7 +41,7 @@ export class Config {
     };
   }
 
-  async findConfigFile(startDir, configPath) {
+  async findConfigFile(startDir = "", configPath = "") {
     if (configPath) {
       const fullPath = path.resolve(configPath);
       if (await this.fileExists(fullPath)) {
@@ -56,18 +53,12 @@ export class Config {
       throw new Error(`Config file not found: ${configPath}`);
     }
 
-    // Search for config files
     let currentDir = startDir;
     while (currentDir !== path.parse(currentDir).root) {
       const silkDir = path.join(currentDir, '.silk');
       const configPaths = [
-        { path: path.join(silkDir, 'config.json'), type: 'json' },
         { path: path.join(silkDir, 'config.js'), type: 'js' },
-        { path: path.join(silkDir, 'config.yaml'), type: 'yaml' },
-        { path: path.join(silkDir, 'config.yml'), type: 'yaml' },
-        { path: path.join(currentDir, '.silk.json'), type: 'json' },
-        { path: path.join(currentDir, '.silk.yaml'), type: 'yaml' },
-        { path: path.join(currentDir, '.silk.yml'), type: 'yaml' }
+        { path: path.join(silkDir, 'config.json'), type: 'json' }
       ];
 
       for (const config of configPaths) {
@@ -91,8 +82,6 @@ export class Config {
       case 'js':
         const module = await import(configFile.path);
         return module.default;
-      case 'yaml':
-        return yaml.parse(content);
       default:
         return JSON.parse(content);
     }

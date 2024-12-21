@@ -5,9 +5,10 @@ export class CommandOptions {
   output = ''
   context = ''
   system = ''
-  config = {}
   include = ['**/*']
   /** path to the config file */
+  config = ''
+  /** path to the resolved config file */
   configPath='.'
   root = ''
   dry = false

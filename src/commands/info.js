@@ -3,6 +3,7 @@ import { Logger } from '../lib/logger.js';
 import { PROVIDERS } from '../lib/constants.js';
 import { gatherContextInfo } from '../lib/utils.js';
 import { FileStats } from '../lib/stats.js';
+import { CommandOptions } from '../lib/CommandOptions.js';
 
 export function logConfiguration(config, logger) {
   const provider = Object.values(PROVIDERS).find(p => p.value === config.provider);
@@ -17,14 +18,15 @@ export function logConfiguration(config, logger) {
   ]);
 }
 
-export async function infoCommand(options = {}) {
+export async function infoCommand(options = new CommandOptions) {
   const logger = new Logger();
   
   try {
-    const config = await loadConfig({ config: options.config });
+    const config = await loadConfig(options)
+
     logConfiguration(config, logger);
 
-    const files = await gatherContextInfo(config.include || '**/*', options);
+    const files = await gatherContextInfo(config.include, config);
     const stats = new FileStats();
     files.forEach(file => stats.addFile(file.path, null, file)); // Use size directly
     stats.getSummary(logger);

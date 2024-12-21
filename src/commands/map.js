@@ -9,9 +9,11 @@ import { Logger } from '../lib/logger.js';
 import { CliRenderer } from '../lib/renderers/cli.js';
 import { createBasicTools } from '../lib/tools/basicTools.js';
 import { mkdirSync } from 'fs';
+import { CommandOptions } from '../lib/CommandOptions.js';
 
-export async function mapCommand(promptOrFile, options = {}) {
-  const config = await loadConfig({ config: options.config });
+export async function mapCommand(promptOrFile, options = new CommandOptions) {
+  const config = await loadConfig(options)
+
   const logger = new Logger(options);
 
   logConfiguration(config, logger);

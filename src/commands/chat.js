@@ -11,13 +11,13 @@ import fs from 'fs';
 import { CommandOptions } from '../lib/CommandOptions.js';
 import { gatherContextInfo, resolveContent } from '../lib/utils.js';
 import { createBasicTools } from '../lib/tools/basicTools.js';
-import { FileStats } from '../lib/stats.js';
 
 export async function chatCommand(options = new CommandOptions()) {
   const logger = new Logger({ verbose: options.verbose });
   let rl;
 
-  const config = await loadConfig();
+  const config = await loadConfig(options)
+
   logger.debug(`Using provider: ${config.provider}`);
   logger.debug(`Using model: ${config.model}`);
 
