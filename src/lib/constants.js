@@ -2,7 +2,7 @@ export const PROVIDERS = {
   SILK: {
     name: 'Silk',
     value: 'silk',
-    baseUrl: 'https://cloud.silk-labs.com',
+    baseUrl: 'https://api.silk-labs.com/v1/chat',
     defaultModel: 'silk',
     displayName: 'Silk',
     endpoint: '',
