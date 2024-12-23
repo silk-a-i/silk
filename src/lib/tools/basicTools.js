@@ -1,15 +1,21 @@
 import fs from 'node:fs';
 import path from 'path';
 import { Tool } from './Tool.js';
+import { ACTION_TAG } from './prompt.js';
 
-export function createBasicTools(options = {}) {
+export function createBasicTools(options = {}, { tag = ACTION_TAG } = {}) {
   const outputDir = options.output || '';
   
   return [
     new Tool({
       name: 'create',
       description: 'Create a new file',
-      pattern: /<silk\.action\s+tool="create"/,
+      examples: `
+> IMPORTANT always return the full content of the file
+
+<${tag} tool="create" path="index.html">
+  <div>Hello World</div>
+</${tag}>`,
       onFinish(ctx) {
         const fullPath = path.join(outputDir, ctx.path);
         const dir = path.dirname(fullPath);
@@ -21,7 +27,12 @@ export function createBasicTools(options = {}) {
     new Tool({
       name: 'modify',
       description: 'Modify an existing file',
-      pattern: /<silk\.action\s+tool="modify"/,
+      examples: `
+<${tag} tool="modify" path="style.css">
+  body {
+    color: blue;
+  }
+</${tag}>`,
       onFinish(ctx) {
         const fullPath = path.join(outputDir, ctx.path);
         
@@ -37,7 +48,8 @@ export function createBasicTools(options = {}) {
     new Tool({
       name: 'delete',
       description: 'Delete a file',
-      pattern: /<silk\.action\s+tool="delete"/,
+      examples: `
+<${tag} tool="delete" path="style.css"></${tag}>`,
       onFinish(ctx) {
         const fullPath = path.join(outputDir, ctx.path);
         try {

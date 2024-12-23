@@ -1,14 +1,14 @@
 import { executeMessages } from './llm.js';
-import { Logger } from './logger.js';
 import { Task } from './task.js';
 
 export class TaskExecutor {
+  content = ""
   constructor(options = {}) {
     this.options = options;
-    this.logger = new Logger(options);
   }
 
   async execute(task = new Task) {
+    this.currentTask = task;
     const {options} = this
     if (!options) throw new Error('Config required');
 
@@ -17,11 +17,10 @@ export class TaskExecutor {
       { role: 'user', content: task.render() }
     ];
 
-    try {
-      const resp = await executeMessages(messages, chunk => task.toolProcessor.process(chunk), options);
-      return resp;
-    } catch (error) {
-      this.logger.error('Error executing task:', error.message);
-    }
+    const resp = await executeMessages(messages, chunk => {
+      return task.toolProcessor.process(chunk)
+    }, options);
+    this.content = resp;
+    return this;
   }
 }

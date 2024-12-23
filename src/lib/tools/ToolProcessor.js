@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import { SYSTEM } from './prompt.js';
+import { Tool } from './Tool.js';
 
 export class ToolProcessor extends EventEmitter {
   tagName = 'silk.action';
@@ -8,7 +9,8 @@ export class ToolProcessor extends EventEmitter {
     super();
     this.tools = new Map();
     this.buffer = '';
-
+    this.queue = []
+    
     // Track current state
     this.currentState = {
       inAction: false,
@@ -21,20 +23,29 @@ export class ToolProcessor extends EventEmitter {
     tools.forEach(tool => this.register(tool));
   }
 
-  register(tool) {
+  register(tool = new Tool) {
+    const isFunctional = !tool._isTool
+    if (isFunctional) {
+      tool = new Tool().fromFunction(tool, this);
+    }
     this.tools.set(tool.name, tool);
   }
 
   getToolingPrompt() {
     const availableTools = Array.from(this.tools.values())
-      .map(tool => tool.system)
-      .join('\n');
+
+function list(arr) {
+  return arr.map(item => `- ${item}`).join('\n')
+}
 
 return `
 ${SYSTEM}
 
 # Available Tools
-${availableTools}
+${list(availableTools.map(tool => tool.name))}
+
+${availableTools.map(tool => tool.system)
+  .join('\n\n')}
 `;
   }
 
@@ -88,7 +99,11 @@ ${availableTools}
     // Accumulate content
     if (this.currentState.inAction || this.currentState.inFileBlock) {
       this.currentState.blockContent += line + '\n';
-      this.emit('tool:progress', { ...this.currentState, line }); // Emit progress event
+      const { tool } = this.currentState;
+      if(tool) {
+        tool.emit('progress', { ...this.currentState, line })
+      }
+      this.emit('tool:progress', { ...this.currentState, line })
     } else {
       // Regular text
       this.emit('text', line + '\n');
@@ -117,14 +132,14 @@ ${availableTools}
       blockContent: ''
     };
 
-    tool.onStart({ ...args, tool });
+    tool.emit('start', { ...args, tool });
     this.emit('tool:start', { ...args, tool });
   }
 
   endAction() {
-    const { tool, args, blockContent } = this.currentState;
+    const { tool = new Tool, args, blockContent } = this.currentState;
     if (tool) {
-      tool.onFinish({ ...args, content: blockContent });
+      tool.emit('finish', { ...args, content: blockContent }, this);
       this.emit('tool:finish', { 
         ...args,
         tool, 

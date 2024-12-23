@@ -5,7 +5,7 @@ import { gatherContextInfo } from '../lib/utils.js';
 import { FileStats } from '../lib/stats.js';
 import { CommandOptions } from '../lib/CommandOptions.js';
 
-export function logConfiguration(config, logger) {
+export function logConfiguration(config, logger = new Logger) {
   const provider = Object.values(PROVIDERS).find(p => p.value === config.provider);
 
   logger.stats('Configuration', [

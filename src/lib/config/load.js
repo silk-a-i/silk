@@ -10,7 +10,6 @@ export async function loadConfig(options = new CommandOptions) {
       ...options
     }
   } catch (error) {
-    console.warn(`Warning: Error loading config - ${error.message}`);
-    return Config.DEFAULT_CONFIG;
+    throw new Error(`Error loading config - ${error.message}`);
   }
 }

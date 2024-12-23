@@ -9,5 +9,5 @@ export async function doCommand(promptOrFile, options = new CommandOptions) {
   const handler = new CommandHandler(config);
   logConfiguration(config, handler.logger);
 
-  return handler.execute(promptOrFile);
+  handler.execute(promptOrFile);
 }

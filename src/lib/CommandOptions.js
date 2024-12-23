@@ -12,6 +12,9 @@ export class CommandOptions {
   configPath='.'
   root = ''
   dry = false
+  tools = []
+  additionalTools = []
+  logger={}
   
   constructor(options = {}) {
     Object.assign(this, options);

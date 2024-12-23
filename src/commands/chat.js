@@ -1,25 +1,27 @@
 import { Command, program } from 'commander';
-import readline from 'readline';
-import chalk from 'chalk';
+import inquirer from 'inquirer';
 import { Task } from '../lib/task.js';
 import { CliRenderer } from '../lib/renderers/cli.js';
 import { Logger } from '../lib/logger.js';
 import { loadConfig } from '../lib/config/load.js';
-import { TaskExecutor } from '../lib/TaskExecutor.js';
 import { infoCommand } from './info.js';
 import fs from 'fs';
 import { CommandOptions } from '../lib/CommandOptions.js';
 import { gatherContextInfo, resolveContent } from '../lib/utils.js';
 import { createBasicTools } from '../lib/tools/basicTools.js';
+import { executeMessages } from '../lib/llm.js';
 
 export async function chatCommand(options = new CommandOptions()) {
-  const logger = new Logger({ verbose: options.verbose });
-  let rl;
+  const logger = new Logger({
+    verbose: options.verbose,
+    ...options.logger
+  });
 
   const config = await loadConfig(options)
 
   logger.debug(`Using provider: ${config.provider}`);
   logger.debug(`Using model: ${config.model}`);
+  // logger.debug(config);
 
   const state = {
     config,
@@ -27,6 +29,7 @@ export async function chatCommand(options = new CommandOptions()) {
     /** @type {Array<{ role: string, content: string }>} */
     history: [],
     files: [],
+    system: '',
     model: ''
   }
 
@@ -37,17 +40,12 @@ export async function chatCommand(options = new CommandOptions()) {
   }
   logger.info(`Project root: ${process.cwd()}`);
 
-  rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-  });
-
   const renderer = new CliRenderer({
     raw: options.raw,
     showStats: options.stats
   });
 
-  logger.info('Starting chat mode (type "exit" to quit, "$info" for config)');
+  logger.info('Starting chat mode (type "exit" to quit, "/info" for config)');
 
   const chatProgram = new Command();
   chatProgram.exitOverride();
@@ -56,7 +54,7 @@ export async function chatCommand(options = new CommandOptions()) {
     .command('exit')
     .description('Exit the chat')
     .action(() => {
-      rl.close();
+      process.exit(0);
     });
 
   chatProgram
@@ -76,17 +74,23 @@ export async function chatCommand(options = new CommandOptions()) {
     });
 
   chatProgram
+    .command('clear')
+    .alias('c')
+    .description('Clear history')
+    .action(async () => {
+      state.history = []
+    });
+
+  chatProgram
     .command('history')
+    .alias('h')
     .description('Show chat history')
     .action((options, command) => {
       if (!state.history?.length) {
         console.log('No chat history')
         return
       }
-      state.history.forEach((entry, i) => {
-        console.log(`\n[${i + 1}] User: ${entry.prompt}`)
-        console.log(`    Assistant: ${entry.response.substring(0, 100)}...`)
-      })
+      new Logger({ verbose: true }).messages(state.history)
     })
 
   async function handleCommand(input) {
@@ -100,46 +104,83 @@ export async function chatCommand(options = new CommandOptions()) {
   }
 
   async function handlePrompt(input = "") {
-    state.history.push({ role: 'user', content: input })
 
     logger.prompt(input);
-    process.stdout.write(chalk.blue('Response: '));
 
-    // Get context info first for stats
     const contextInfo = await gatherContextInfo(config.include);
 
     const context = await resolveContent(contextInfo);
-    const tools = createBasicTools({ output: '.' });
+    const tools = config.tools || [
+      ...createBasicTools({
+        output: config.output,
+      }),
+      ...config.additionalTools,
+    ]
     const task = new Task({ prompt: input, context, tools });
 
-    renderer.attach(task.toolProcessor);
-    const executor = new TaskExecutor(options);
-    const resp = await executor.execute(task);
+    state.system = task.fullSystem;
 
-    state.history.push({ role: 'assistent', content: resp })
+    renderer.attach(task.toolProcessor);
+    // const executor = new TaskExecutor(config);
+    // const { content, currentTask } = config.dry ? {} : await executor.execute(task);
+    const messages = [
+      { role: 'system', content: task.fullSystem },
+      ...state.history,
+      { role: 'user', content: task.render() }
+    ];
+    logger.info('message size:', JSON.stringify(messages).length)
+
+    const content = await executeMessages(messages, chunk => {
+      return task.toolProcessor.process(chunk)
+    }, config);
 
     renderer.cleanup();
-    process.stdout.write('\n\n');
+    process.stdout.write('\n');
+
+    return { content, currentTask: task };
   }
 
-  const askQuestion = () => {
-    rl.question('> ', async (input = "") => {
-      const trimmedInput = input.trim()
+  const askQuestion = async () => {
+    const { input } = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'input',
+        message: '> ',
+      },
+    ]);
 
-      if (trimmedInput.startsWith('$')) {
-        await handleCommand(trimmedInput.substring(1))
-        askQuestion()
-        return
-      }
-
-      try {
-        await handlePrompt(input);
-      } catch (error) {
-        logger.error(`Error: ${error.message}`);
-      }
-      askQuestion();
-    });
+    handleQuestion(input);
   };
+
+  async function handleQuestion(input) {
+    const trimmedInput = input.trim();
+    if (trimmedInput.startsWith('/')) {
+      await handleCommand(trimmedInput.substring(1));
+      askQuestion();
+      return;
+    }
+
+    try {
+      state.history.push({ role: 'user', content: input })
+      const { content, currentTask } = await handlePrompt(input);
+      state.history.push({ role: 'assistent', content })
+
+      // Run any remaining tasks in the queue
+      const tasks = currentTask?.toolProcessor.queue;
+      const responses = await Promise.all(tasks.map(async task => {
+        try {
+          return await task(state)
+        } catch (error) {
+          logger.error(`Error: ${error.message}`);
+        }
+      }))
+
+      // console.log('Type "exit" to quit, "/info" for config');
+    } catch (error) {
+      logger.error(`Error: ${error.message}`);
+    }
+    askQuestion();
+  }
 
   askQuestion();
 }

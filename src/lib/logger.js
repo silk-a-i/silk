@@ -1,8 +1,11 @@
 import chalk from 'chalk';
 
 export class Logger {
+  maxMessageLength = 0;
+  verbose = false;
+
   constructor(options = {}) {
-    this.verbose = options.verbose || false;
+    Object.assign(this, options);
   }
 
   info(...args) {
@@ -42,20 +45,34 @@ export class Logger {
     });
   }
 
-  messages(messages) {
+  messages(messages = []) {
     if (!this.verbose) return;
-    
+
     console.log(chalk.yellow('\nMessages:'));
     messages.forEach(message => {
-      const roleColor = {
-        system: chalk.magenta,
-        user: chalk.cyan,
-        assistant: chalk.green
-      }[message.role] || chalk.white;
-
-      console.log(roleColor(`[${message.role}]`));
-      console.log(chalk.gray(message.content));
-      console.log();
+      this.message(message);
     });
+  }
+
+  message(message = {}, options = {}) {
+    if (!this.verbose) return;
+    
+    const _maxLength = options.maxLength || this.maxMessageLength;
+
+    const roleColor = {
+      system: chalk.magenta,
+      user: chalk.cyan,
+      assistant: chalk.green
+    }[message.role] || chalk.white;
+
+    console.log(roleColor(`[${message.role}]`));
+    if (_maxLength && message.content.length > _maxLength) {
+      const truncatedContent = message.content.slice(0, _maxLength);
+      const remainingBytes = Buffer.byteLength(message.content) - Buffer.byteLength(truncatedContent);
+      console.log(chalk.gray(truncatedContent + `... (${remainingBytes} more bytes)`));
+    } else {
+      console.log(chalk.gray(message.content));
+    }
+    console.log();
   }
 }

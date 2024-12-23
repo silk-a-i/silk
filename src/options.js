@@ -6,7 +6,7 @@ export function addSharedOptions(command) {
     .option('-v, --verbose', 'Show additional information including the used prompt', false)
     .option('-r, --raw', 'Show raw LLM output without formatting', false)
     .option('-d, --dry', 'Run the command without any processing', false)
-    .option('--root <dir>', 'Specify root', '')
+    .option('--root <dir>', 'Specify root', undefined)
     .option('-s, --stats', 'Show stats', false)
     .option('--config <path>', 'Path to config file')
 }

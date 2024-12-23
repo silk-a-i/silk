@@ -6,7 +6,7 @@ export async function executeMessages(messages = [], onProgress, options = {}) {
     throw new Error('No messages provided');
   }
   
-  const logger = new Logger({ verbose: options.verbose });
+  const logger = new Logger(options.logger);
   const client = new AIClient(options);
 
   logger.info(`Using model: ${client.config.model}`);

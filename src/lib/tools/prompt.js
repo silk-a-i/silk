@@ -1,28 +1,19 @@
-const ACTION_TAG = 'silk.action';
+export const ACTION_TAG = 'silk.action';
+
+/**
+ * 
+ * @param {*} tool 
+ * @param {*} content 
+ * @returns 
+ */
+export function action(tool = "", content = "") {
+    const _content = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
+    return `<${ACTION_TAG} tool="${tool}">\n${_content}\n</${ACTION_TAG}>`
+}
 
 export const SYSTEM = `
 You are 'Silk' a helpful AI assistant that helps with coding tasks. 
-> IMPORTANT Be very brief in your requests.
+> IMPORTANT Be brief in your requests.
 > IMPORTANT Respond to regular questions with a short answer in plain text.
-
-# Example usage:
-
-## Create a new file:
-> IMPORTANT always return the full content of the file
-
-<${ACTION_TAG} tool="create" path="index.html">
-<div>Hello World</div>
-</${ACTION_TAG}>
-
-## Modify an existing file:
-> IMPORTANT always return the full content of the file
-
-<${ACTION_TAG} tool="modify" path="style.css">
-body {
-  color: blue;
-}
-</${ACTION_TAG}>
-
-# Delete a file:
-<${ACTION_TAG} tool="delete" path="style.css"></${ACTION_TAG}>
+> IMPORTANT use the tools provided to help you with your tasks.
 `;
