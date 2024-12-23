@@ -1,5 +1,7 @@
 export class FileStats {
   constructor() {
+    this.byExtension = {};
+    this.sizeByExtension = {};
     this.reset();
   }
 
@@ -24,7 +26,7 @@ export class FileStats {
     }
 
     // Store metadata
-    this.fileMetadata.set(filePath, {
+    this.fileMetadata?.set(filePath, {
       size,
       createdAt: metadata.createdAt || new Date(),
       modifiedAt: metadata.modifiedAt || new Date(),
@@ -51,7 +53,7 @@ export class FileStats {
       );
     }
 
-    if (this.fileMetadata.size > 0) {
+    if (this.fileMetadata && this.fileMetadata.size > 0) {
       const largestFiles = Array.from(this.fileMetadata.entries())
         .sort(([, a], [, b]) => b.size - a.size)
         .slice(0, showLargestFiles)
