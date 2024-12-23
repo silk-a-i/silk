@@ -27,15 +27,15 @@ export class ToolProcessor extends EventEmitter {
 
   getToolingPrompt() {
     const availableTools = Array.from(this.tools.values())
-      .map(tool => `- ${tool.name}: ${tool.description}`)
+      .map(tool => tool.system)
       .join('\n');
 
-    return `
-    ${SYSTEM}
+return `
+${SYSTEM}
 
-    # Available Tools
-    ${availableTools}
-    `;
+# Available Tools
+${availableTools}
+`;
   }
 
   process(chunk) {
@@ -117,6 +117,7 @@ export class ToolProcessor extends EventEmitter {
       blockContent: ''
     };
 
+    tool.onStart({ ...args, tool });
     this.emit('tool:start', { ...args, tool });
   }
 

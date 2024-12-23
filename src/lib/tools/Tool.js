@@ -1,20 +1,20 @@
 export class Tool {
-  name = '';
-  description = '';
-  pattern = null;
-  onStart = () => {};
-  onProgress = () => {};
-  onFinish = () => {};
+  name = ''
+  description = ''
+  pattern = null
+  examples = []
+  onStart() {}
+  onProgress() {}
+  onFinish() {}
 
   constructor(obj) {
-    Object.assign(this, obj);
+    Object.assign(this, obj)
   }
 
-  matches(content) {
-    return this.pattern.test(content);
-  }
-
-  getDescription() {
-    return `${this.name} - ${this.description}`;
+  get system() {
+return `## ${this.name}
+${this.description}
+Examples:
+${this.examples.join('\n')}`
   }
 }
