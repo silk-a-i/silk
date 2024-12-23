@@ -8,7 +8,7 @@ import { prepCommand } from './commands/prep.js';
 import { packCommand } from './commands/pack.js';
 import { infoCommand } from './commands/info.js';
 import { parseCommand } from './commands/parse.js';
-import { addSharedOptions } from './lib/options.js';
+import { addSharedOptions } from './options.js';
 
 program
   .name('silk')
