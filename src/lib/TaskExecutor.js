@@ -18,7 +18,7 @@ export class TaskExecutor {
     ];
 
     try {
-      const resp = await executeMessages(messages, chunk => task.toolProcessor.process(chunk), _options);
+      const resp = await executeMessages(messages, chunk => task.toolProcessor.process(chunk), options);
       return resp;
     } catch (error) {
       this.logger.error('Error executing task:', error.message);
