@@ -47,8 +47,6 @@ export async function chatCommand(options = new CommandOptions()) {
     showStats: options.stats
   });
 
-  const executor = new TaskExecutor(options);
-
   logger.info('Starting chat mode (type "exit" to quit, "$info" for config)');
 
   const chatProgram = new Command();
@@ -110,17 +108,13 @@ export async function chatCommand(options = new CommandOptions()) {
     // Get context info first for stats
     const contextInfo = await gatherContextInfo(config.include);
 
-    // Display stats
-    // const stats = new FileStats();
-    // contextInfo.forEach(file => stats.addFile(file.path, null, file));
-    // stats.getSummary(this.logger);
-
     const context = await resolveContent(contextInfo);
     const tools = createBasicTools({ output: '.' });
     const task = new Task({ prompt: input, context, tools });
 
     renderer.attach(task.toolProcessor);
-    const resp = await executor.execute(task, config);
+    const executor = new TaskExecutor(options);
+    const resp = await executor.execute(task);
 
     state.history.push({ role: 'assistent', content: resp })
 

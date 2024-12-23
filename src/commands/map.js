@@ -17,7 +17,6 @@ export async function mapCommand(promptOrFile, options = new CommandOptions) {
   const logger = new Logger(options);
 
   logConfiguration(config, logger);
-  const executor = new TaskExecutor(config);
 
   const { root } = config;
   console.log({config, options})
@@ -48,7 +47,8 @@ export async function mapCommand(promptOrFile, options = new CommandOptions) {
       });
 
       const renderer = new CliRenderer(options).attach(task.toolProcessor);
-      await executor.execute(task, { ...options, config });
+      const executor = new TaskExecutor({ ...options, config });
+      await executor.execute(task);
       renderer.cleanup();
     }
   }

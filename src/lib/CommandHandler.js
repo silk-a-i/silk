@@ -63,7 +63,7 @@ export class CommandHandler {
     const renderer = new CliRenderer(this.options).attach(task.toolProcessor);
 
     if (!dry) {
-      await this.executor.execute(task, this.options);
+      await this.executor.execute(task);
     }
     renderer.cleanup();
   }

@@ -6,8 +6,13 @@ import { INIT_PROViDERS as PROVIDERS } from '../lib/constants.js';
 import fs from 'fs';
 import path from 'path';
 
-export async function initCommand(root) {
+export async function initCommand(root = '') {
   const logger = new Logger();
+
+  if (root) {
+    fs.mkdirSync(root, { recursive: true });
+    process.chdir(root);
+  }
 
   try {
     const answers = await inquirer.prompt([
@@ -15,11 +20,21 @@ export async function initCommand(root) {
         type: 'input',
         name: 'root',
         message: 'Project directory:',
-        default: root || '.',
+        default: '.',
         validate: input => {
           if (!input) return 'Directory is required';
           return true;
         }
+      },
+      {
+        type: 'list',
+        name: 'configFormat',
+        message: 'Select config format:',
+        choices: [
+          { name: 'JavaScript (config.js)', value: 'js' },
+          { name: 'JSON (config.json)', value: 'json' }
+        ],
+        default: 'js'
       },
       {
         type: 'list',
@@ -59,7 +74,7 @@ export async function initCommand(root) {
     fs.mkdirSync(projectDir, { recursive: true });
 
     if (answers.provider === 'other') {
-      logger.info('\nPlease manually configure your provider in .silk/config.json');
+      logger.info('\nPlease manually configure your provider in .silk/config.js');
       answers.model = 'openai/gpt-3.5-turbo';
       answers.apiKey = 'sk-dummy-key';
     }
@@ -70,7 +85,7 @@ export async function initCommand(root) {
       root: answers.root
     };
 
-    const configPath = await createConfig(config);
+    const configPath = await createConfig(config, answers.configFormat);
 
     logger.success('Configuration created successfully!');
     logger.success(configPath);
