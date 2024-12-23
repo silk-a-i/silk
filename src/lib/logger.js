@@ -5,26 +5,26 @@ export class Logger {
     this.verbose = options.verbose || false;
   }
 
-  info(message) {
+  info(...args) {
     if (!this.verbose) return;
-    console.log(chalk.blue(message));
+    console.log(chalk.blue(...args));
   }
 
-  success(message) {
-    console.log(chalk.green(message));
+  success(...args) {
+    console.log(chalk.green(...args));
   }
 
-  hint(message) {
-    console.log(chalk.blue(message));
+  hint(...args) {
+    console.log(chalk.blue(...args));
   }
 
-  error(message) {
-    console.error(chalk.red(message));
+  error(...args) {
+    console.error(chalk.red(...args));
   }
 
-  debug(message) {
+  debug(...args) {
     if (!this.verbose) return;
-    console.log(chalk.gray('Debug:'), message);
+    console.log(chalk.gray('Debug:'), ...args);
   }
 
   prompt(prompt) {
