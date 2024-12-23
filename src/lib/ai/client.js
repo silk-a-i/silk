@@ -13,23 +13,23 @@ export class AIClient {
 
     const headers = {
       'Content-Type': 'application/json',
-      ...(provider.requiresApiKey && {
-        [provider.value === 'anthropic' ? 'x-api-key' : 'Authorization']: 
-        provider.value === 'anthropic' ? this.config.apiKey : `Bearer ${this.config.apiKey}`
-      })
+      'x-api-key': this.config.apiKey,
     };
 
     if (provider.value === 'anthropic') headers['anthropic-version'] = '2023-06-01';
 
     const body = this.formatRequestBody(messages, provider);
 
-    const response = await fetch(`${this.config.baseUrl}${provider.endpoint}`, {
+    const url = `${this.config.baseUrl}${provider.endpoint}`
+    const response = await fetch(url, {
       method: 'POST',
       headers,
       body: JSON.stringify(body)
     });
 
-    if (!response.ok) throw new Error(`AI request failed (${response.status}): ${await response.text()}`);
+    if (!response.ok) {
+      throw new Error(`AI request failed (${response.status}): ${await response.text()}`);
+    }
     return new AIResponseStream(response, provider.value);
   }
 
