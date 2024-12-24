@@ -4,6 +4,7 @@ import { Config } from './Config.js';
 export async function loadConfig(options = new CommandOptions) {
   try {
     return {
+      ...new CommandOptions(),
       // Load the default config
       ...await new Config().load(options.config),
       // Override with any options passed in
