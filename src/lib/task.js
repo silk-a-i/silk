@@ -25,7 +25,11 @@ export class Task {
   }
 
   get _context() {
-    return this.context.map(f => f.render())
+    return this.context.map(f => {
+      if(f.render) return f.render()
+        
+      return f
+    })
   }
 
   render() {
@@ -37,8 +41,8 @@ export class Task {
 # Intent
 ${userPrompt}
 
-# Context (${this.context.length} files)
-${this._context.join('\n')}
+# Context (${this.context.length} items)
+${this._context.join('\n\n')}
 `
   }
 }
