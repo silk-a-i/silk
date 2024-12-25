@@ -12,25 +12,42 @@ export class Config {
     include: ['**/*']
   };
 
+  baseUrl = "";
+  configPath = "";
+
+  constructor(obj) {
+    Object.assign(this, this.validate(obj));
+  }
+
   async load(path = "") {
     const envConfig = this.loadEnvConfig();
     const configFile = await this.findConfigFile(process.cwd(), path);
     const fileConfig = await this.loadConfigFile(configFile);
-
     const config = this.mergeConfigs(Config.DEFAULT_CONFIG, fileConfig, envConfig);
-    const validatedConfig = this.validateProvider(config);
-    
-    if (validatedConfig.model && validatedConfig.model.includes('/')) {
-      const [provider, model] = validatedConfig.model.split('/');
-      validatedConfig.provider = provider;
-      validatedConfig.model = model;
+    this.configPath = configFile?.path || ''
+    return this.validate(config);
+  }
+
+  validate(config = {}) {
+    // handle 'provider/model' shorthand
+    if (config.model && config.model.includes('/')) {
+      const [provider, model] = config.model.split('/');
+      config.provider = provider;
+      config.model = model;
     }
 
-    return {
-      baseUrl: PROVIDERS[validatedConfig.provider.toUpperCase()].baseUrl,
+    // const provider = config.provider?.toUpperCase() || DEFAULT_PROVIDER.value;
+    const validatedConfig = this.validateProvider(config);
+    // console.log(validatedConfig)
+    const provider = Object.values(PROVIDERS).find(p => p.value === config.provider);
+
+    Object.assign(this, {
+      ...provider,
+      model: validatedConfig.model || provider?.defaultModel,
       ...validatedConfig,
-      configPath: configFile?.path
-    };
+    })
+
+    return this 
   }
 
   loadEnvConfig() {

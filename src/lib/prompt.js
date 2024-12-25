@@ -6,9 +6,9 @@ export const ACTION_TAG = 'silk.action';
  * @param {*} content 
  * @returns 
  */
-export function action(tool = "", content = "") {
+export function action(tool = "", content = "", args = "") {
     const _content = typeof content === 'string' ? content : JSON.stringify(content, null, 2);
-    return `<${ACTION_TAG} tool="${tool}">\n${_content}\n</${ACTION_TAG}>`
+    return `<${ACTION_TAG} tool="${tool}"${args}>\n${_content}\n</${ACTION_TAG}>`
 }
 
 export const SYSTEM = `

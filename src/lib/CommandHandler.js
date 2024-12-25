@@ -34,8 +34,6 @@ export class CommandHandler {
     const { root, include, dry } = this.options;
     const { logger } = this;
 
-    logger.info(JSON.stringify({ root, promptOrFile, options: this.options }, null, 2));
-
     const configRoot = path.dirname(this.options.configPath);
     const prompt = await extractPrompt(promptOrFile, configRoot);
 

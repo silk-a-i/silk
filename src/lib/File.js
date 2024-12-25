@@ -13,7 +13,7 @@ export class File {
     const ext = path.extname(this.path).slice(1) || 'txt';
     return `##### \`${this.path}\`
 \`\`\`${ext}
-${this.content.trim()}
+${this.content}
 \`\`\`
 `;
   }

@@ -4,7 +4,6 @@ export const PROVIDERS = {
     value: 'silk',
     baseUrl: 'https://api.silk-labs.com/v1/chat',
     defaultModel: 'silk',
-    displayName: 'Silk',
     endpoint: '',
     models: [
       { name: 'silk-fast', displayName: 'Silk Fast' },
@@ -17,7 +16,6 @@ export const PROVIDERS = {
     baseUrl: 'http://localhost:11434/v1',
     defaultModel: 'llama3.1',
     requiresApiKey: false,
-    displayName: 'Ollama (Local)',
     endpoint: '/chat/completions'
   },
   OPENAI: {
@@ -26,7 +24,6 @@ export const PROVIDERS = {
     baseUrl: 'https://api.openai.com/v1',
     defaultModel: 'gpt-3.5-turbo',
     requiresApiKey: true,
-    displayName: 'OpenAI',
     endpoint: '/chat/completions'
   },
   ANTHROPIC: {

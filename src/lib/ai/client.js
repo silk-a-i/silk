@@ -28,7 +28,7 @@ export class AIClient {
     });
 
     if (!response.ok) {
-      throw new Error(`AI request failed (${response.status}): ${await response.text()}`);
+      throw new Error(`AI request failed (${response.status}): ${(await response.text()).slice(0, 500)}`);
     }
     return new AIResponseStream(response, provider.value);
   }

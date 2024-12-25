@@ -1,6 +1,6 @@
 import { glob } from 'glob-gitignore';
 import fs from 'fs/promises';
-import path from 'path';
+import {relative} from 'path';
 import { File } from './File.js';
 
 const DEFAULT_IGNORE = [
@@ -11,8 +11,6 @@ const DEFAULT_IGNORE = [
   'coverage/**',
   'test/**',
   '.silk/**',
-  '.silk.json',
-  '.silk.md',
   '.env',
   '.DS_Store',
   'yarn.lock',
@@ -26,7 +24,10 @@ export function getGlobOptions(options = {}) {
     nodir: true,
     dot: true,
     ...options,
-    ignore: [...DEFAULT_IGNORE, ...(options.ignore || [])],
+    ignore: [
+      ...DEFAULT_IGNORE, 
+      ...(options.ignore || [])
+    ],
   };
 }
 
@@ -53,19 +54,21 @@ async function gatherFiles(patterns, options) {
 export async function gatherContextInfo(patterns, options = {}) {
   if (!patterns) return [];
   
+  const {cwd} = options;
   try {
     const allFiles = await gatherFiles(patterns, options);
     const fileInfos = await Promise.all(
-      Array.from(allFiles).map(async filePath => {
+      Array.from(allFiles).map(async path => {
         try {
-          const stats = await fs.stat(filePath);
+          const stats = await fs.stat(`${cwd}${path}`);
           return new File({
-            path: path.relative(process.cwd(), filePath),
+            pathRelative: relative(cwd, path),
+            path,
             size: stats.size,
             content: null
           })
         } catch (error) {
-          console.warn(`Warning: Could not read file ${filePath}: ${error.message}`);
+          console.warn(`Warning: Could not read file ${path}: ${error.message}`);
           return null;
         }
       })
