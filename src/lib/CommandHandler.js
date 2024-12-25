@@ -19,22 +19,19 @@ export class CommandHandler {
 
   constructor(options = {}) {
     this.options = new CommandOptions(options);
-    if (typeof options.logger === 'object') {
-      this.logger = new Logger(options.logger);
-    } else {
-      this.logger = options.logger || new Logger({
-        verbose: options.verbose,
-      });
-    }
+    this.logger = new Logger({
+      verbose: options.verbose,
+      ...options.logger
+    });
     this.executor = new TaskExecutor(this.options);
     this.limitChecker = new LimitChecker(options);
   }
 
   async execute(promptOrFile = "") {
-    const { root, include, dry } = this.options;
-    const { logger } = this;
+    const { logger, options } = this;
+    const { root, include, dry, stats } = this.options;
 
-    const configRoot = path.dirname(this.options.configPath);
+    const configRoot = path.dirname(options.configPath);
     const prompt = await extractPrompt(promptOrFile, configRoot);
 
     await this.setupRoot(root);
@@ -44,20 +41,22 @@ export class CommandHandler {
     logger.prompt(prompt);
 
     // Get context info first for stats
-    const contextInfo = await gatherContextInfo(include);
+    const contextInfo = await gatherContextInfo(include, options);
 
     // Display stats
-    const stats = new FileStats();
-    contextInfo.forEach(file => stats.addFile(file.path, null, file));
-    stats.getSummary(logger);
-
+    if(stats) {
+      const fileStats = new FileStats();
+      contextInfo.forEach(file => fileStats.addFile(file.path, null, file));
+      fileStats.getSummary(logger);
+    }
+    
     // Check limits
     try {
       contextInfo.forEach(file => this.limitChecker.checkFile(file.path, file.size));
     } catch (e) {
       console.log()
       logger.error(e.message);
-      logger.hint('Reduce the context or increase the limits in the config file.');
+      logger.hint(`Reduce the context or increase the limits in the config file. ${options.configPath}`);
       console.log()
       return;
     }
@@ -65,15 +64,15 @@ export class CommandHandler {
     // Now resolve full content
     const context = await resolveContent(contextInfo);
 
-    const tools = this.options.tools || [
+    const tools = options.tools || [
       ...createBasicTools({
-        output: this.options.output,
+        output: options.output,
       }),
-      ...this.options.additionalTools,
+      ...options.additionalTools,
     ]
 
     const task = new Task({ prompt, context, tools });
-    const renderer = new CliRenderer(this.options).attach(task.toolProcessor);
+    const renderer = new CliRenderer(options).attach(task.toolProcessor);
 
     if (!dry) {
       const resp = await this.executor.execute(task);
