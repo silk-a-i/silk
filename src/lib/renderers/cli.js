@@ -4,7 +4,7 @@ import ora from 'ora';
 export class CliRenderer {
   constructor(options = {}) {
     this.raw = options.raw || false;
-    this.showStats = options.showStats !== false;
+    this.showStats = options.stats !== false;
     this.spinners = new Map();
     this.stats = {
       totalBytes: 0,
