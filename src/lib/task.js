@@ -26,7 +26,7 @@ export class Task {
 
   get _context() {
     return this.context.map(f => {
-      if(f.render) return f.render()
+      if(f?.render) return f.render()
         
       return f
     })
