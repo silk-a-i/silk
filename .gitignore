@@ -7,3 +7,4 @@ dist
 .DS_Store
 **/.silk/config.json
 .silk
+.features
