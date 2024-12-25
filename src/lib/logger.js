@@ -2,7 +2,7 @@ import chalk from 'chalk';
 
 export class Logger {
   maxMessageLength = 0;
-  verbose = false;
+  verbose = true;
 
   constructor(options = {}) {
     Object.assign(this, options);

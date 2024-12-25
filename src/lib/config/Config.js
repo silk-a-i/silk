@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import dotenv from 'dotenv';
 import { PROVIDERS, DEFAULT_PROVIDER } from '../constants.js';
+import { homedir } from 'os';
 
 export class Config {
   static DEFAULT_CONFIG = {
@@ -18,6 +19,7 @@ export class Config {
     baseUrl: "",
     endpoint: ""
   }
+  max_tokens = null
 
   constructor(obj) {
     if(obj) this.validate(obj)
@@ -80,7 +82,9 @@ export class Config {
     let currentDir = startDir;
     while (currentDir !== path.parse(currentDir).root) {
       const silkDir = path.join(currentDir, '.silk');
+      const configDir = path.join(homedir(), '.config', 'silk');
       const configPaths = [
+        { path: path.join(configDir, 'config.js'), type: 'js' },
         { path: path.join(silkDir, 'config.js'), type: 'js' },
         { path: path.join(silkDir, 'config.json'), type: 'json' }
       ];

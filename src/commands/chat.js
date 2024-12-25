@@ -10,6 +10,7 @@ import { CommandOptions } from '../lib/CommandOptions.js';
 import { gatherContextInfo, resolveContent } from '../lib/utils.js';
 import { createBasicTools } from '../lib/tools/basicTools.js';
 import { executeMessages } from '../lib/llm.js';
+import { FileStats } from '../lib/stats.js';
 
 export async function chatCommand(options = new CommandOptions()) {
   const logger = new Logger({
@@ -63,6 +64,17 @@ export async function chatCommand(options = new CommandOptions()) {
     .description('Show config info')
     .action(async () => {
       await infoCommand();
+    });
+
+  chatProgram
+    .command('context')
+    .alias('c')
+    .description('List context')
+    .action(async () => {
+      const files = await gatherContextInfo(config.include, config);
+      const stats = new FileStats();
+      files.forEach(file => stats.addFile(file.path, null, file)); // Use size directly
+      stats.getSummary(logger, { showLargestFiles: 60});
     });
 
   chatProgram

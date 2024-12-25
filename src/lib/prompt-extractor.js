@@ -8,17 +8,19 @@ async function tryReadFile(filePath) {
     return null;
   }
 }
-
 export async function extractPrompt(promptOrFile, configRoot = '.') {
   try {
     // If no prompt given, look for default files
     if (!promptOrFile) {
       const designPath = path.join(configRoot, 'design.md');
       const content = await tryReadFile(designPath);
-      if (!content) {
-        throw new Error('No prompt provided and no .silk/design.md found');
-      }
-      return content;
+      if (content) return content;
+
+      const readmePath = 'README.md';
+      const readmeContent = await tryReadFile(readmePath);
+      if (readmeContent) return readmeContent;
+
+      throw new Error('No prompt provided and no .silk/design.md or README.md found');
     }
 
     // Check if prompt is a file path

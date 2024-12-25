@@ -9,6 +9,7 @@ export function logConfiguration(config, logger = new Logger) {
   const provider = Object.values(PROVIDERS).find(p => p.value === config.provider);
 
   logger.stats('Configuration', [
+    { label: 'config', value: config.configPath },
     { label: 'Provider', value: provider?.displayName || config.provider },
     { label: 'Model', value: config.model },
     { label: 'Base URL', value: config.baseUrl },

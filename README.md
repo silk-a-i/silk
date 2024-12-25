@@ -18,11 +18,6 @@ A powerful CLI tool for quick task automation using LLMs.
 - Parse markdown into files with `silk parse`
 - Prepare project structure with `silk prep`
 
-⚙️ **Multiple Providers**
-- Silk Cloud
-- Ollama (Local)
-- ...
-
 ## Quick Start
 
 ```bash

@@ -26,7 +26,7 @@ export class LimitChecker {
     }
 
     if (this.stats.totalSize > limits.max_size) {
-      throw new Error(`Exceeded maximum total size of ${limits.max_size} bytes`);
+      throw new Error(`Exceeded maximum total size of ${limits.max_size} bytes. Current total size is ${this.stats.totalSize} bytes`);
     }
   }
 }

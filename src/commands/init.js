@@ -42,7 +42,7 @@ export async function initCommand(root = '') {
         message: 'Select your AI provider:',
         choices: [
           ...Object.entries(PROVIDERS).map(([key, provider]) => ({
-            name: provider.displayName,
+            name: provider.displayName || provider.name,
             value: key
           })),
           { name: 'Other (manual config)', value: 'other' }

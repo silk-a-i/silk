@@ -34,8 +34,7 @@ export class FileStats {
     });
   }
 
-  getSummary(logger, options = {}) {
-    const { showLargestFiles = 3 } = options;
+  getSummary(logger, { showLargestFiles = 3 } = {}) {
 
     logger.stats('Context stats', [
       { label: 'Total size', value: formatBytes(this.totalSize) },

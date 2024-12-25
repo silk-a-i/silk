@@ -8,6 +8,7 @@ import { prepCommand } from './commands/prep.js';
 import { packCommand } from './commands/pack.js';
 import { infoCommand } from './commands/info.js';
 import { parseCommand } from './commands/parse.js';
+import { loginCommand } from './commands/login.js';
 import { addSharedOptions } from './options.js';
 
 program
@@ -16,12 +17,19 @@ program
   .version(process.env.npm_package_version);
 
 program
+  .command('login')
+  .description('Configure API key')
+  .option('-i, --interactive', 'Interactive mode')
+  .action(loginCommand);
+
+program
   .command('init')
   .argument('[root]', 'root directory')
   .description('Initialize a new Silk project')
   .action(initCommand);
 
-program
+
+  program
   .command('info')
   .description('Show current configuration')
   .action(infoCommand);
@@ -81,3 +89,4 @@ addSharedOptions(
 ).action(mapCommand);
 
 program.parse();
+
