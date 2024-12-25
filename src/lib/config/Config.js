@@ -14,9 +14,13 @@ export class Config {
 
   baseUrl = "";
   configPath = "";
+  api = {
+    baseUrl: "",
+    endpoint: ""
+  }
 
   constructor(obj) {
-    Object.assign(this, this.validate(obj));
+    if(obj) this.validate(obj)
   }
 
   async load(path = "") {
@@ -38,12 +42,15 @@ export class Config {
 
     // const provider = config.provider?.toUpperCase() || DEFAULT_PROVIDER.value;
     const validatedConfig = this.validateProvider(config);
-    // console.log(validatedConfig)
     const provider = Object.values(PROVIDERS).find(p => p.value === config.provider);
 
     Object.assign(this, {
       ...provider,
       model: validatedConfig.model || provider?.defaultModel,
+      api: {
+        baseUrl: validatedConfig.baseUrl || provider?.baseUrl,
+        endpoint: validatedConfig.endpoint || provider?.endpoint
+      },
       ...validatedConfig,
     })
 
