@@ -8,19 +8,20 @@ export class AIClient {
   }
 
   async createCompletion({ messages }) {
-    const provider = Object.values(PROVIDERS).find(p => p.value === this.config.provider);
-    if (!provider) throw new Error(`Invalid provider: ${this.config.provider}`);
+    const { config } = this;
+    const provider = Object.values(PROVIDERS).find(p => p.value === config.provider);
+    if (!provider) throw new Error(`Invalid provider: ${config.provider}`);
 
     const headers = {
       'Content-Type': 'application/json',
-      'x-api-key': this.config.apiKey,
+      'x-api-key': config.apiKey,
     };
 
     if (provider.value === 'anthropic') headers['anthropic-version'] = '2023-06-01';
 
     const body = this.formatRequestBody(messages, provider);
 
-    const url = `${this.config.baseUrl}${provider.endpoint}`
+    const url = `${config.api.baseUrl}${config.api.endpoint}`
     const response = await fetch(url, {
       method: 'POST',
       headers,
@@ -28,6 +29,7 @@ export class AIClient {
     });
 
     if (!response.ok) {
+      console.log(`POST ${url}`)
       throw new Error(`AI request failed (${response.status}): ${(await response.text()).slice(0, 500)}`);
     }
     return new AIResponseStream(response, provider.value);
