@@ -35,7 +35,7 @@ async function loadFileContent(filePath) {
   try {
     const content = await fs.readFile(filePath, 'utf-8');
     return new File({
-      path: path.relative(process.cwd(), filePath),
+      path: relative(process.cwd(), filePath),
       content
     });
   } catch (error) {
@@ -54,7 +54,7 @@ async function gatherFiles(patterns, options) {
 export async function gatherContextInfo(patterns, options = {}) {
   if (!patterns) return [];
   
-  const {cwd} = options;
+  const {cwd = ''} = options;
   try {
     const allFiles = await gatherFiles(patterns, options);
     const fileInfos = await Promise.all(
