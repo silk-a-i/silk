@@ -2,8 +2,9 @@
   "name": "hello",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "build": "node ../.. do public 'create a simple website'"
+    "build": "node ../.. do"
   },
   "keywords": [],
   "author": "",
