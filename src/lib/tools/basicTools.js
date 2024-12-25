@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'path';
 import { Tool } from './Tool.js';
-import { ACTION_TAG } from './prompt.js';
+import { ACTION_TAG } from '../prompt.js';
 
 export function createBasicTools(options = {}, { tag = ACTION_TAG } = {}) {
   const outputDir = options.output || '';
