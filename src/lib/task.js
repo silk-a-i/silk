@@ -14,7 +14,7 @@ export class Task {
   }
 
   get fullSystem() {
-    return `${this.system}${this.toolProcessor.getToolingPrompt()}`
+    return `${this.system}${this.toolProcessor?.getToolingPrompt()}`
   }
 
   get messages() {
