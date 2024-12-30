@@ -44,7 +44,7 @@ Handles loading and validating configuration.
 ```js
 const config = new Config({
   apiKey: "your-api-key",
-  model: "silk/silk-fast",
+  model: "silk/fast",
   root: "public"
 });
 ```

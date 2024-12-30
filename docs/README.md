@@ -26,7 +26,7 @@ Example config:
 ```js
 export default {
   apiKey: "your-api-key",
-  model: "silk/silk-fast",
+  model: "silk/fast",
   root: "public",
   include: ["**/*"]
 }
