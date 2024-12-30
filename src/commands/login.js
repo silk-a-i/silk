@@ -5,7 +5,12 @@ import { homedir } from 'os';
 import { Logger } from '../lib/logger.js';
 
 export async function loginCommand(options = {}) {
-  const logger = new Logger(options);
+  options.interactive = options.interactive || true
+
+  const logger = new Logger({
+    verbose: true,
+    ...options
+  });
   const configDir = path.join(homedir(), '.config', 'silk');
   const envPath = path.join(configDir, '.env');
 
@@ -13,6 +18,7 @@ export async function loginCommand(options = {}) {
   fs.mkdirSync(configDir, { recursive: true });
 
   if (options.interactive) {
+    logger.info('Get your API key from https://console.silk-labs.com/');
     const answers = await inquirer.prompt([{
       type: 'input',
       name: 'apiKey',
@@ -21,7 +27,7 @@ export async function loginCommand(options = {}) {
     }]);
     
     fs.writeFileSync(envPath, `SILK_API_KEY=${answers.apiKey}\n`);
-    logger.success('API key saved successfully');
+    logger.success(`API key saved successfully to ${envPath}`);
     return;
   }
 

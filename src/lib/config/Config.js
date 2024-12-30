@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import { PROVIDERS, DEFAULT_PROVIDER } from '../constants.js';
 import { homedir } from 'os';
 
+export const configDir = path.join(homedir(), '.config', 'silk')
+
 export class Config {
   static DEFAULT_CONFIG = {
     apiKey: 'sk-dummy-key',
@@ -63,10 +65,15 @@ export class Config {
   }
 
   loadEnvConfig() {
-    dotenv.config();
+    const env = dotenv.config({
+      path: ['.env', path.join(configDir, '.env')]
+    })
+    console.log(env.parsed)
+ 
     return {
       apiKey: process.env.SILK_API_KEY,
       model: process.env.SILK_MODEL,
+      env: env.parsed
     };
   }
 
@@ -110,12 +117,10 @@ export class Config {
     }
 
     // Search in user's config directory
-    const configDir = path.join(homedir(), '.config', 'silk');
     const configFile = await this.findConfigFileFromPath(configDir);
     if (configFile) {
       return configFile;
     }
-
 
     return null;
   }
