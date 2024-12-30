@@ -2,14 +2,12 @@ import { Logger } from './logger.js';
 import { TaskExecutor } from './TaskExecutor.js';
 import { Task } from './task.js';
 import { CliRenderer } from './renderers/cli.js';
-import { extractPrompt } from './prompt-extractor.js';
 import { createBasicTools } from './tools/basicTools.js';
 import { gatherContextInfo, resolveContent } from './fs.js';
 import { FileStats } from './stats.js';
 import { CommandOptions } from './CommandOptions.js';
 import { LimitChecker } from './LimitChecker.js';
 import fs from 'fs';
-import path from 'path';
 
 export class CommandHandler {
   logger = new Logger();
@@ -27,12 +25,9 @@ export class CommandHandler {
     this.limitChecker = new LimitChecker(options);
   }
 
-  async execute(promptOrFile = "") {
+  async execute(prompt = "") {
     const { logger, options } = this;
     const { root, include, dry, stats } = this.options;
-
-    const configRoot = path.dirname(options.configPath);
-    const prompt = await extractPrompt(promptOrFile, configRoot);
 
     await this.setupRoot(root);
     logger.info(`Project root: ${process.cwd()}`);
