@@ -6,7 +6,7 @@ import { homedir } from 'os';
 
 export class Config {
   static DEFAULT_CONFIG = {
-    apiKey: 'sk-dummy-key', 
+    apiKey: 'sk-dummy-key',
     model: DEFAULT_PROVIDER.defaultModel,
     provider: DEFAULT_PROVIDER.value,
     models: [],
@@ -47,6 +47,9 @@ export class Config {
     const provider = Object.values(PROVIDERS).find(p => p.value === config.provider);
 
     Object.assign(this, {
+      logger: {
+        verbose: validatedConfig.verbose
+      },
       ...provider,
       model: validatedConfig.model || provider?.defaultModel,
       api: {
@@ -56,7 +59,7 @@ export class Config {
       ...validatedConfig,
     })
 
-    return this 
+    return this
   }
 
   loadEnvConfig() {
@@ -65,6 +68,19 @@ export class Config {
       apiKey: process.env.SILK_API_KEY,
       model: process.env.SILK_MODEL,
     };
+  }
+
+  async findConfigFileFromPath(configPath) {
+    const configPaths = [
+      { path: path.join(configPath, 'config.js'), type: 'js' },
+      { path: path.join(configPath, 'config.json'), type: 'json' }
+    ];
+    for (const config of configPaths) {
+      if (await this.fileExists(config.path)) {
+        return config;
+      }
+    }
+    return null;
   }
 
   async findConfigFile(startDir = "", configPath = "") {
@@ -79,24 +95,27 @@ export class Config {
       throw new Error(`Config file not found: ${configPath}`);
     }
 
+    // @todo load .env file for global keys
+
+    // Project specific config
     let currentDir = startDir;
     while (currentDir !== path.parse(currentDir).root) {
       const silkDir = path.join(currentDir, '.silk');
-      const configDir = path.join(homedir(), '.config', 'silk');
-      const configPaths = [
-        { path: path.join(configDir, 'config.js'), type: 'js' },
-        { path: path.join(silkDir, 'config.js'), type: 'js' },
-        { path: path.join(silkDir, 'config.json'), type: 'json' }
-      ];
-
-      for (const config of configPaths) {
-        if (await this.fileExists(config.path)) {
-          return config;
-        }
+      const configFile = await this.findConfigFileFromPath(silkDir);
+      if (configFile) {
+        return configFile;
       }
 
       currentDir = path.dirname(currentDir);
     }
+
+    // Search in user's config directory
+    const configDir = path.join(homedir(), '.config', 'silk');
+    const configFile = await this.findConfigFileFromPath(configDir);
+    if (configFile) {
+      return configFile;
+    }
+
 
     return null;
   }
@@ -105,7 +124,7 @@ export class Config {
     if (!configFile) return {};
 
     const content = await fs.readFile(configFile.path, 'utf-8');
-    
+
     switch (configFile.type) {
       case 'js':
         const module = await import(configFile.path);

@@ -4,7 +4,7 @@ import { Task } from './task.js';
 import { CliRenderer } from './renderers/cli.js';
 import { extractPrompt } from './prompt-extractor.js';
 import { createBasicTools } from './tools/basicTools.js';
-import { gatherContextInfo, resolveContent } from './utils.js';
+import { gatherContextInfo, resolveContent } from './fs.js';
 import { FileStats } from './stats.js';
 import { CommandOptions } from './CommandOptions.js';
 import { LimitChecker } from './LimitChecker.js';

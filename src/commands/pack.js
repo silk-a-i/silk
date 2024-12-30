@@ -1,9 +1,9 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { glob } from 'glob-gitignore';
+import { globby } from 'globby';
 import { Logger } from '../lib/logger.js';
 import { File } from '../lib/File.js';
-import { getGlobOptions } from '../lib/utils.js';
+import { getGlobOptions } from '../lib/fs.js';
 import { FileStats, formatBytes } from '../lib/stats.js';
 
 export async function packCommand(folder, options) {
@@ -15,7 +15,7 @@ export async function packCommand(folder, options) {
       ignore: [options.output]
     });
     
-    const files = await glob('**/*', globOptions);
+    const files = await globby('**/*', globOptions);
 
     if (files.length === 0) {
       logger.error('No files found to pack');

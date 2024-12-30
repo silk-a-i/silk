@@ -7,7 +7,7 @@ import { loadConfig } from '../lib/config/load.js';
 import { infoCommand } from './info.js';
 import fs from 'fs';
 import { CommandOptions } from '../lib/CommandOptions.js';
-import { gatherContextInfo, resolveContent } from '../lib/utils.js';
+import { gatherContextInfo, resolveContent } from '../lib/fs.js';
 import { createBasicTools } from '../lib/tools/basicTools.js';
 import { executeMessages } from '../lib/llm.js';
 import { FileStats } from '../lib/stats.js';
@@ -133,8 +133,7 @@ export async function chatCommand(options = new CommandOptions()) {
     state.system = task.fullSystem;
 
     renderer.attach(task.toolProcessor);
-    // const executor = new TaskExecutor(config);
-    // const { content, currentTask } = config.dry ? {} : await executor.execute(task);
+
     const messages = [
       { role: 'system', content: task.fullSystem },
       ...state.history,

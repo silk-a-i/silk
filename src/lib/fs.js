@@ -1,4 +1,4 @@
-import { glob } from 'glob-gitignore';
+import { globby} from "globby"
 import fs from 'fs/promises';
 import {relative} from 'path';
 import { File } from './File.js';
@@ -22,6 +22,7 @@ const DEFAULT_IGNORE = [
 export function getGlobOptions(options = {}) {
   return {
     nodir: true,
+    gitignore: true,
     dot: true,
     ...options,
     ignore: [
@@ -47,7 +48,8 @@ async function loadFileContent(filePath) {
 async function gatherFiles(patterns, options) {
   const globs = Array.isArray(patterns) ? patterns : [patterns];
   const globOptions = getGlobOptions(options);
-  const files = await glob(globs, globOptions);
+  const files = await globby(globs, globOptions);
+  // const files = await glob(globs, globOptions);
   return new Set(files);
 }
 

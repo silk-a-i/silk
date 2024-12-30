@@ -1,7 +1,7 @@
 import { TaskExecutor } from '../lib/TaskExecutor.js';
 import { loadConfig } from '../lib/config/load.js';
 import { logConfiguration } from './info.js';
-import { gatherContextInfo } from '../lib/utils.js';
+import { gatherContextInfo } from '../lib/fs.js';
 import fs from 'fs/promises';
 import { File } from '../lib/File.js';
 import { Task } from '../lib/task.js';
