@@ -2,7 +2,7 @@ import chalk from 'chalk';
 
 export class Logger {
   maxMessageLength = 0;
-  verbose = true;
+  verbose = false;
 
   constructor(options = {}) {
     Object.assign(this, options);
@@ -38,6 +38,8 @@ export class Logger {
   }
 
   stats(title, items) {
+    if (!this.verbose) return;
+
     console.log(chalk.cyan(`\n${title}:`));
     items.forEach(({ label, value }, i, arr) => {
       const prefix = i === arr.length - 1 ? '└─' : '├─';
