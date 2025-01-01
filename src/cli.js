@@ -78,7 +78,6 @@ addSharedOptions(
     .description('Execute a single task')
 ).action(doCommand);
 
-
 addSharedOptions(
   program
     .command('chat')
