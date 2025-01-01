@@ -75,7 +75,7 @@ export class CliRenderer {
     });
 
     toolProcessor.on('text', text => {
-      process.stdout.write(text);
+      // already handled
     });
 
     return this;
