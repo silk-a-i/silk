@@ -28,9 +28,10 @@ program
   .description('Initialize a new Silk project')
   .action(initCommand);
 
-
-  program
+program
   .command('info')
+  // @todo add json option
+  // .option('--json', 'json')
   .description('Show current configuration')
   .action(infoCommand);
 
@@ -55,11 +56,24 @@ program
 
 addSharedOptions(
   program
+    .command('create')
+    .alias('c')
+    .argument('<folder>', 'folder')
+    .argument('<prompt>', 'prompt or file')
+    .description('Execute a single task')
+).action((folder, promptOrFile, options) => {
+  doCommand(promptOrFile, {
+    root: folder,
+    ...options
+  })
+});
+
+addSharedOptions(
+  program
     .command('run')
     .alias('patch')
     .alias('do')
     .alias('build')
-    .alias('create')
     .argument('[prompt]', 'prompt or file')
     .description('Execute a single task')
 ).action(doCommand);
@@ -69,7 +83,7 @@ addSharedOptions(
     .command('prompt')
     .argument('[prompt]', 'prompt or file')
     .description('Execute a single task')
-).action(function(prompt, options) {
+).action(function (prompt, options) {
   doCommand('.', prompt, options);
 })
 
