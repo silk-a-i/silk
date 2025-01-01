@@ -31,7 +31,7 @@ export class Config {
     const envConfig = this.loadEnvConfig();
     const configFile = await this.findConfigFile(process.cwd(), path);
     const fileConfig = await this.loadConfigFile(configFile);
-    const config = this.mergeConfigs(Config.DEFAULT_CONFIG, fileConfig, envConfig);
+    const config = this.mergeConfigs(Config.DEFAULT_CONFIG, envConfig, fileConfig);
     this.configPath = configFile?.path || ''
     return this.validate(config);
   }
@@ -68,7 +68,6 @@ export class Config {
     const env = dotenv.config({
       path: ['.env', path.join(configDir, '.env')]
     })
-    console.log(env.parsed)
  
     return {
       apiKey: process.env.SILK_API_KEY,

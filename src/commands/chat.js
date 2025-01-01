@@ -67,6 +67,21 @@ export async function chatCommand(options = new CommandOptions()) {
     });
 
   chatProgram
+    .command('model')
+    .description('Select model')
+    .action(async () => {
+      // Add model selection
+      const { model } = await inquirer.prompt([{
+        type: 'list',
+        name: 'model',
+        message: 'Select model:',
+        choices: config.models,
+        default: config.model
+      }]);
+      config.model = model;
+    });
+
+  chatProgram
     .command('context')
     .alias('c')
     .description('List context')
@@ -74,7 +89,7 @@ export async function chatCommand(options = new CommandOptions()) {
       const files = await gatherContextInfo(config.include, config);
       const stats = new FileStats();
       files.forEach(file => stats.addFile(file.path, null, file)); // Use size directly
-      stats.getSummary(logger, { showLargestFiles: 60});
+      stats.getSummary(logger, { showLargestFiles: 60 });
     });
 
   chatProgram
@@ -87,7 +102,6 @@ export async function chatCommand(options = new CommandOptions()) {
 
   chatProgram
     .command('clear')
-    .alias('c')
     .description('Clear history')
     .action(async () => {
       state.history = []
@@ -152,15 +166,23 @@ export async function chatCommand(options = new CommandOptions()) {
   }
 
   const askQuestion = async () => {
-    const { input } = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'input',
-        message: '> ',
-      },
-    ]);
+    try {
+      const { input } = await inquirer.prompt([
+        {
+          type: 'input',
+          name: 'input',
+          message: '> ',
+        },
+      ]);
 
-    handleQuestion(input);
+      handleQuestion(input);
+    } catch (error) {
+      if (error.name === 'ExitPromptError') {
+        return
+      }
+      console.error(`Error: ${error.message}`)
+      askQuestion();
+    }
   };
 
   async function handleQuestion(input) {

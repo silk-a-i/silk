@@ -6,8 +6,8 @@ export const PROVIDERS = {
     defaultModel: 'silk',
     endpoint: '',
     models: [
-      { name: 'silk/fast', displayName: 'Silk Fast' },
-      { name: 'silk/smart', displayName: 'Silk Smart' }
+      { name: 'fast', displayName: 'Silk Fast' },
+      { name: 'smart', displayName: 'Silk Smart' }
     ]
   },
   OLLAMA: {

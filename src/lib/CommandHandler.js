@@ -70,22 +70,26 @@ export class CommandHandler {
     const renderer = new CliRenderer(options).attach(task.toolProcessor);
 
     if (!dry) {
-      const resp = await this.executor.execute(task);
-
-      const MOCK_STATE = {
-        history: [],
-      }
-      const state = MOCK_STATE
-      
-      // Any tasks in the queue?
-      const tasks = resp.currentTask?.toolProcessor.queue;
-      const responses = await Promise.all(tasks.map(async task => {
-        try {
-          return await task(state)
-        } catch (error) {
-          logger.error(`Error: ${error.message}`);
+      try {
+        const resp = await this.executor.execute(task);
+  
+        const MOCK_STATE = {
+          history: [],
         }
-      }))
+        const state = MOCK_STATE
+        
+        // Any tasks in the queue?
+        const tasks = resp.currentTask?.toolProcessor.queue;
+        const responses = await Promise.all(tasks.map(async task => {
+          try {
+            return await task(state)
+          } catch (error) {
+            logger.error(`Error: ${error.message}`);
+          }
+        }))
+      } catch (error) {
+        logger.error(`Error: ${error.message}`);
+      }
     }
 
     renderer.cleanup();
