@@ -2,7 +2,7 @@ import chalk from 'chalk';
 
 export class Logger {
   maxMessageLength = 0;
-  verbose = false;
+  verbose = true;
 
   constructor(options = {}) {
     Object.assign(this, options);
@@ -36,6 +36,13 @@ export class Logger {
     console.log(chalk.gray(prompt));
     console.log();
   }
+
+  json(prompt) {
+    if (!this.verbose) return;
+    console.log(chalk.gray(JSON.stringify(prompt, null, 2)));
+    console.log();
+  }
+
 
   stats(title, items) {
     if (!this.verbose) return;
