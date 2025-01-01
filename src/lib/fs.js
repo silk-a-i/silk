@@ -2,22 +2,7 @@ import { globby} from "globby"
 import fs from 'fs/promises';
 import {relative} from 'path';
 import { File } from './File.js';
-
-const DEFAULT_IGNORE = [
-  'node_modules/**',
-  'dist/**',
-  'build/**',
-  '.git/**',
-  'coverage/**',
-  'test/**',
-  '.silk/**',
-  '.env',
-  '.DS_Store',
-  'yarn.lock',
-  'package-lock.json',
-  'npm-debug.log',
-  'pnpm-lock.yaml',
-];
+import { DEFAULT_IGNORE } from "./constants.js";
 
 export function getGlobOptions(options = {}) {
   return {

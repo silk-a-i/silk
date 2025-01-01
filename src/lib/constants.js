@@ -47,3 +47,19 @@ export const PROVIDERS = {
 
 export const INIT_PROViDERS = [PROVIDERS.SILK, PROVIDERS.OLLAMA, PROVIDERS.OPENAI];
 export const DEFAULT_PROVIDER = PROVIDERS.OLLAMA;
+
+export const DEFAULT_IGNORE = [
+  'node_modules/**',
+  'dist/**',
+  'build/**',
+  '.git/**',
+  'coverage/**',
+  'test/**',
+  '.silk/**',
+  '.env',
+  '.DS_Store',
+  'yarn.lock',
+  'package-lock.json',
+  'npm-debug.log',
+  'pnpm-lock.yaml',
+];
