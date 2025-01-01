@@ -78,14 +78,6 @@ addSharedOptions(
     .description('Execute a single task')
 ).action(doCommand);
 
-addSharedOptions(
-  program
-    .command('prompt')
-    .argument('[prompt]', 'prompt or file')
-    .description('Execute a single task')
-).action(function (prompt, options) {
-  doCommand('.', prompt, options);
-})
 
 addSharedOptions(
   program
