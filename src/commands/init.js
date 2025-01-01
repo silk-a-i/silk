@@ -7,7 +7,7 @@ import fs from 'fs';
 import path from 'path';
 
 export async function initCommand(root = '') {
-  const logger = new Logger();
+  const logger = new Logger({ verbose: true });
 
   if (root) {
     fs.mkdirSync(root, { recursive: true });
@@ -28,18 +28,8 @@ export async function initCommand(root = '') {
       },
       {
         type: 'list',
-        name: 'configFormat',
-        message: 'Select config format:',
-        choices: [
-          { name: 'JavaScript (config.js)', value: 'js' },
-          { name: 'JSON (config.json)', value: 'json' }
-        ],
-        default: 'js'
-      },
-      {
-        type: 'list',
         name: 'provider',
-        message: 'Select your AI provider:',
+        message: 'Select your LLM provider:',
         choices: [
           ...Object.entries(PROVIDERS).map(([key, provider]) => ({
             name: provider.displayName || provider.name,
@@ -51,7 +41,7 @@ export async function initCommand(root = '') {
       {
         type: 'input',
         name: 'apiKey',
-        message: 'Enter your API key:',
+        message: 'Enter a custom API key (press enter to skip or use a global key):',
         when: (answers) => answers.provider !== 'other' && PROVIDERS[answers.provider]?.requiresApiKey,
         default: (answers) => PROVIDERS[answers.provider]?.requiresApiKey ? undefined : 'sk-dummy-key'
       },
@@ -76,21 +66,25 @@ export async function initCommand(root = '') {
     if (answers.provider === 'other') {
       logger.info('\nPlease manually configure your provider in .silk/config.js');
       answers.model = 'openai/gpt-3.5-turbo';
-      answers.apiKey = 'sk-dummy-key';
+      answers.apiKey = '';
     }
 
+    const provider = PROVIDERS[answers.provider];
+    const tag = `${provider.value}/${answers.model}`;
+
     const config = {
-      apiKey: answers.apiKey || 'sk-dummy-key',
-      model: answers.model,
+      apiKey: answers.apiKey || '',
+      model: tag,
+      // provider: provider.name,
       root: answers.root
     };
 
-    const configPath = await createConfig(config, answers.configFormat);
+    const configPath = await createConfig(config, 'js');
 
     logger.success('Configuration created successfully!');
     logger.success(configPath);
-    logger.info('\nYou can now use Silk with the following commands:');
-    logger.info(chalk.cyan('\n  silk do "create a hello world program"'));
+    logger.info('\nYou can now use Silk with the following commands:\n');
+    logger.info(chalk.cyan('  silk do "create a hello world program"'));
     logger.info(chalk.cyan('  silk chat'));
 
   } catch (error) {

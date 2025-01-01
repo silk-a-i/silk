@@ -4,7 +4,10 @@ export const PROVIDERS = {
     value: 'silk',
     baseUrl: 'https://api.silk-labs.com/v1/chat',
     defaultModel: 'silk',
+    requiresApiKey: true,
+    keyInfo: 'Get your key at: https://console.silk-labs.com',
     endpoint: '',
+    envKey: 'SILK_API_KEY',
     models: [
       { name: 'fast', displayName: 'Silk Fast' },
       { name: 'smart', displayName: 'Silk Smart' }
