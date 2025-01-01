@@ -9,7 +9,7 @@ import fs from 'fs';
 import { CommandOptions } from '../lib/CommandOptions.js';
 import { gatherContextInfo, resolveContent } from '../lib/fs.js';
 import { createBasicTools } from '../lib/tools/basicTools.js';
-import { executeMessages } from '../lib/llm.js';
+import { execute, streamHandler } from '../lib/llm.js';
 import { FileStats } from '../lib/stats.js';
 
 export async function chatCommand(options = new CommandOptions()) {
@@ -155,10 +155,11 @@ export async function chatCommand(options = new CommandOptions()) {
     ];
     logger.info('message size:', JSON.stringify(messages).length)
 
-    const content = await executeMessages(messages, chunk => {
-      return task.toolProcessor.process(chunk)
-    }, config);
-
+    const {stream} = await execute(messages, config);
+    const content = await streamHandler(stream, chunk => {
+      task.toolProcessor.process(chunk)
+    })
+  
     renderer.cleanup();
     process.stdout.write('\n');
 
