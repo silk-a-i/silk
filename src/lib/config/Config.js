@@ -24,6 +24,11 @@ export class Config {
   max_tokens = null
   provider = ""
   env={}
+  model=""
+  include=[]
+  tools=[]
+  additionalTools=[]
+  output=""
 
   constructor(obj) {
     if(obj) this.validate(obj)
