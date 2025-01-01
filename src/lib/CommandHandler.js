@@ -21,7 +21,8 @@ export class CommandHandler {
     this.options = new CommandOptions(options);
     this.logger = new Logger({
       verbose: options.verbose,
-      ...options.logger
+      // @todo proxy more options
+      // ...options.logger
     });
     this.executor = new TaskExecutor(this.options);
     this.limitChecker = new LimitChecker(options);
@@ -30,7 +31,6 @@ export class CommandHandler {
   async execute(prompt = "") {
     const { logger, options } = this;
     const { root, include, dry, stats } = this.options;
-
     await this.setupRoot(root);
     logger.info(`Project root: ${process.cwd()}`);
 
@@ -61,12 +61,15 @@ export class CommandHandler {
     // Now resolve full content
     const context = await resolveContent(contextInfo);
 
-    const tools = options.tools || [
+    const tools = options.tools.length ? options.tools : [
       ...createBasicTools({
         output: options.output,
       }),
       ...options.additionalTools,
     ]
+    logger.info(`Using tools: ${tools.map(t => t.name).join(', ')}`);
+    // logger.json(tools)
+    logger.json({tools, options})
 
     const task = new Task({ prompt, context, tools });
     const renderer = new CliRenderer(options).attach(task.toolProcessor);
