@@ -78,6 +78,11 @@ export async function initCommand(root = '') {
       // provider: provider.name,
       root: answers.root
     };
+    
+    // @todo check for a better way to handle a fallback to env
+    if(!config.apiKey) {
+      delete config.apiKey;
+    }
 
     const configPath = await createConfig(config, 'js');
 
