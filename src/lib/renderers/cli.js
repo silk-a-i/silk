@@ -1,7 +1,10 @@
 import chalk from 'chalk';
 import ora from 'ora';
+import { ToolProcessor } from '../tools/ToolProcessor.js';
 
 export class CliRenderer {
+  toolProcessor = new ToolProcessor
+
   constructor(options = {}) {
     this.raw = options.raw || false;
     this.showStats = options.stats !== false;
@@ -15,15 +18,31 @@ export class CliRenderer {
   }
 
   attach(toolProcessor) {
+    this.toolProcessor = toolProcessor
+
+    toolProcessor.on('chunk', text => {
+      this.stats.textBytes += Buffer.from(text).length;
+      this.stats.totalBytes += Buffer.from(text).length;
+    });
+
     if (this.raw) {
       toolProcessor.on('chunk', text => {
         process.stdout.write(text);
-        this.stats.textBytes += Buffer.from(text).length;
-        this.stats.totalBytes += Buffer.from(text).length;
       });
       
       return this;
     }
+
+    toolProcessor.on('chunk', (text, partialLine) => {
+      const {currentState} = toolProcessor
+      if(partialLine.startsWith('<')) {
+        return
+      }
+      if(currentState.inAction) { return }
+      if(currentState.inFileBlock) return
+      
+      process.stdout.write(text);
+    });
 
     toolProcessor.on('tool:start', ({ tool, path }) => {
       const spinner = ora({
@@ -57,8 +76,6 @@ export class CliRenderer {
 
     toolProcessor.on('text', text => {
       process.stdout.write(text);
-      this.stats.textBytes += Buffer.from(text).length;
-      this.stats.totalBytes += Buffer.from(text).length;
     });
 
     return this;
@@ -68,6 +85,8 @@ export class CliRenderer {
     if (this.raw) {
       return;
     }
+
+    // console.log(this.toolProcessor)
 
     for (const spinner of this.spinners.values()) {
       spinner.stop();

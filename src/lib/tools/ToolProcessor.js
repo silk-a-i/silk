@@ -10,7 +10,7 @@ export class ToolProcessor extends EventEmitter {
     this.tools = new Map();
     this.buffer = '';
     this.queue = []
-    
+
     // Track current state
     this.currentState = {
       inAction: false,
@@ -34,36 +34,37 @@ export class ToolProcessor extends EventEmitter {
   getToolingPrompt() {
     const availableTools = Array.from(this.tools.values())
 
-function list(arr) {
-  return arr.map(item => `- ${item}`).join('\n')
-}
+    function list(arr) {
+      return arr.map(item => `- ${item}`).join('\n')
+    }
 
-return `
+    return `
 ${SYSTEM}
 
 # Available Tools
 ${list(availableTools.map(tool => tool.name))}
 
-${availableTools.map(tool => tool.system)
-  .join('\n\n')}
+${availableTools.map(tool => tool.system).join('\n\n')}
 `;
   }
 
   process(chunk) {
     this.buffer += chunk;
 
-    this.emit('chunk', chunk);
+    this.emit('chunk', chunk, this.buffer);
 
     // Process complete lines
     const lines = this.buffer.split('\n');
     this.buffer = lines.pop() || ''; // Keep last incomplete line in buffer
 
     for (const line of lines) {
+      this.emit('line:end', line);
+
       this.processLine(line);
     }
   }
 
-  processLine(line) {
+  processLine(line = "") {
     // Check for action start
     const actionStart = line.match(new RegExp(`<${this.tagName}\\s+([^>]+)>`));
     if (actionStart) {
@@ -100,7 +101,7 @@ ${availableTools.map(tool => tool.system)
     if (this.currentState.inAction || this.currentState.inFileBlock) {
       this.currentState.blockContent += line + '\n';
       const { tool } = this.currentState;
-      if(tool) {
+      if (tool) {
         tool.emit('progress', { ...this.currentState, line })
       }
       this.emit('tool:progress', { ...this.currentState, line })
@@ -140,10 +141,10 @@ ${availableTools.map(tool => tool.system)
     const { tool = new Tool, args, blockContent } = this.currentState;
     if (tool) {
       tool.emit('finish', { ...args, content: blockContent }, this);
-      this.emit('tool:finish', { 
+      this.emit('tool:finish', {
         ...args,
-        tool, 
-        content: blockContent 
+        tool,
+        content: blockContent
       });
     }
 

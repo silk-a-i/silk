@@ -1,4 +1,4 @@
-import { executeMessages } from './llm.js';
+import { execute, streamHandler } from './llm.js';
 import { Task } from './task.js';
 
 export class TaskExecutor {
@@ -7,9 +7,9 @@ export class TaskExecutor {
     this.options = options;
   }
 
-  async execute(task = new Task) {
+  async createStream(task = new Task) {
     this.currentTask = task;
-    const {options} = this
+    const { options } = this
     if (!options) throw new Error('Config required');
 
     const messages = [
@@ -17,10 +17,16 @@ export class TaskExecutor {
       { role: 'user', content: task.render() }
     ];
 
-    const resp = await executeMessages(messages, chunk => {
-      return task.toolProcessor.process(chunk)
-    }, options);
-    this.content = resp;
+    return await execute(messages, options)
+  }
+
+  async execute(task = new Task) {
+    const stream = await this.createStream(task);
+    const content = await streamHandler(stream, chunk => {
+      task.toolProcessor.process(chunk)
+    })
+
+    this.content = content;
     return this;
   }
 }

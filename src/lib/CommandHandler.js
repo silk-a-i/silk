@@ -8,6 +8,8 @@ import { FileStats } from './stats.js';
 import { CommandOptions } from './CommandOptions.js';
 import { LimitChecker } from './LimitChecker.js';
 import fs from 'fs';
+import ora from 'ora';
+import { streamHandler } from './llm.js';
 
 export class CommandHandler {
   logger = new Logger();
@@ -39,12 +41,12 @@ export class CommandHandler {
     const contextInfo = await gatherContextInfo(include, options);
 
     // Display stats
-    if(stats) {
+    if (stats) {
       const fileStats = new FileStats();
       contextInfo.forEach(file => fileStats.addFile(file.path, null, file));
       fileStats.getSummary(logger);
     }
-    
+
     // Check limits
     try {
       contextInfo.forEach(file => this.limitChecker.checkFile(file.path, file.size));
@@ -71,16 +73,28 @@ export class CommandHandler {
 
     if (!dry) {
       try {
-        const resp = await this.executor.execute(task);
-  
+
+        const spinner = ora({
+          text: `thinking...`,
+          color: 'yellow'
+        }).start();
+
+        const {stream} = await this.executor.createStream(task)
+          
+        spinner.stop()
+
+        const content = await streamHandler(stream, chunk => {
+          task.toolProcessor.process(chunk)
+        })
+
         const MOCK_STATE = {
           history: [],
         }
         const state = MOCK_STATE
-        
+
         // Any tasks in the queue?
-        const tasks = resp.currentTask?.toolProcessor.queue;
-        const responses = await Promise.all(tasks.map(async task => {
+        const tasks = task?.toolProcessor.queue;
+        await Promise.all(tasks.map(async task => {
           try {
             return await task(state)
           } catch (error) {
