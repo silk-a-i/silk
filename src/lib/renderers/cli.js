@@ -46,7 +46,7 @@ export class CliRenderer {
 
     toolProcessor.on('tool:start', ({ tool, path }) => {
       const spinner = ora({
-        text: `${tool.name}: ${chalk.cyan(path)}...`,
+        text: `${tool.name}: ${chalk.cyan(path || '')}...`,
         color: 'yellow'
       }).start();
       
@@ -61,15 +61,19 @@ export class CliRenderer {
 
       if (spinner && tool) {
         const bytes = Buffer.from(blockContent).length;
-        this.stats.totalBytes += bytes;
-        spinner.text = `${tool.name}: ${chalk.cyan(path)}... (${this.formatBytes(bytes)})`;
+        spinner.text = `${tool.name}: ${chalk.cyan(path || '')}... (${this.formatBytes(bytes)})`;
       }
     });
 
-    toolProcessor.on('tool:finish', ({ tool, path }) => {
+    toolProcessor.on('tool:finish', (context) => {
+      const { tool, args, blockContent } = context;
+      // @todo fix api see tool:progress
+      // const {path} = args
+      const {path} = context
+
       const spinner = this.spinners.get(path);
       if (spinner) {
-        spinner.succeed(chalk.green(`${tool.name}: ${path} completed`));
+        spinner.succeed();
         this.spinners.delete(path);
       }
     });
@@ -85,8 +89,6 @@ export class CliRenderer {
     if (this.raw) {
       return;
     }
-
-    // console.log(this.toolProcessor)
 
     for (const spinner of this.spinners.values()) {
       spinner.stop();
@@ -113,37 +115,4 @@ export class CliRenderer {
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
     return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
   }
-}
-
-export function renderFileStructure(context) {
-  const structure = {};
-
-  context.forEach(file => {
-      const parts = file.split('/');
-      let current = structure;
-
-      parts.forEach((part, index) => {
-          if (!current[part]) {
-              if (index === parts.length - 1) {
-                  current[part] = null;
-              } else {
-                  current[part] = {};
-              }
-          }
-          current = current[part];
-      });
-  });
-
-  function renderStructure(structure, indent = '') {
-      let result = '';
-      for (const key in structure) {
-          result += `${indent}├── ${key}\n`;
-          if (structure[key]) {
-              result += renderStructure(structure[key], indent + '│   ');
-          }
-      }
-      return result;
-  }
-
-  return renderStructure(structure).replace(/├── ([^│]*)\n│/g, '├── $1\n');
 }
