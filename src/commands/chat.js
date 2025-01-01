@@ -12,161 +12,166 @@ import { createBasicTools } from '../lib/tools/basicTools.js';
 import { execute, streamHandler } from '../lib/llm.js';
 import { FileStats } from '../lib/stats.js';
 
-export async function chatCommand(options = new CommandOptions()) {
-  const logger = new Logger({
-    verbose: options.verbose,
-    ...options.logger
-  });
-
-  const config = await loadConfig(options)
-
-  logger.debug(`Using provider: ${config.provider}`);
-  logger.debug(`Using model: ${config.model}`);
-  // logger.debug(config);
-
-  const state = {
-    config,
-    options,
-    /** @type {Array<{ role: string, content: string }>} */
-    history: [],
-    files: [],
-    system: '',
-    model: ''
+class ChatCommand {
+  constructor(options = new CommandOptions()) {
+    this.options = options;
+    this.logger = new Logger({
+      verbose: options.verbose,
+      ...options.logger
+    });
+    this.state = {
+      config: null,
+      options,
+      history: [],
+      files: [],
+      system: '',
+      model: ''
+    };
+    this.renderer = new CliRenderer({
+      raw: options.raw,
+      showStats: options.stats
+    });
   }
 
-  const { root } = config;
-  if (root) {
-    fs.mkdirSync(root, { recursive: true });
-    process.chdir(root);
+  async init() {
+    this.state.config = await loadConfig(this.options);
+    const { config } = this.state;
+
+    this.logger.debug(`Using provider: ${config.provider}`);
+    this.logger.debug(`Using model: ${config.model}`);
+
+    const { root } = config;
+    if (root) {
+      fs.mkdirSync(root, { recursive: true });
+      process.chdir(root);
+    }
+    this.logger.info(`Project root: ${process.cwd()}`);
+
+    this.logger.info('Starting chat mode (type "exit" to quit, "/info" for config)');
+
+    this.chatProgram = new Command();
+    this.chatProgram.exitOverride();
+
+    this.setupCommands();
+    this.askQuestion();
   }
-  logger.info(`Project root: ${process.cwd()}`);
 
-  const renderer = new CliRenderer({
-    raw: options.raw,
-    showStats: options.stats
-  });
+  setupCommands() {
+    this.chatProgram
+      .command('exit')
+      .description('Exit the chat')
+      .action(() => {
+        process.exit(0);
+      });
 
-  logger.info('Starting chat mode (type "exit" to quit, "/info" for config)');
+    this.chatProgram
+      .command('info')
+      .alias('i')
+      .description('Show config info')
+      .action(async () => {
+        await infoCommand();
+      });
 
-  const chatProgram = new Command();
-  chatProgram.exitOverride();
+    this.chatProgram
+      .command('model')
+      .description('Select model')
+      .action(async () => {
+        const { model } = await inquirer.prompt([{
+          type: 'list',
+          name: 'model',
+          message: 'Select model:',
+          choices: this.state.config.models,
+          default: this.state.config.model
+        }]);
+        this.state.config.model = model;
+      });
 
-  chatProgram
-    .command('exit')
-    .description('Exit the chat')
-    .action(() => {
-      process.exit(0);
-    });
+    this.chatProgram
+      .command('context')
+      .alias('c')
+      .description('List context')
+      .action(async () => {
+        const files = await gatherContextInfo(this.state.config.include, this.state.config);
+        const stats = new FileStats();
+        files.forEach(file => stats.addFile(file.path, null, file));
+        stats.getSummary(this.logger, { showLargestFiles: 60 });
+      });
 
-  chatProgram
-    .command('info')
-    .alias('i')
-    .description('Show config info')
-    .action(async () => {
-      await infoCommand();
-    });
+    this.chatProgram
+      .command('state')
+      .alias('s')
+      .description('Show internal state')
+      .action(async () => {
+        console.log(this.state);
+      });
 
-  chatProgram
-    .command('model')
-    .description('Select model')
-    .action(async () => {
-      // Add model selection
-      const { model } = await inquirer.prompt([{
-        type: 'list',
-        name: 'model',
-        message: 'Select model:',
-        choices: config.models,
-        default: config.model
-      }]);
-      config.model = model;
-    });
+    this.chatProgram
+      .command('clear')
+      .description('Clear history')
+      .action(async () => {
+        this.state.history = [];
+      });
 
-  chatProgram
-    .command('context')
-    .alias('c')
-    .description('List context')
-    .action(async () => {
-      const files = await gatherContextInfo(config.include, config);
-      const stats = new FileStats();
-      files.forEach(file => stats.addFile(file.path, null, file)); // Use size directly
-      stats.getSummary(logger, { showLargestFiles: 60 });
-    });
+    this.chatProgram
+      .command('history')
+      .alias('h')
+      .description('Show chat history')
+      .action(() => {
+        if (!this.state.history?.length) {
+          console.log('No chat history');
+          return;
+        }
+        new Logger({ verbose: true }).messages(this.state.history);
+      });
+  }
 
-  chatProgram
-    .command('state')
-    .alias('s')
-    .description('Show internal state')
-    .action(async () => {
-      console.log(state)
-    });
-
-  chatProgram
-    .command('clear')
-    .description('Clear history')
-    .action(async () => {
-      state.history = []
-    });
-
-  chatProgram
-    .command('history')
-    .alias('h')
-    .description('Show chat history')
-    .action((options, command) => {
-      if (!state.history?.length) {
-        console.log('No chat history')
-        return
-      }
-      new Logger({ verbose: true }).messages(state.history)
-    })
-
-  async function handleCommand(input) {
+  async handleCommand(input) {
     try {
-      await chatProgram.parseAsync(input.split(' '), { from: 'user' })
-      return true
+      await this.chatProgram.parseAsync(input.split(' '), { from: 'user' });
+      return true;
     } catch (err) {
-      console.error(`Error: ${err.message}`)
-      return false
+      console.error(`Error: ${err.message}`);
+      return false;
     }
   }
 
-  async function handlePrompt(input = "") {
+  async handlePrompt(input = "") {
+    this.logger.prompt(input);
 
-    logger.prompt(input);
-
-    const contextInfo = await gatherContextInfo(config.include);
-
+    const contextInfo = await gatherContextInfo(this.state.config.include);
     const context = await resolveContent(contextInfo);
-    const tools = config.tools || [
+
+    const tools = this.state.config.tools.length ? this.state.config.tools : [
       ...createBasicTools({
-        output: config.output,
+        output: this.state.config.output,
       }),
-      ...config.additionalTools,
-    ]
+      ...this.state.config.additionalTools,
+    ];
     const task = new Task({ prompt: input, context, tools });
 
-    state.system = task.fullSystem;
+    this.state.system = task.fullSystem;
 
-    renderer.attach(task.toolProcessor);
+    this.renderer.attach(task.toolProcessor);
 
     const messages = [
       { role: 'system', content: task.fullSystem },
-      ...state.history,
+      ...this.state.history,
       { role: 'user', content: task.render() }
     ];
-    logger.info('message size:', JSON.stringify(messages).length)
+    this.logger.info('message size:', JSON.stringify(messages).length);
 
-    const {stream} = await execute(messages, config);
+    const { stream } = await execute(messages, this.state.config);
     const content = await streamHandler(stream, chunk => {
-      task.toolProcessor.process(chunk)
-    })
-  
-    renderer.cleanup();
+      task.toolProcessor.process(chunk);
+    });
+
+    this.renderer.cleanup();
     process.stdout.write('\n');
 
     return { content, currentTask: task };
   }
 
-  const askQuestion = async () => {
+  async askQuestion() {
     try {
       const { input } = await inquirer.prompt([
         {
@@ -176,45 +181,45 @@ export async function chatCommand(options = new CommandOptions()) {
         },
       ]);
 
-      handleQuestion(input);
+      this.handleQuestion(input);
     } catch (error) {
       if (error.name === 'ExitPromptError') {
-        return
+        return;
       }
-      console.error(`Error: ${error.message}`)
-      askQuestion();
+      console.error(`Error: ${error.message}`);
+      this.askQuestion();
     }
-  };
+  }
 
-  async function handleQuestion(input) {
+  async handleQuestion(input = "") {
     const trimmedInput = input.trim();
     if (trimmedInput.startsWith('/')) {
-      await handleCommand(trimmedInput.substring(1));
-      askQuestion();
+      await this.handleCommand(trimmedInput.substring(1));
+      this.askQuestion();
       return;
     }
 
     try {
-      state.history.push({ role: 'user', content: input })
-      const { content, currentTask } = await handlePrompt(input);
-      state.history.push({ role: 'assistent', content })
+      this.state.history.push({ role: 'user', content: input });
+      const { content, currentTask } = await this.handlePrompt(input);
+      this.state.history.push({ role: 'assistant', content });
 
-      // Run any remaining tasks in the queue
       const tasks = currentTask?.toolProcessor.queue;
-      const responses = await Promise.all(tasks.map(async task => {
+      await Promise.all(tasks.map(async task => {
         try {
-          return await task(state)
+          return await task(this);
         } catch (error) {
-          logger.error(`Error: ${error.message}`);
+          this.logger.error(`Error: ${error.message}`);
         }
-      }))
-
-      // console.log('Type "exit" to quit, "/info" for config');
+      }));
     } catch (error) {
-      logger.error(`Error: ${error.message}`);
+      this.logger.error(`Error: ${error.message}`);
     }
-    askQuestion();
+    this.askQuestion();
   }
+}
 
-  askQuestion();
+export async function chatCommand(options = new CommandOptions()) {
+  const chat = new ChatCommand(options);
+  await chat.init();
 }
