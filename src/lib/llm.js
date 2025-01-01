@@ -21,7 +21,11 @@ export async function execute(messages = [], options = {}) {
   
   const client = new AIClient(options);
 
-  const logger = new Logger(options.logger);
+  // @todo proxy more options
+  // const logger = new Logger(options.logger);
+  const logger = new Logger({
+    verbose: options.verbose,
+  });
   logger.info(`Using model: ${client.config.model}`);
   logger.messages(messages);
 
