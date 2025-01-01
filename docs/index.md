@@ -23,3 +23,11 @@ hero:
 #     details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
 ---
 
+```sh
+# New project
+silk create website "Build a simple html website"
+silk create snake "Create a snake game in html"
+
+# In an existing project
+silk do "make a README.md of this project"
+```
