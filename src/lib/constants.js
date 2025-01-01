@@ -35,6 +35,7 @@ export const PROVIDERS = {
     baseUrl: 'https://api.anthropic.com/v1',
     requiresApiKey: true,
     displayName: 'Anthropic',
+    envKey: 'ANTHROPIC_API_KEY',
     website: 'https://docs.anthropic.com/en/docs/about-claude/models',
     endpoint: '/messages',
     models: [

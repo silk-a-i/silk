@@ -8,7 +8,7 @@ export const configDir = path.join(homedir(), '.config', 'silk')
 
 export class Config {
   static DEFAULT_CONFIG = {
-    apiKey: 'sk-dummy-key',
+    apiKey: '',
     model: DEFAULT_PROVIDER.defaultModel,
     provider: DEFAULT_PROVIDER.value,
     models: [],
@@ -22,6 +22,8 @@ export class Config {
     endpoint: ""
   }
   max_tokens = null
+  provider = ""
+  env={}
 
   constructor(obj) {
     if(obj) this.validate(obj)
@@ -61,6 +63,11 @@ export class Config {
       ...validatedConfig,
     })
 
+    if(!this.apiKey) {
+      const envKey = PROVIDERS[this.provider.toUpperCase()].envKey
+      const hasKey = this.env[envKey]
+      this.apiKey = hasKey
+    }
     return this
   }
 
@@ -70,7 +77,7 @@ export class Config {
     })
  
     return {
-      apiKey: process.env.SILK_API_KEY,
+      // apiKey: process.env.SILK_API_KEY,
       model: process.env.SILK_MODEL,
       env: env.parsed
     };
@@ -131,6 +138,7 @@ export class Config {
 
     switch (configFile.type) {
       case 'js':
+        // @todo when importing from another 'commonjs' package this fails.
         const module = await import(configFile.path);
         return module.default;
       default:
