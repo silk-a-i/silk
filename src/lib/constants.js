@@ -1,16 +1,19 @@
 export const PROVIDERS = {
+  // @todo better lookup structure.
+  // either use value or key of the lookup object not both.
   SILK: {
     name: 'Silk',
     value: 'silk',
-    baseUrl: 'https://api.silk-labs.com/v1/chat',
+    baseUrl: 'https://api.silk-labs.com/v2/chat',
     defaultModel: 'smart',
     requiresApiKey: true,
     keyInfo: 'Get your key at: https://console.silk-labs.com',
     endpoint: '',
     envKey: 'SILK_API_KEY',
     models: [
-      { name: 'fast', displayName: 'Silk Fast' },
-      { name: 'smart', displayName: 'Silk Smart' }
+      { name: 'fast', displayName: 'Fast' },
+      { name: 'smart', displayName: 'Smart' },
+      { name: 'oracle', displayName: 'Oracle' }
     ]
   },
   OLLAMA: {
@@ -52,8 +55,7 @@ export const DEFAULT_IGNORE = [
   'node_modules/**',
   'dist/**',
   'build/**',
-  '.git/**',
-  'coverage/**',
+  '**/.git',
   'test/**',
   '.silk/**',
   '.env',

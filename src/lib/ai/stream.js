@@ -54,6 +54,9 @@ export class AIResponseStream {
       
       switch (this.provider) {
         case 'silk':
+          return parsed || '';
+
+        case 'silk_v1':
           return parsed.response || '';
         
         case 'anthropic':
