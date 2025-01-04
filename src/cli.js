@@ -18,6 +18,7 @@ program
 
 program
   .command('login')
+  .argument('[key]', 'key')
   .description('Configure API key')
   .option('-i, --interactive', 'Interactive mode')
   .action(loginCommand);
