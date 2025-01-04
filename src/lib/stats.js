@@ -13,8 +13,9 @@ export class FileStats {
     this.fileMetadata = new Map(); // Store file metadata
   }
 
-  addFile(filePath, content, metadata = {}) {
-    const size = metadata.size || Buffer.from(content).length;
+  addFile(filePath, content = "", metadata = {}) {
+    const hasSize = metadata.size !== undefined;
+    const size = hasSize ? metadata.size : Buffer.from(content).length;
     const ext = getExtension(filePath);
     
     this.totalSize += size;
