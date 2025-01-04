@@ -91,6 +91,7 @@ export class Config {
   async findConfigFileFromPath(configPath) {
     const configPaths = [
       { path: path.join(configPath, 'config.js'), type: 'js' },
+      { path: path.join(configPath, 'config.mjs'), type: 'js' },
       { path: path.join(configPath, 'config.json'), type: 'json' }
     ];
     for (const config of configPaths) {
