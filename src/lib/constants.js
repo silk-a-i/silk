@@ -3,7 +3,7 @@ export const PROVIDERS = {
     name: 'Silk',
     value: 'silk',
     baseUrl: 'https://api.silk-labs.com/v1/chat',
-    defaultModel: 'silk',
+    defaultModel: 'smart',
     requiresApiKey: true,
     keyInfo: 'Get your key at: https://console.silk-labs.com',
     endpoint: '',
@@ -46,7 +46,7 @@ export const PROVIDERS = {
 };
 
 export const INIT_PROViDERS = [PROVIDERS.SILK, PROVIDERS.OLLAMA, PROVIDERS.OPENAI];
-export const DEFAULT_PROVIDER = PROVIDERS.OLLAMA;
+export const DEFAULT_PROVIDER = PROVIDERS.SILK;
 
 export const DEFAULT_IGNORE = [
   'node_modules/**',
