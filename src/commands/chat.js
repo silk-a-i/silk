@@ -11,6 +11,7 @@ import { gatherContextInfo, resolveContent } from '../lib/fs.js';
 import { createBasicTools } from '../lib/tools/basicTools.js';
 import { execute, streamHandler } from '../lib/llm.js';
 import { FileStats } from '../lib/stats.js';
+import { Config } from '../lib/config/Config.js';
 
 class ChatCommand {
   constructor(options = new CommandOptions()) {
@@ -20,8 +21,9 @@ class ChatCommand {
       ...options.logger
     });
     this.state = {
-      config: null,
+      config: new Config(),
       options,
+      /** @type {Array<{ role: string, content: string }>} */
       history: [],
       files: [],
       system: '',
@@ -31,6 +33,8 @@ class ChatCommand {
       raw: options.raw,
       showStats: options.stats
     });
+    this.chatProgram = new Command();
+    this.chatProgram.exitOverride();
   }
 
   async init() {
@@ -48,9 +52,6 @@ class ChatCommand {
     this.logger.info(`Project root: ${process.cwd()}`);
 
     this.logger.info('Starting chat mode (type "exit" to quit, "/info" for config)');
-
-    this.chatProgram = new Command();
-    this.chatProgram.exitOverride();
 
     this.setupCommands();
     this.askQuestion();
@@ -135,6 +136,9 @@ class ChatCommand {
     }
   }
 
+  /** 
+   * @deprecation migrate to 'run'
+   **/ 
   async handlePrompt(input = "") {
     this.logger.prompt(input);
 
@@ -169,6 +173,12 @@ class ChatCommand {
     process.stdout.write('\n');
 
     return { content, currentTask: task };
+  }
+  
+  // @todo migrate to this
+  // it should run on the current history
+  async run() {
+    
   }
 
   async askQuestion() {
