@@ -4,10 +4,10 @@ import path from 'path'
 import { homedir } from 'os'
 import { Logger } from '../lib/logger.js'
 
-export async function loginCommand(key = '', options = {}) {
+export async function loginCommand (key = '', options = {}) {
   options.interactive = options.interactive || true
 
-  async function ask() {
+  async function ask () {
     const answers = await inquirer.prompt([{
       type: 'input',
       name: 'apiKey',
@@ -17,7 +17,7 @@ export async function loginCommand(key = '', options = {}) {
     return answers
   }
 
-  async function askOverwrite() {
+  async function askOverwrite () {
     const answers = await inquirer.prompt([{
       type: 'confirm',
       name: 'overwrite',

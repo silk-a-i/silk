@@ -9,14 +9,14 @@ export class CommandOptions {
   /** path to the config file */
   config = ''
   /** path to the resolved config file */
-  configPath='.'
+  configPath = '.'
   root = ''
   dry = false
   tools = []
   additionalTools = []
-  logger={}
-  
-  constructor(options = {}) {
-    Object.assign(this, options);
+  logger = {}
+
+  constructor (options = {}) {
+    Object.assign(this, options)
   }
 }

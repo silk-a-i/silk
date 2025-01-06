@@ -1,17 +1,17 @@
-import inquirer from 'inquirer';
-import chalk from 'chalk';
-import { createConfig } from '../lib/config/create.js';
-import { Logger } from '../lib/logger.js';
-import { INIT_PROViDERS as PROVIDERS } from '../lib/constants.js';
-import fs from 'fs';
-import path from 'path';
+import inquirer from 'inquirer'
+import chalk from 'chalk'
+import { createConfig } from '../lib/config/create.js'
+import { Logger } from '../lib/logger.js'
+import { INIT_PROViDERS as PROVIDERS } from '../lib/constants.js'
+import fs from 'fs'
+import path from 'path'
 
-export async function initCommand(root = '') {
-  const logger = new Logger({ verbose: true });
+export async function initCommand (root = '') {
+  const logger = new Logger({ verbose: true })
 
   if (root) {
-    fs.mkdirSync(root, { recursive: true });
-    process.chdir(root);
+    fs.mkdirSync(root, { recursive: true })
+    process.chdir(root)
   }
 
   try {
@@ -22,8 +22,8 @@ export async function initCommand(root = '') {
         message: 'Project directory:',
         default: '.',
         validate: input => {
-          if (!input) return 'Directory is required';
-          return true;
+          if (!input) return 'Directory is required'
+          return true
         }
       },
       {
@@ -51,49 +51,48 @@ export async function initCommand(root = '') {
         message: 'Select the model:',
         when: (answers) => answers.provider !== 'other',
         choices: (answers) => {
-          const provider = PROVIDERS[answers.provider];
+          const provider = PROVIDERS[answers.provider]
           return provider.models?.map(m => ({
             name: m.displayName || m.name,
             value: m.name
-          })) || [provider.defaultModel];
+          })) || [provider.defaultModel]
         }
       }
-    ]);
+    ])
 
-    const projectDir = path.resolve(answers.root);
-    fs.mkdirSync(projectDir, { recursive: true });
+    const projectDir = path.resolve(answers.root)
+    fs.mkdirSync(projectDir, { recursive: true })
 
     if (answers.provider === 'other') {
-      logger.info('\nPlease manually configure your provider in .silk/config.js');
-      answers.model = 'openai/gpt-3.5-turbo';
-      answers.apiKey = '';
+      logger.info('\nPlease manually configure your provider in .silk/config.js')
+      answers.model = 'openai/gpt-3.5-turbo'
+      answers.apiKey = ''
     }
 
-    const provider = PROVIDERS[answers.provider];
-    const tag = `${provider.value}/${answers.model}`;
+    const provider = PROVIDERS[answers.provider]
+    const tag = `${provider.value}/${answers.model}`
 
     const config = {
       apiKey: answers.apiKey || '',
       model: tag,
       // provider: provider.name,
       root: answers.root
-    };
-    
-    // @todo check for a better way to handle a fallback to env
-    if(!config.apiKey) {
-      delete config.apiKey;
     }
 
-    const configPath = await createConfig(config, 'js');
+    // @todo check for a better way to handle a fallback to env
+    if (!config.apiKey) {
+      delete config.apiKey
+    }
 
-    logger.success('Configuration created successfully!');
-    logger.success(configPath);
-    logger.info('\nYou can now use Silk with the following commands:\n');
-    logger.info(chalk.cyan('  silk do "create a hello world program"'));
-    logger.info(chalk.cyan('  silk chat'));
+    const configPath = await createConfig(config, 'js')
 
+    logger.success('Configuration created successfully!')
+    logger.success(configPath)
+    logger.info('\nYou can now use Silk with the following commands:\n')
+    logger.info(chalk.cyan('  silk do "create a hello world program"'))
+    logger.info(chalk.cyan('  silk chat'))
   } catch (error) {
-    logger.error(`Failed to initialize: ${error.message}`);
-    process.exit(1);
+    logger.error(`Failed to initialize: ${error.message}`)
+    process.exit(1)
   }
 }

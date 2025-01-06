@@ -1,4 +1,4 @@
-export function addSharedOptions(command) {
+export function addSharedOptions (command) {
   return command
     .option('-o, --output <dir>', 'Output directory for generated files', '')
     .option('-c, --context [glob]', 'File glob pattern to process')

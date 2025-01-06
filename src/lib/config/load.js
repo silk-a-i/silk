@@ -1,7 +1,7 @@
-import { CommandOptions } from '../CommandOptions.js';
-import { Config } from './Config.js';
+import { CommandOptions } from '../CommandOptions.js'
+import { Config } from './Config.js'
 
-export async function loadConfig(options = new CommandOptions) {
+export async function loadConfig (options = new CommandOptions()) {
   try {
     return {
       ...new CommandOptions(),
@@ -11,6 +11,6 @@ export async function loadConfig(options = new CommandOptions) {
       ...options
     }
   } catch (error) {
-    throw new Error(`Error loading config - ${error.message}`);
+    throw new Error(`Error loading config - ${error.message}`)
   }
 }

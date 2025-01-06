@@ -1,12 +1,12 @@
-import { loadConfig } from '../lib/config/load.js';
-import { Logger } from '../lib/logger.js';
-import { PROVIDERS } from '../lib/constants.js';
-import { gatherContextInfo } from '../lib/fs.js';
-import { FileStats } from '../lib/stats.js';
-import { CommandOptions } from '../lib/CommandOptions.js';
+import { loadConfig } from '../lib/config/load.js'
+import { Logger } from '../lib/logger.js'
+import { PROVIDERS } from '../lib/constants.js'
+import { gatherContextInfo } from '../lib/fs.js'
+import { FileStats } from '../lib/stats.js'
+import { CommandOptions } from '../lib/CommandOptions.js'
 
-export function logConfiguration(config, logger = new Logger) {
-  const provider = Object.values(PROVIDERS).find(p => p.value === config.provider);
+export function logConfiguration (config, logger = new Logger()) {
+  const provider = Object.values(PROVIDERS).find(p => p.value === config.provider)
 
   logger.stats('Configuration', [
     { label: 'Config', value: config.configPath },
@@ -16,26 +16,25 @@ export function logConfiguration(config, logger = new Logger) {
     { label: 'include', value: config.include },
     { label: 'root', value: config.root },
     { label: 'max_tokens', value: config.max_tokens || 'N/A' }
-  ]);
+  ])
 }
 
-export async function infoCommand(options = new CommandOptions) {
+export async function infoCommand (options = new CommandOptions()) {
   const logger = new Logger({
     verbose: options.verbose || true
-  });
-  
+  })
+
   try {
     const config = await loadConfig(options)
     // console.log(config)
-    logConfiguration(config, logger);
+    logConfiguration(config, logger)
 
-    const files = await gatherContextInfo(config.include, config);
-    const stats = new FileStats();
-    files.forEach(file => stats.addFile(file.path, null, file)); // Use size directly
-    stats.getSummary(logger);
-
+    const files = await gatherContextInfo(config.include, config)
+    const stats = new FileStats()
+    files.forEach(file => stats.addFile(file.path, null, file)) // Use size directly
+    stats.getSummary(logger)
   } catch (error) {
-    logger.error(`Failed to load configuration: ${error.message}`);
-    process.exit(1);
+    logger.error(`Failed to load configuration: ${error.message}`)
+    process.exit(1)
   }
 }

@@ -1,76 +1,76 @@
 export class AIResponseStream {
-  constructor(response, provider) {
-    this.reader = response.body.getReader();
-    this.decoder = new TextDecoder();
-    this.buffer = '';
-    this.provider = provider;
+  constructor (response, provider) {
+    this.reader = response.body.getReader()
+    this.decoder = new TextDecoder()
+    this.buffer = ''
+    this.provider = provider
   }
 
-  async *[Symbol.asyncIterator]() {
+  async * [Symbol.asyncIterator] () {
     try {
       while (true) {
-        const { done, value } = await this.reader.read();
-        
+        const { done, value } = await this.reader.read()
+
         if (done) {
           if (this.buffer) {
-            const content = this.parseChunk(this.buffer);
-            if (content) yield content;
+            const content = this.parseChunk(this.buffer)
+            if (content) yield content
           }
-          break;
+          break
         }
 
-        const chunk = this.decoder.decode(value);
-        this.buffer += chunk;
-        
-        const lines = this.buffer.split('\n');
-        this.buffer = lines.pop() || '';
+        const chunk = this.decoder.decode(value)
+        this.buffer += chunk
+
+        const lines = this.buffer.split('\n')
+        this.buffer = lines.pop() || ''
 
         for (const line of lines) {
           if (line.trim()) {
-            const content = this.parseChunk(line);
+            const content = this.parseChunk(line)
             if (content) {
-              yield content;
+              yield content
             }
           }
         }
       }
     } finally {
-      this.reader.releaseLock();
+      this.reader.releaseLock()
     }
   }
 
-  parseChunk(chunk) {
+  parseChunk (chunk) {
     if (!chunk.startsWith('data: ')) {
-      return null;
+      return null
     }
 
-    const data = chunk.slice(6);
+    const data = chunk.slice(6)
     if (data === '[DONE]') {
-      return null;
+      return null
     }
 
     try {
-      const parsed = JSON.parse(data);
-      
+      const parsed = JSON.parse(data)
+
       switch (this.provider) {
         case 'silk':
-          return parsed || '';
+          return parsed || ''
 
         case 'silk_v1':
-          return parsed.response || '';
-        
+          return parsed.response || ''
+
         case 'anthropic':
-          return parsed.delta?.text || '';
-        
+          return parsed.delta?.text || ''
+
         case 'openai':
-          return parsed.choices?.[0]?.delta?.content || '';
-        
+          return parsed.choices?.[0]?.delta?.content || ''
+
         case 'ollama':
         default:
-          return parsed.choices?.[0]?.delta?.content || '';
+          return parsed.choices?.[0]?.delta?.content || ''
       }
     } catch (error) {
-      return null;
+      return null
     }
   }
 }

@@ -12,6 +12,7 @@ export const PROVIDERS = {
     envKey: 'SILK_API_KEY',
     models: [
       { name: 'fast', displayName: 'Fast' },
+      { name: 'bright', displayName: 'Bright' },
       { name: 'smart', displayName: 'Smart' },
       { name: 'oracle', displayName: 'Oracle' }
     ]
@@ -46,10 +47,10 @@ export const PROVIDERS = {
       { name: 'claude-3-5-haiku-20241022' }
     ]
   }
-};
+}
 
-export const INIT_PROViDERS = [PROVIDERS.SILK, PROVIDERS.OLLAMA, PROVIDERS.OPENAI];
-export const DEFAULT_PROVIDER = PROVIDERS.SILK;
+export const INIT_PROViDERS = [PROVIDERS.SILK, PROVIDERS.OLLAMA, PROVIDERS.OPENAI]
+export const DEFAULT_PROVIDER = PROVIDERS.SILK
 
 export const DEFAULT_IGNORE = [
   'node_modules/**',
@@ -63,5 +64,5 @@ export const DEFAULT_IGNORE = [
   'yarn.lock',
   'package-lock.json',
   'npm-debug.log',
-  'pnpm-lock.yaml',
-];
+  'pnpm-lock.yaml'
+]
