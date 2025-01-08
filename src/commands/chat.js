@@ -32,6 +32,7 @@ export class Chat {
       verbose: options.verbose,
       ...options.logger
     })
+    this.ui = new Logger()
     this.renderer = new CliRenderer({
       raw: options.raw,
       showStats: options.stats
@@ -54,7 +55,7 @@ export class Chat {
     }
     this.logger.info(`Project root: ${process.cwd()}`)
 
-    this.logger.info('Starting chat mode (type "exit" to quit, "/info" for config)')
+    this.ui.info('Starting chat mode (type "exit" to quit, "/info" for config)')
 
     this.setupCommands()
     this.askQuestion()
@@ -215,6 +216,11 @@ export class Chat {
       return
     }
 
+    // handle exit
+    if (trimmedInput === 'exit') {
+      process.exit(0)
+    }
+    
     try {
       this.state.history.push({ role: 'user', content: input })
       const { content, currentTask } = await this.handlePrompt(input)
