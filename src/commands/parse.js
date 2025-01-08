@@ -5,7 +5,7 @@ import { CliRenderer } from '../lib/renderers/cli.js'
 import fs from 'fs/promises'
 import { postActions } from '../lib/silk.js'
 
-export async function runCommand(filePath) {
+export async function parseCommand(filePath) {
   const logger = new Logger()
 
   try {

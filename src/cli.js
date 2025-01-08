@@ -7,7 +7,7 @@ import { initCommand } from './commands/init.js'
 import { prepCommand } from './commands/prep.js'
 import { packCommand } from './commands/pack.js'
 import { infoCommand } from './commands/info.js'
-import { runCommand } from './commands/run.js'
+import { parseCommand } from './commands/parse.js'
 import { loginCommand } from './commands/login.js'
 import { addSharedOptions } from './options.js'
 
@@ -37,10 +37,11 @@ program
   .action(infoCommand)
 
 program
-  .command('run')
+  .command('parse')
+  .alias('p')
   .argument('[file]', 'file to parse')
   .description('Parse markdown file into individual files')
-  .action(runCommand)
+  .action(parseCommand)
 
 program
   .command('prep')
