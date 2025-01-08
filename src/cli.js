@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 import { program } from 'commander'
 import { doCommand } from './commands/do.js'
-import { chatCommand } from './commands/chat.js'
+import { Chat, chatCommand } from './commands/chat.js'
 import { mapCommand } from './commands/map.js'
 import { initCommand } from './commands/init.js'
 import { prepCommand } from './commands/prep.js'
 import { packCommand } from './commands/pack.js'
 import { infoCommand } from './commands/info.js'
-import { parseCommand } from './commands/parse.js'
+import { runCommand } from './commands/run.js'
 import { loginCommand } from './commands/login.js'
 import { addSharedOptions } from './options.js'
 
@@ -37,10 +37,10 @@ program
   .action(infoCommand)
 
 program
-  .command('parse')
+  .command('run')
   .argument('[file]', 'file to parse')
   .description('Parse markdown file into individual files')
-  .action(parseCommand)
+  .action(runCommand)
 
 program
   .command('prep')
@@ -71,9 +71,8 @@ addSharedOptions(
 
 addSharedOptions(
   program
-    .command('run')
+    .command('do')
     .alias('patch')
-    .alias('do')
     .alias('build')
     .argument('[prompt]', 'prompt or file')
     .description('Execute a single task')
@@ -93,5 +92,15 @@ addSharedOptions(
     .argument('[prompt]', 'prompt or file')
     .description('Run a prompt over multiple files')
 ).action(mapCommand)
+
+addSharedOptions(
+  program
+    .argument('[mood]', 'set the mood')
+    .description('Execute a single task')
+).action(async (promptOrFile, options) => {
+  const chat = new Chat(options)
+  chat.state.system = promptOrFile
+  await chat.init()
+})
 
 program.parse()

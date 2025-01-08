@@ -11,6 +11,7 @@ import { LimitChecker } from './LimitChecker.js'
 import fs from 'fs'
 import ora from 'ora'
 import { streamHandler } from './llm.js'
+import { postActions } from './silk.js'
 
 export class CommandHandler {
   logger = new Logger()
@@ -18,7 +19,7 @@ export class CommandHandler {
   executor = new TaskExecutor()
   limitChecker = new LimitChecker()
 
-  constructor (options = {}) {
+  constructor(options = {}) {
     this.options = new CommandOptions(options)
     this.logger = new Logger({
       verbose: options.verbose
@@ -29,7 +30,7 @@ export class CommandHandler {
     this.limitChecker = new LimitChecker(options)
   }
 
-  async execute (prompt = '') {
+  async execute(prompt = '') {
     const { logger, options } = this
     const { root, include, dry, stats } = this.options
     await this.setupRoot(root)
@@ -77,20 +78,7 @@ export class CommandHandler {
         task.toolProcessor.process(chunk)
       })
 
-      const MOCK_STATE = {
-        history: []
-      }
-      const state = MOCK_STATE
-
-      // Any tasks in the queue?
-      const tasks = task?.toolProcessor.queue
-      await Promise.all(tasks.map(async task => {
-        try {
-          return await task(state)
-        } catch (error) {
-          logger.error(`Error: ${error.message}`)
-        }
-      }))
+      postActions(task, { logger: this.logger })
     } catch (error) {
       logger.error(`Error: ${error.message}`)
     }
@@ -98,7 +86,7 @@ export class CommandHandler {
     renderer.cleanup()
   }
 
-  async setupRoot (root) {
+  async setupRoot(root) {
     if (root) {
       fs.mkdirSync(root, { recursive: true })
       process.chdir(root)

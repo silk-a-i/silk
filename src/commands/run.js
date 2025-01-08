@@ -3,8 +3,9 @@ import { Logger } from '../lib/logger.js'
 import { createBasicTools } from '../lib/tools/basicTools.js'
 import { CliRenderer } from '../lib/renderers/cli.js'
 import fs from 'fs/promises'
+import { postActions } from '../lib/silk.js'
 
-export async function parseCommand (filePath) {
+export async function runCommand(filePath) {
   const logger = new Logger()
 
   try {
@@ -27,6 +28,9 @@ export async function parseCommand (filePath) {
     task.toolProcessor.process(content)
     task.toolProcessor.cleanup()
 
+    // Post actions
+    postActions(task, { logger: this.logger })
+
     renderer.cleanup()
   } catch (error) {
     logger.error(`Failed to parse: ${error.message}`)
@@ -34,7 +38,7 @@ export async function parseCommand (filePath) {
   }
 }
 
-async function readStdin () {
+async function readStdin() {
   const chunks = []
   for await (const chunk of process.stdin) {
     chunks.push(chunk)

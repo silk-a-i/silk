@@ -15,21 +15,23 @@ import { Config } from '../lib/config/Config.js'
 import { getContext } from '../lib/getContext.js'
 
 export class Chat {
+  options = {}
+  state = {
+    config: new Config(),
+    options: {},
+    /** @type {Array<{ role: string, content: string }>} */
+    history: [],
+    files: [],
+    system: '',
+    model: ''
+  }
+
   constructor (options = new CommandOptions()) {
     this.options = options
     this.logger = new Logger({
       verbose: options.verbose,
       ...options.logger
     })
-    this.state = {
-      config: new Config(),
-      options,
-      /** @type {Array<{ role: string, content: string }>} */
-      history: [],
-      files: [],
-      system: '',
-      model: ''
-    }
     this.renderer = new CliRenderer({
       raw: options.raw,
       showStats: options.stats
@@ -76,6 +78,7 @@ export class Chat {
 
     this.chatProgram
       .command('model')
+      .alias('m')
       .description('Select model')
       .action(async () => {
         const { model } = await inquirer.prompt([{
@@ -156,12 +159,12 @@ export class Chat {
         ]
     const task = new Task({ prompt: input, context, tools })
 
-    this.state.system = task.fullSystem
+    const system = `${this.state.system}${task.fullSystem}`
 
     this.renderer.attach(task.toolProcessor)
 
     const messages = [
-      { role: 'system', content: task.fullSystem },
+      { role: 'system', content: system },
       ...this.state.history,
       { role: 'user', content: task.render() }
     ]
