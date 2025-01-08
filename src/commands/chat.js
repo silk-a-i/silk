@@ -13,6 +13,7 @@ import { execute, streamHandler } from '../lib/llm.js'
 import { FileStats } from '../lib/stats.js'
 import { Config } from '../lib/config/Config.js'
 import { getContext } from '../lib/getContext.js'
+import { postActions } from '../lib/silk.js'
 
 export class Chat {
   options = {}
@@ -35,7 +36,7 @@ export class Chat {
     this.ui = new Logger()
     this.renderer = new CliRenderer({
       raw: options.raw,
-      showStats: options.stats
+      stats: options.stats
     })
     this.chatProgram = new Command()
     this.chatProgram.exitOverride()
@@ -55,7 +56,7 @@ export class Chat {
     }
     this.logger.info(`Project root: ${process.cwd()}`)
 
-    this.ui.info('Starting chat mode (type "exit" to quit, "/info" for config)')
+    this.ui.info('Starting chat mode (type "exit" to quit, "/help" for available commands)')
 
     this.setupCommands()
     this.askQuestion()
@@ -145,33 +146,35 @@ export class Chat {
    * @deprecation migrate to 'run'
    **/
   async handlePrompt (input = '') {
+    const { state }  = this
+
     this.logger.prompt(input)
 
-    const files = await getContext(this.state.config)
+    const files = await getContext(state.config)
     const context = await resolveContent(files)
 
-    const tools = this.state.config.tools.length
-      ? this.state.config.tools
+    const tools = state.config.tools.length
+      ? state.config.tools
       : [
           ...createBasicTools({
-            output: this.state.config.output
+            output: state.config.output
           }),
-          ...this.state.config.additionalTools
+          ...state.config.additionalTools
         ]
     const task = new Task({ prompt: input, context, tools })
 
-    const system = `${this.state.system}${task.fullSystem}`
+    const system = `${state.system}${task.fullSystem}`
 
     this.renderer.attach(task.toolProcessor)
 
     const messages = [
       { role: 'system', content: system },
-      ...this.state.history,
+      ...state.history,
       { role: 'user', content: task.render() }
     ]
     this.logger.info('message size:', JSON.stringify(messages).length)
 
-    const { stream } = await execute(messages, this.state.config)
+    const { stream } = await execute(messages, state.config)
     const content = await streamHandler(stream, chunk => {
       task.toolProcessor.process(chunk)
     })
@@ -226,17 +229,11 @@ export class Chat {
       const { content, currentTask } = await this.handlePrompt(input)
       this.state.history.push({ role: 'assistant', content })
 
-      const tasks = currentTask?.toolProcessor.queue
-      await Promise.all(tasks.map(async task => {
-        try {
-          return await task(this)
-        } catch (error) {
-          this.logger.error(`Error: ${error.message}`)
-        }
-      }))
+      await postActions(currentTask, this)
     } catch (error) {
       this.logger.error(`Error: ${error.message}`)
     }
+    
     this.askQuestion()
   }
 }

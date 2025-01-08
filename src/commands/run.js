@@ -29,7 +29,7 @@ export async function runCommand(filePath) {
     task.toolProcessor.cleanup()
 
     // Post actions
-    postActions(task, { logger: this.logger })
+    await postActions(task)
 
     renderer.cleanup()
   } catch (error) {
