@@ -213,15 +213,19 @@ export class Chat {
 
   async handleQuestion (input = '') {
     const trimmedInput = input.trim()
-    if (trimmedInput.startsWith('/')) {
+
+    const isCommand = trimmedInput.startsWith('/')
+    const isExit = trimmedInput === 'exit'
+
+    // handle exit
+    if (isExit) {
+      process.exit(0)
+    }
+
+    if (isCommand) {
       await this.handleCommand(trimmedInput.substring(1))
       this.askQuestion()
       return
-    }
-
-    // handle exit
-    if (trimmedInput === 'exit') {
-      process.exit(0)
     }
     
     try {
@@ -231,7 +235,7 @@ export class Chat {
 
       await postActions(currentTask, this)
     } catch (error) {
-      this.logger.error(`Error: ${error.message}`)
+      this.ui.error(`Error: ${error.message}`)
     }
     
     this.askQuestion()
