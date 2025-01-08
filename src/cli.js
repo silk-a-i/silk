@@ -97,7 +97,7 @@ addSharedOptions(
   program
     .argument('[mood]', 'set the mood')
     .description('Execute a single task')
-).action(async (promptOrFile, options) => {
+).action(async (promptOrFile = '', options) => {
   const chat = new Chat(options)
   chat.state.system = promptOrFile
   await chat.init()
