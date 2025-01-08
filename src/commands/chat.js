@@ -12,8 +12,9 @@ import { createBasicTools } from '../lib/tools/basicTools.js'
 import { execute, streamHandler } from '../lib/llm.js'
 import { FileStats } from '../lib/stats.js'
 import { Config } from '../lib/config/Config.js'
+import { getContext } from '../lib/getContext.js'
 
-class ChatCommand {
+export class Chat {
   constructor (options = new CommandOptions()) {
     this.options = options
     this.logger = new Logger({
@@ -92,9 +93,9 @@ class ChatCommand {
       .alias('c')
       .description('List context')
       .action(async () => {
-        const files = await gatherContextInfo(this.state.config.include, this.state.config)
+        const files = await getContext(this.state.config)
         const stats = new FileStats()
-        files.forEach(file => stats.addFile(file.path, null, file))
+        files.forEach(file => stats.addFile(file.path, file))
         stats.getSummary(this.logger, { showLargestFiles: 60 })
       })
 
@@ -142,8 +143,8 @@ class ChatCommand {
   async handlePrompt (input = '') {
     this.logger.prompt(input)
 
-    const contextInfo = await gatherContextInfo(this.state.config.include)
-    const context = await resolveContent(contextInfo)
+    const files = await getContext(this.state.config)
+    const context = await resolveContent(files)
 
     const tools = this.state.config.tools.length
       ? this.state.config.tools
@@ -232,6 +233,6 @@ class ChatCommand {
 }
 
 export async function chatCommand (options = new CommandOptions()) {
-  const chat = new ChatCommand(options)
+  const chat = new Chat(options)
   await chat.init()
 }

@@ -4,8 +4,9 @@ import { PROVIDERS } from '../lib/constants.js'
 import { gatherContextInfo } from '../lib/fs.js'
 import { FileStats } from '../lib/stats.js'
 import { CommandOptions } from '../lib/CommandOptions.js'
+import { getContext } from '../lib/getContext.js'
 
-export function logConfiguration (config, logger = new Logger()) {
+export function logConfiguration(config, logger = new Logger()) {
   const provider = Object.values(PROVIDERS).find(p => p.value === config.provider)
 
   logger.stats('Configuration', [
@@ -19,19 +20,19 @@ export function logConfiguration (config, logger = new Logger()) {
   ])
 }
 
-export async function infoCommand (options = new CommandOptions()) {
+export async function infoCommand(options = new CommandOptions()) {
   const logger = new Logger({
     verbose: options.verbose || true
   })
 
   try {
     const config = await loadConfig(options)
-    // console.log(config)
     logConfiguration(config, logger)
 
-    const files = await gatherContextInfo(config.include, config)
+    const files = await getContext(options)
+
     const stats = new FileStats()
-    files.forEach(file => stats.addFile(file.path, null, file)) // Use size directly
+    files.forEach(file => stats.addFile(file.path, file))
     stats.getSummary(logger)
   } catch (error) {
     logger.error(`Failed to load configuration: ${error.message}`)

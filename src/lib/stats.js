@@ -1,21 +1,13 @@
 export class FileStats {
-  constructor () {
-    this.byExtension = {}
-    this.sizeByExtension = {}
-    this.reset()
-  }
+  totalSize = 0
+  byExtension = {}
+  sizeByExtension = {}
+  /** @type {null | { path: string, size: number }} */
+  largestFile = null
+  fileMetadata = new Map() // Store file metadata
 
-  reset () {
-    this.totalSize = 0
-    this.byExtension = {}
-    this.sizeByExtension = {}
-    this.largestFile = null
-    this.fileMetadata = new Map() // Store file metadata
-  }
-
-  addFile (filePath, content = '', metadata = {}) {
-    const hasSize = metadata.size !== undefined
-    const size = hasSize ? metadata.size : Buffer.from(content).length
+  addFile (filePath, metadata = { size: 0 }) {
+    const size = metadata.size || 0
     const ext = getExtension(filePath)
 
     this.totalSize += size
@@ -28,7 +20,6 @@ export class FileStats {
 
     // Store metadata
     this.fileMetadata?.set(filePath, {
-      size,
       createdAt: metadata.createdAt || new Date(),
       modifiedAt: metadata.modifiedAt || new Date(),
       ...metadata
