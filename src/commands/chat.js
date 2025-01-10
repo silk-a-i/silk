@@ -101,7 +101,7 @@ export class Chat {
         const files = await getContext(this.state.config)
         const stats = new FileStats()
         files.forEach(file => stats.addFile(file.path, file))
-        stats.getSummary(this.logger, { showLargestFiles: 60 })
+        stats.summary({ showLargestFiles: 20 })
       })
 
     this.chatProgram
@@ -185,8 +185,8 @@ export class Chat {
     return { content, currentTask: task }
   }
 
-  // @todo migrate to this
-  // it should run on the current history
+  // @todo migrate `handlePrompt` to this
+  // but without taking a new input but just runs on the current history
   async run () {
 
   }

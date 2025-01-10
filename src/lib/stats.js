@@ -1,3 +1,5 @@
+import { Logger } from "./logger.js"
+
 export class FileStats {
   totalSize = 0
   byExtension = {}
@@ -26,7 +28,7 @@ export class FileStats {
     })
   }
 
-  getSummary (logger, { showLargestFiles = 3 } = {}) {
+  summary ({ showLargestFiles = 3 } = {}, {logger = new Logger} = {}) {
     logger.stats('Context stats', [
       { label: 'Total size', value: formatBytes(this.totalSize) },
       { label: 'Files', value: Object.values(this.byExtension).reduce((a, b) => a + b, 0) }
@@ -45,15 +47,30 @@ export class FileStats {
 
     if (this.fileMetadata && this.fileMetadata.size > 0) {
       const largestFiles = Array.from(this.fileMetadata.entries())
-        .sort(([, a], [, b]) => b.size - a.size)
-        .slice(0, showLargestFiles)
-        .map(([path, { size }]) => ({
-          label: path,
-          value: formatBytes(size)
-        }))
+      .sort(([, a], [, b]) => b.size - a.size)
+      .slice(0, showLargestFiles)
+      .map(([path, { size }]) => ({
+        label: path,
+        value: formatBytes(size)
+      }))
 
-      logger.stats('Largest Files', largestFiles)
+      const remainingFilesCount = this.fileMetadata.size - showLargestFiles
+      if (remainingFilesCount > 0) {
+        largestFiles.push({ label: `+ ${remainingFilesCount} more files`, value: '' })
+      }
+
+      logger.stats('Files by size', largestFiles)
     }
+  }
+
+  /**
+   * @deprecated Use summary
+   * @param {*} logger 
+   * @param {*} param1 
+   * @returns 
+   */
+  getSummary (logger, { showLargestFiles = 3 } = {}) {
+    return this.summary({ showLargestFiles }, { logger })
   }
 }
 

@@ -49,7 +49,7 @@ export class Logger {
     console.log(chalk.cyan(`\n${title}:`))
     items.forEach(({ label, value }, i, arr) => {
       const prefix = i === arr.length - 1 ? '└─' : '├─'
-      console.log(chalk.gray(prefix) + ` ${label}: ${value}`)
+      console.log(chalk.gray(prefix) + ` ${label}${value && ': ' + value}`)
     })
   }
 
