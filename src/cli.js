@@ -4,7 +4,6 @@ import { run } from './commands/run.js'
 import { Chat, chat } from './commands/chat.js'
 import { map } from './commands/map.js'
 import { init } from './commands/init.js'
-import { prep } from './commands/prep.js'
 import { pack } from './commands/pack.js'
 import { info } from './commands/info.js'
 import { parse } from './commands/parse.js'
@@ -42,12 +41,6 @@ program
   .argument('[file]', 'file to parse')
   .description('Parse markdown file into individual files')
   .action(parse)
-
-program
-  .command('prep')
-  .argument('<folder>', 'folder to prepare')
-  .description('Create a package of files')
-  .action(prep)
 
 program
   .command('pack')
