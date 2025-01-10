@@ -2,7 +2,7 @@ import fs from 'fs/promises'
 import path from 'path'
 import { Logger } from '../lib/logger.js'
 
-export async function prepCommand (folder) {
+export async function prep (folder) {
   const logger = new Logger()
 
   try {

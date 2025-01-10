@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 import { program } from 'commander'
-import { doCommand } from './commands/do.js'
-import { Chat, chatCommand } from './commands/chat.js'
-import { mapCommand } from './commands/map.js'
-import { initCommand } from './commands/init.js'
-import { prepCommand } from './commands/prep.js'
-import { packCommand } from './commands/pack.js'
-import { infoCommand } from './commands/info.js'
-import { parseCommand } from './commands/parse.js'
-import { loginCommand } from './commands/login.js'
+import { run } from './commands/run.js'
+import { Chat, chat } from './commands/chat.js'
+import { map } from './commands/map.js'
+import { init } from './commands/init.js'
+import { prep } from './commands/prep.js'
+import { pack } from './commands/pack.js'
+import { info } from './commands/info.js'
+import { parse } from './commands/parse.js'
+import { login } from './commands/login.js'
 import { addSharedOptions } from './options.js'
 
 program
@@ -21,40 +21,40 @@ program
   .argument('[key]', 'key')
   .description('Configure API key')
   .option('-i, --interactive', 'Interactive mode')
-  .action(loginCommand)
+  .action(login)
 
 program
   .command('init')
   .argument('[root]', 'root directory')
   .description('Initialize a new Silk project')
-  .action(initCommand)
+  .action(init)
 
 program
   .command('info')
   // @todo add json option
   // .option('--json', 'json')
   .description('Show current configuration')
-  .action(infoCommand)
+  .action(info)
 
 program
   .command('parse')
   .alias('p')
   .argument('[file]', 'file to parse')
   .description('Parse markdown file into individual files')
-  .action(parseCommand)
+  .action(parse)
 
 program
   .command('prep')
   .argument('<folder>', 'folder to prepare')
   .description('Create a package of files')
-  .action(prepCommand)
+  .action(prep)
 
 program
   .command('pack')
   .argument('<folder>', 'folder to pack')
   .option('-o, --output <file>', 'output file', 'packed.md')
   .description('Pack folder contents into a single markdown file')
-  .action(packCommand)
+  .action(pack)
 
 addSharedOptions(
   program
@@ -64,7 +64,7 @@ addSharedOptions(
     .argument('<prompt>', 'prompt or file')
     .description('Execute a single task')
 ).action((folder, promptOrFile, options) => {
-  doCommand(promptOrFile, {
+  run(promptOrFile, {
     root: folder,
     ...options
   })
@@ -72,18 +72,18 @@ addSharedOptions(
 
 addSharedOptions(
   program
-    .command('do')
-    .alias('patch')
-    .alias('build')
+    .command('run')
+    .alias('do')
     .argument('[prompt]', 'prompt or file')
     .description('Execute a single task')
-).action(doCommand)
+).action(run)
 
 addSharedOptions(
   program
     .command('chat')
+    .option('-s, --style <file>', 'change the talking style. e.g friendly, brief', '')
     .description('Start interactive chat mode')
-    .action(chatCommand)
+    .action(chat)
 )
 
 addSharedOptions(
@@ -92,7 +92,7 @@ addSharedOptions(
     .alias('map')
     .argument('[prompt]', 'prompt or file')
     .description('Run a prompt over multiple files')
-).action(mapCommand)
+).action(map)
 
 addSharedOptions(
   program

@@ -11,7 +11,7 @@ import { createBasicTools } from '../lib/tools/basicTools.js'
 import { mkdirSync } from 'fs'
 import { CommandOptions } from '../lib/CommandOptions.js'
 
-export async function mapCommand (promptOrFile, options = new CommandOptions()) {
+export async function map (promptOrFile = "", options = new CommandOptions()) {
   const config = await loadConfig(options)
 
   const logger = new Logger(options)

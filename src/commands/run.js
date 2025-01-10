@@ -5,7 +5,7 @@ import { extractPrompt } from '../lib/prompt-extractor.js'
 import { logConfiguration } from './info.js'
 import path from 'path'
 
-export async function doCommand (promptOrFile, options = new CommandOptions()) {
+export async function run (promptOrFile = "", options = new CommandOptions()) {
   const config = await loadConfig(options)
 
   const handler = new CommandHandler(config)

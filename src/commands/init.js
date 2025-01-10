@@ -6,7 +6,7 @@ import { INIT_PROViDERS as PROVIDERS } from '../lib/constants.js'
 import fs from 'fs'
 import path from 'path'
 
-export async function initCommand (root = '') {
+export async function init (root = '') {
   const logger = new Logger({ verbose: true })
 
   if (root) {

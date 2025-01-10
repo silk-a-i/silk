@@ -4,7 +4,7 @@ import { Task } from '../lib/task.js'
 import { CliRenderer } from '../lib/renderers/cli.js'
 import { Logger } from '../lib/logger.js'
 import { loadConfig } from '../lib/config/load.js'
-import { infoCommand } from './info.js'
+import { info } from './info.js'
 import fs from 'fs'
 import { CommandOptions } from '../lib/CommandOptions.js'
 import { gatherContextInfo, resolveContent } from '../lib/fs.js'
@@ -75,7 +75,7 @@ export class Chat {
       .alias('i')
       .description('Show config info')
       .action(async () => {
-        await infoCommand()
+        await info()
       })
 
     this.chatProgram
@@ -242,7 +242,7 @@ export class Chat {
   }
 }
 
-export async function chatCommand (options = new CommandOptions()) {
+export async function chat (options = new CommandOptions()) {
   const chat = new Chat(options)
   await chat.init()
 }

@@ -20,7 +20,7 @@ export function logConfiguration(config, logger = new Logger()) {
   ])
 }
 
-export async function infoCommand(options = new CommandOptions()) {
+export async function info(options = new CommandOptions()) {
   const logger = new Logger({
     verbose: options.verbose || true
   })

@@ -4,7 +4,7 @@ import path from 'path'
 import { homedir } from 'os'
 import { Logger } from '../lib/logger.js'
 
-export async function loginCommand (key = '', options = {}) {
+export async function login (key = '', options = {}) {
   options.interactive = options.interactive || true
 
   async function ask () {

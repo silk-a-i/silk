@@ -6,7 +6,7 @@ import { File } from '../lib/File.js'
 import { getGlobOptions } from '../lib/fs.js'
 import { FileStats, formatBytes } from '../lib/stats.js'
 
-export async function packCommand (folder, options) {
+export async function pack (folder, options) {
   const logger = new Logger()
 
   try {
