@@ -48,7 +48,7 @@ export async function pack (folder = "", options = {}) {
       value: formatBytes(Buffer.from(content).length)
     }])
 
-    stats.getSummary(logger)
+    stats.summary(undefined, {logger})
   } catch (error) {
     logger.error(`Failed to pack folder: ${error.message}`)
     process.exit(1)

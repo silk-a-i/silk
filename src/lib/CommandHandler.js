@@ -43,7 +43,7 @@ export class CommandHandler {
     if (stats) {
       const fileStats = new FileStats()
       validFiles.forEach(file => fileStats.addFile(file.path, file.content))
-      fileStats.getSummary(logger)
+      fileStats.summary(undefined, { logger })
     }
 
     const tools = options.tools.length

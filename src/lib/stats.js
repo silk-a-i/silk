@@ -62,16 +62,6 @@ export class FileStats {
       logger.stats('Files by size', largestFiles)
     }
   }
-
-  /**
-   * @deprecated Use summary
-   * @param {*} logger 
-   * @param {*} param1 
-   * @returns 
-   */
-  getSummary (logger, { showLargestFiles = 3 } = {}) {
-    return this.summary({ showLargestFiles }, { logger })
-  }
 }
 
 export function formatBytes (bytes) {
