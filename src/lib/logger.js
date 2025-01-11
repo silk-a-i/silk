@@ -1,5 +1,15 @@
 import chalk from 'chalk'
 
+const COLORS = {
+  json: chalk.gray,
+  info: chalk.blue,
+  success: chalk.green,
+  hint: chalk.blue,
+  error: chalk.red,
+  debug: chalk.gray,
+  message: chalk.gray
+}
+
 export class Logger {
   maxMessageLength = 0
   verbose = true
@@ -10,36 +20,36 @@ export class Logger {
 
   info (...args) {
     if (!this.verbose) return
-    console.log(chalk.blue(...args))
+    console.log(COLORS.info(...args))
   }
 
   success (...args) {
-    console.log(chalk.green(...args))
+    console.log(COLORS.success(...args))
   }
 
   hint (...args) {
-    console.log(chalk.blue(...args))
+    console.log(COLORS.hint(...args))
   }
 
   error (...args) {
-    console.error(chalk.red(...args))
+    console.error(COLORS.error(...args))
   }
 
   debug (...args) {
     if (!this.verbose) return
-    console.log(chalk.gray('Debug:'), ...args)
+    console.log(COLORS.debug('Debug:'), ...args)
   }
 
   prompt (prompt) {
     if (!this.verbose) return
     console.log(chalk.yellow('\nPrompt used:'))
-    console.log(chalk.gray(prompt))
+    console.log(COLORS.message(prompt))
     console.log()
   }
 
   json (prompt) {
     if (!this.verbose) return
-    console.log(chalk.gray(JSON.stringify(prompt, null, 2)))
+    console.log(COLORS.json(JSON.stringify(prompt, null, 2)))
     console.log()
   }
 
@@ -49,7 +59,7 @@ export class Logger {
     console.log(chalk.cyan(`\n${title}:`))
     items.forEach(({ label, value }, i, arr) => {
       const prefix = i === arr.length - 1 ? '└─' : '├─'
-      console.log(chalk.gray(prefix) + ` ${label}${value !== '' ? ': ' + value : ''}`)
+      console.log(COLORS.message(prefix) + ` ${label}: ${value || 'N/A'}`)
     })
   }
 
@@ -77,10 +87,14 @@ export class Logger {
     if (_maxLength && message.content.length > _maxLength) {
       const truncatedContent = message.content.slice(0, _maxLength)
       const remainingBytes = Buffer.byteLength(message.content) - Buffer.byteLength(truncatedContent)
-      console.log(chalk.gray(truncatedContent + `... (${remainingBytes} more bytes)`))
+      console.log(COLORS.message(truncatedContent + `... (${remainingBytes} more bytes)`))
     } else {
-      console.log(chalk.gray(message.content))
+      console.log(COLORS.message(message.content))
     }
     console.log()
   }
 }
+
+export const Log = new Logger({
+  verbose: false
+})
