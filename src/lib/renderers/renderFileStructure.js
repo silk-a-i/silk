@@ -1,4 +1,4 @@
-export function renderFileStructure (context) {
+export function renderFileStructure (context = []) {
   const structure = {}
 
   context.forEach(file => {
@@ -16,17 +16,16 @@ export function renderFileStructure (context) {
       current = current[part]
     })
   })
-
-  function renderStructure (structure, indent = '') {
-    let result = ''
-    for (const key in structure) {
-      result += `${indent}├── ${key}\n`
-      if (structure[key]) {
-        result += renderStructure(structure[key], indent + '│   ')
-      }
-    }
-    return result
-  }
-
   return renderStructure(structure).replace(/├── ([^│]*)\n│/g, '├── $1\n')
+}
+
+export function renderStructure (structure, indent = '') {
+  let result = ''
+  for (const key in structure) {
+    result += `${indent}├── ${key}\n`
+    if (structure[key]) {
+      result += renderStructure(structure[key], indent + '│   ')
+    }
+  }
+  return result
 }
