@@ -23,7 +23,8 @@ export class Chat {
     /** @type {Array<{ role: string, content: string }>} */
     history: [],
     files: [],
-    system: '',
+    mood: '',
+    moods: ['brief', 'happy', 'sad', 'angry', 'professional', 'neutral', 'other'],
     model: ''
   }
 
@@ -63,14 +64,40 @@ export class Chat {
   }
 
   setupCommands () {
-    this.chatProgram
+    const { chatProgram } = this
+
+    chatProgram
       .command('exit')
       .description('Exit the chat')
       .action(() => {
         process.exit(0)
       })
 
-    this.chatProgram
+    chatProgram
+      .command('mood')
+      .alias('m')
+      .description('Set the mood')
+      .action(async () => {
+        const { mood } = await inquirer.prompt([{
+          type: 'list',
+          name: 'mood',
+          message: 'Select mood:',
+          choices: this.state.moods
+        }])
+
+        if (mood === 'other') {
+          const { customMood } = await inquirer.prompt([{
+            type: 'input',
+            name: 'customMood',
+            message: 'Enter custom mood:'
+          }])
+          this.state.mood = customMood
+        } else {
+          this.state.mood = mood
+        }
+      })
+
+    chatProgram
       .command('info')
       .alias('i')
       .description('Show config info')
@@ -78,7 +105,7 @@ export class Chat {
         await info()
       })
 
-    this.chatProgram
+    chatProgram
       .command('model')
       .alias('m')
       .description('Select model')
@@ -93,7 +120,7 @@ export class Chat {
         this.state.config.model = model
       })
 
-    this.chatProgram
+    chatProgram
       .command('context')
       .alias('c')
       .description('List context')
@@ -104,7 +131,7 @@ export class Chat {
         stats.summary({ showLargestFiles: 20 })
       })
 
-    this.chatProgram
+    chatProgram
       .command('state')
       .alias('s')
       .description('Show internal state')
@@ -112,14 +139,14 @@ export class Chat {
         console.log(this.state)
       })
 
-    this.chatProgram
+    chatProgram
       .command('clear')
       .description('Clear history')
       .action(async () => {
         this.state.history = []
       })
 
-    this.chatProgram
+    chatProgram
       .command('history')
       .alias('h')
       .description('Show chat history')
@@ -163,7 +190,7 @@ export class Chat {
         ]
     const task = new Task({ prompt: input, context, tools })
 
-    const system = `${state.system}${task.fullSystem}`
+    const system = `${state.mood}${task.fullSystem}`
 
     this.renderer.attach(task.toolProcessor)
 
