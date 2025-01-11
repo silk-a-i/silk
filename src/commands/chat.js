@@ -64,7 +64,7 @@ export class Chat {
   }
 
   setupCommands () {
-    const { chatProgram } = this
+    const { chatProgram, logger, ui, state } = this
 
     chatProgram
       .command('exit')
@@ -74,27 +74,33 @@ export class Chat {
       })
 
     chatProgram
-      .command('mood')
-      .alias('m')
+      .command('tone')
+      .alias('t')
+      .argument('[tone]', 'tone')
       .description('Set the mood')
-      .action(async () => {
-        const { mood } = await inquirer.prompt([{
-          type: 'list',
-          name: 'mood',
-          message: 'Select mood:',
-          choices: this.state.moods
-        }])
-
-        if (mood === 'other') {
-          const { customMood } = await inquirer.prompt([{
-            type: 'input',
-            name: 'customMood',
-            message: 'Enter custom mood:'
+      .action(async (tone = '') => {
+        async function askMood() {
+          const { toneOfVoice } = await inquirer.prompt([{
+            type: 'list',
+            name: 'toneOfVoice',
+            message: 'Select tone of voice:',
+            choices: state.moods
           }])
-          this.state.mood = customMood
-        } else {
-          this.state.mood = mood
+  
+          if (toneOfVoice === 'other') {
+            const { customMood } = await inquirer.prompt([{
+              type: 'input',
+              name: 'customMood',
+              message: 'Enter custom tone of voice:'
+            }])
+            return customMood
+          } 
+          return toneOfVoice
         }
+
+        const mood = tone || await askMood()
+        ui.info(`Tone of voice set to: ${mood}`)
+        state.mood = mood
       })
 
     chatProgram
@@ -114,10 +120,10 @@ export class Chat {
           type: 'list',
           name: 'model',
           message: 'Select model:',
-          choices: this.state.config.models,
-          default: this.state.config.model
+          choices: state.config.models,
+          default: state.config.model
         }])
-        this.state.config.model = model
+        state.config.model = model
       })
 
     chatProgram
@@ -125,7 +131,7 @@ export class Chat {
       .alias('c')
       .description('List context')
       .action(async () => {
-        const files = await getContext(this.state.config)
+        const files = await getContext(state.config)
         const stats = new FileStats()
         files.forEach(file => stats.addFile(file.path, file))
         stats.summary({ showLargestFiles: 20 })
@@ -136,14 +142,14 @@ export class Chat {
       .alias('s')
       .description('Show internal state')
       .action(async () => {
-        console.log(this.state)
+        console.log(state)
       })
 
     chatProgram
       .command('clear')
       .description('Clear history')
       .action(async () => {
-        this.state.history = []
+        state.history = []
       })
 
     chatProgram
@@ -151,17 +157,19 @@ export class Chat {
       .alias('h')
       .description('Show chat history')
       .action(() => {
-        if (!this.state.history?.length) {
+        if (!state.history?.length) {
           console.log('No chat history')
           return
         }
-        new Logger({ verbose: true }).messages(this.state.history)
+        new Logger({ verbose: true }).messages(state.history)
       })
   }
 
   async handleCommand (input) {
     try {
-      await this.chatProgram.parseAsync(input.split(' '), { from: 'user' })
+      // also handle commands like `/tone "very happy"`
+      const argv = input.match(/(?:[^\s"]+|"[^"]*")+/g).map(arg => arg.replace(/^"|"$/g, ''))
+      await this.chatProgram.parseAsync(argv, { from: 'user' })
       return true
     } catch (err) {
       console.error(`Error: ${err.message}`)
