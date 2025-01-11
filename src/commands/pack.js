@@ -5,14 +5,17 @@ import { Logger } from '../lib/logger.js'
 import { File } from '../lib/File.js'
 import { getGlobOptions } from '../lib/fs.js'
 import { FileStats, formatBytes } from '../lib/stats.js'
+import { loadConfig } from '../lib/config/load.js'
 
-export async function pack (folder, options) {
+export async function pack (folder = "", options = {}) {
   const logger = new Logger()
 
   try {
+    const config = await loadConfig(options)
+
     const globOptions = await getGlobOptions({
       cwd: folder,
-      ignore: [options.output]
+      ignore: [options.output || 'packed.md']
     })
 
     const files = await globby('**/*', globOptions)
@@ -29,12 +32,12 @@ export async function pack (folder, options) {
       const fullPath = path.join(folder, filePath)
       const fileContent = await fs.readFile(fullPath, 'utf-8')
 
-      stats.addFile(filePath, fileContent)
-      const file = new File(filePath, fileContent)
+      stats.addFile(filePath, { size: fileContent.length })
+      const file = new File({ path: filePath, content: fileContent })
       content += file.render()
     }
 
-    const outputPath = path.resolve(options.output)
+    const outputPath = path.resolve(options.output || 'packed.md')
     await fs.writeFile(outputPath, content)
 
     logger.success(`\nPacked ${files.length} files into ${outputPath}`)
