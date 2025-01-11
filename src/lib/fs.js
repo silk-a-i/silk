@@ -38,33 +38,36 @@ async function gatherFiles (patterns, options) {
   return new Set(files)
 }
 
-export async function gatherContextInfo (patterns, options = {}) {
+export async function gatherContextInfo(patterns, options = {}) {
   if (!patterns) return []
 
   const { cwd = '' } = options
   try {
     const allFiles = await gatherFiles(patterns, options)
-    const fileInfos = await Promise.all(
-      Array.from(allFiles).map(async path => {
-        try {
-          const stats = await fs.stat(`${cwd}${path}`)
-          return new File({
-            pathRelative: relative(cwd, path),
-            path,
-            size: stats.size,
-            content: null
-          })
-        } catch (error) {
-          console.warn(`Warning: Could not read file ${path}: ${error.message}`)
-          return null
-        }
-      })
-    )
-
+    const fileInfos = await getFileInfos(Array.from(allFiles), cwd)
     return fileInfos.filter(Boolean)
   } catch (error) {
     console.warn(`Warning: Error gathering context info: ${error.message}`)
     return []
+  }
+}
+
+async function getFileInfos(files, cwd) {
+  return Promise.all(files.map(path => getFileInfo(path, cwd)))
+}
+
+async function getFileInfo(path, cwd) {
+  try {
+    const stats = await fs.stat(`${cwd}${path}`)
+    return new File({
+      pathRelative: relative(cwd, path),
+      path,
+      size: stats.size,
+      content: null
+    })
+  } catch (error) {
+    console.warn(`Warning: Could not read file ${path}: ${error.message}`)
+    return null
   }
 }
 
