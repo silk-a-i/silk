@@ -10,7 +10,9 @@
   "scripts": {
     "lint": "npx standard --fix",
     "start": "node src/cli.js",
-    "test": "npx vitest"
+    "test": "npx vitest",
+    "docs:build": "npx vitepress build docs",
+    "docs:preview": "npx vitepress preview docs"
   },
   "dependencies": {
     "chalk": "^5.3.0",
@@ -18,7 +20,10 @@
     "dotenv": "^16.3.1",
     "globby": "^14.0.2",
     "inquirer": "^9.2.12",
-    "ora": "^7.0.1",
-    "mime-types": "^2.1.35"
+    "mime-types": "^2.1.35",
+    "ora": "^7.0.1"
+  },
+  "devDependencies": {
+    "vitepress": "^1.5.0"
   }
 }
