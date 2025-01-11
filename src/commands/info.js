@@ -20,20 +20,25 @@ export function logConfiguration(config, logger = new Logger()) {
   ])
 }
 
-export async function info(options = new CommandOptions()) {
+export async function info(options = {}) {
   const logger = new Logger({
     verbose: options.verbose || true
   })
 
   try {
-    const config = await loadConfig(options)
+    const config = await loadConfig(new CommandOptions(options))
+    
+    const files = await getContext(config)
+    if(options.json) {
+      const obj = JSON.stringify(files, null, 2)
+      console.log(obj)
+      return
+    }
+
     logConfiguration(config, logger)
-
-    const files = await getContext(options)
-
     const stats = new FileStats()
     files.forEach(file => stats.addFile(file.path, file))
-    stats.getSummary(logger)
+    stats.summary()
   } catch (error) {
     logger.error(`Failed to load configuration: ${error.message}`)
     process.exit(1)
