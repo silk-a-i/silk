@@ -83,3 +83,15 @@ export async function resolveContent (fileInfos) {
     })
   )
 }
+
+// Common binary file extensions
+export const BINARY_EXTENSIONS = new Set([
+  'jpg', 'jpeg', 'png', 'gif', 'ico', 'pdf', 
+  'zip', 'tar', 'gz', 'exe', 'dll', 'so',
+  'mp3', 'mp4', 'avi', 'mov', 'woff', 'woff2'
+])
+
+export function isBinaryPath(filePath = '') {
+  const ext = filePath.split('.').pop()?.toLowerCase()
+  return BINARY_EXTENSIONS.has(ext)
+}
