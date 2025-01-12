@@ -57,9 +57,10 @@ export class Logger {
     if (!this.verbose) return
 
     console.log(chalk.cyan(`\n${title}:`))
-    items.forEach(({ label, value }, i, arr) => {
+    items.forEach(({ label, value, raw }, i, arr) => {
       const prefix = i === arr.length - 1 ? '└─' : '├─'
-      console.log(COLORS.message(prefix) + ` ${label}: ${value || 'N/A'}`)
+      const keyValue = raw || `${label}: ${value || 'N/A'}`
+      console.log(COLORS.message(prefix) + keyValue)
     })
   }
 

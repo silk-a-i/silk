@@ -1,15 +1,22 @@
 import { globby } from 'globby'
 import fs from 'fs/promises'
-import { relative } from 'path'
+import { join, relative } from 'path'
 import { File } from './File.js'
 import { DEFAULT_IGNORE } from './constants.js'
+import { Log } from './logger.js'
 
+/**
+ * Generates options for globbing files.
+ *
+ * @param {import('globby').Options} [options={}] - Custom options to override the default settings.
+ * @returns {import('globby').Options} The combined glob options.
+ */
 export function getGlobOptions (options = {}) {
   return {
-    nodir: true,
     gitignore: true,
     dot: true,
-    ...options,
+    // deep: 10,
+    // ...options,
     ignore: [
       ...DEFAULT_IGNORE,
       ...(options.ignore || [])
@@ -30,11 +37,12 @@ async function loadFileContent (filePath) {
   }
 }
 
-async function gatherFiles (patterns, options) {
+async function gatherFiles (patterns = [], options) {
   const globs = Array.isArray(patterns) ? patterns : [patterns]
   const globOptions = getGlobOptions(options)
+  Log.debug(`Gathering files with options`, {globs, globOptions})
   const files = await globby(globs, globOptions)
-  // const files = await glob(globs, globOptions);
+  Log.debug(files)
   return new Set(files)
 }
 
@@ -56,12 +64,13 @@ async function getFileInfos(files, cwd) {
   return Promise.all(files.map(path => getFileInfo(path, cwd)))
 }
 
-async function getFileInfo(path, cwd) {
+async function getFileInfo(relPath = '', cwd = '') {
+  const path = join(cwd, relPath)
   try {
-    const stats = await fs.stat(`${cwd}${path}`)
+    const stats = await fs.stat(path)
     return new File({
-      pathRelative: relative(cwd, path),
-      path,
+      // pathRelative: relative(cwd, path),
+      path: relative(cwd, path),
       size: stats.size,
       content: null
     })

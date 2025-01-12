@@ -1,7 +1,6 @@
 import { loadConfig } from '../lib/config/load.js'
-import { Logger } from '../lib/logger.js'
+import { Log, Logger } from '../lib/logger.js'
 import { PROVIDERS } from '../lib/constants.js'
-import { gatherContextInfo } from '../lib/fs.js'
 import { FileStats } from '../lib/stats.js'
 import { CommandOptions } from '../lib/CommandOptions.js'
 import { getContext } from '../lib/getContext.js'
@@ -15,7 +14,9 @@ export function logConfiguration(config, logger = new Logger()) {
     { label: 'Model', value: config.model },
     { label: 'Base URL', value: config.baseUrl },
     { label: 'include', value: config.include },
+    { label: 'ignore', value: config.ignore },
     { label: 'root', value: config.root },
+    { label: 'cwd', value: config.cwd },
     { label: 'max_tokens', value: config.max_tokens || 'N/A' }
   ])
 }
@@ -24,23 +25,26 @@ export async function info(options = {}) {
   const logger = new Logger({
     verbose: options.verbose || true
   })
+  Log.verbose = options.verbose || false
 
-  try {
-    const config = await loadConfig(new CommandOptions(options))
-    
-    const files = await getContext(config)
-    if(options.json) {
-      const obj = JSON.stringify(files, null, 2)
-      console.log(obj)
-      return
-    }
-
-    logConfiguration(config, logger)
-    const stats = new FileStats()
-    files.forEach(file => stats.addFile(file.path, file))
-    stats.summary()
-  } catch (error) {
-    logger.error(`Failed to load configuration: ${error.message}`)
-    process.exit(1)
+  const config = await loadConfig(new CommandOptions(options))
+  
+  if(options.json) {
+    new Logger().json(config)
+    return
   }
+
+  // @todo also support info on files
+  const files = await getContext(config)
+  // if(options.json) {
+  //   const obj = JSON.stringify(files, null, 2)
+  //   console.log(obj)
+  //   return
+  // }
+
+  logConfiguration(config, logger)
+  
+  const stats = new FileStats()
+  files.forEach(file => stats.addFile(file.path, file))
+  stats.summary()
 }

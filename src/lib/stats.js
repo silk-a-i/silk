@@ -1,62 +1,60 @@
 import { Logger } from "./logger.js"
 
 export class FileStats {
-  totalSize = 0
-  byExtension = {}
-  sizeByExtension = {}
-  /** @type {null | { path: string, size: number }} */
-  largestFile = null
+  filePaths = new Set()
   fileMetadata = new Map() // Store file metadata
 
   addFile (filePath, metadata = { size: 0 }) {
-    const size = metadata.size || 0
-    const ext = getExtension(filePath)
-
-    this.totalSize += size
-    this.byExtension[ext] = (this.byExtension[ext] || 0) + 1
-    this.sizeByExtension[ext] = (this.sizeByExtension[ext] || 0) + size
-
-    if (size > (this.largestFile?.size || 0)) {
-      this.largestFile = { path: filePath, size }
-    }
-
-    // Store metadata
-    this.fileMetadata?.set(filePath, {
-      createdAt: metadata.createdAt || new Date(),
-      modifiedAt: metadata.modifiedAt || new Date(),
+    this.filePaths.add(filePath)
+    this.fileMetadata.set(filePath, {
+      // createdAt: metadata.createdAt || new Date(),
+      // modifiedAt: metadata.modifiedAt || new Date(),
       ...metadata
     })
   }
 
   summary ({ showLargestFiles = 3 } = {}, {logger = new Logger} = {}) {
+    let totalSize = 0
+    const byExtension = {}
+    const sizeByExtension = {}
+
+    this.fileMetadata.forEach((metadata, filePath) => {
+      const size = metadata.size || 0
+      const ext = getExtension(filePath)
+
+      totalSize += size
+      byExtension[ext] = (byExtension[ext] || 0) + 1
+      sizeByExtension[ext] = (sizeByExtension[ext] || 0) + size
+    })
+
     logger.stats('Context stats', [
-      { label: 'Total size', value: formatBytes(this.totalSize) },
-      { label: 'Files', value: Object.values(this.byExtension).reduce((a, b) => a + b, 0) }
+      { label: 'Total size', value: formatBytes(totalSize) },
+      { label: 'Files', value: this.filePaths.size }
     ])
 
-    if (Object.keys(this.byExtension).length > 0) {
+    if (Object.keys(byExtension).length > 0) {
       logger.stats('Files by Type',
-        Object.entries(this.byExtension)
+        Object.entries(byExtension)
           .sort(([, a], [, b]) => b - a)
           .map(([ext, count]) => ({
             label: ext,
-            value: `${count} (${formatBytes(this.sizeByExtension[ext])})`
+            value: `${count} (${formatBytes(sizeByExtension[ext])})`
           }))
       )
     }
 
-    if (this.fileMetadata && this.fileMetadata.size > 0) {
+    if (this.fileMetadata.size > 0) {
       const largestFiles = Array.from(this.fileMetadata.entries())
-      .sort(([, a], [, b]) => b.size - a.size)
-      .slice(0, showLargestFiles)
-      .map(([path, { size }]) => ({
-        label: path,
-        value: formatBytes(size)
-      }))
+        .sort(([, a], [, b]) => b.size - a.size)
+        .slice(0, showLargestFiles)
+        .map(([path, { size }]) => ({
+          label: path,
+          value: formatBytes(size)
+        }))
 
       const remainingFilesCount = this.fileMetadata.size - showLargestFiles
       if (remainingFilesCount > 0) {
-        largestFiles.push({ label: `+ ${remainingFilesCount} more files`, value: '' })
+        largestFiles.push({ raw: `+ ${remainingFilesCount} more files` })
       }
 
       logger.stats('Files by size', largestFiles)

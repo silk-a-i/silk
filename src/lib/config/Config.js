@@ -30,9 +30,12 @@ export class Config {
   tools = []
   additionalTools = []
   output = ''
+  root = ''
+  cwd = ''
+  verbose = false
 
-  constructor (obj) {
-    if (obj) this.validate(obj)
+  constructor (obj = {}) {
+    Object.assign(this, obj)
   }
 
   async load (path = '') {
@@ -41,7 +44,8 @@ export class Config {
     const fileConfig = await this.loadConfigFile(configFile)
     const config = this.mergeConfigs(Config.DEFAULT_CONFIG, envConfig, fileConfig)
     this.configPath = configFile?.path || ''
-    return this.validate(config)
+    const validatedConfig = this.validate(config)
+    return validatedConfig
   }
 
   validate (config = {}) {
@@ -61,6 +65,7 @@ export class Config {
         verbose: validatedConfig.verbose
       },
       ...provider,
+      cwd: process.cwd(),
       model: validatedConfig.model || provider?.defaultModel,
       api: {
         baseUrl: validatedConfig.baseUrl || provider?.baseUrl,
@@ -105,19 +110,29 @@ export class Config {
 
   async findConfigFile (startDir = '', configPath = '') {
     if (configPath) {
-      const fullPath = path.resolve(configPath)
-      if (await this.fileExists(fullPath)) {
-        return {
-          path: fullPath,
-          type: path.extname(fullPath).slice(1) || 'json'
-        }
-      }
-      throw new Error(`Config file not found: ${configPath}`)
+      return this.findConfigFileByPath(configPath)
     }
 
-    // @todo load .env file for global keys
+    const projectConfigFile = await this.findProjectConfigFile(startDir)
+    if (projectConfigFile) {
+      return projectConfigFile
+    }
 
-    // Project specific config
+    return this.findConfigFileFromPath(configDir)
+  }
+
+  async findConfigFileByPath (configPath) {
+    const fullPath = path.resolve(configPath)
+    if (await this.fileExists(fullPath)) {
+      return {
+        path: fullPath,
+        type: path.extname(fullPath).slice(1) || 'json'
+      }
+    }
+    throw new Error(`Config file not found: ${configPath}`)
+  }
+
+  async findProjectConfigFile (startDir) {
     let currentDir = startDir
     while (currentDir !== path.parse(currentDir).root) {
       const silkDir = path.join(currentDir, '.silk')
@@ -125,16 +140,8 @@ export class Config {
       if (configFile) {
         return configFile
       }
-
       currentDir = path.dirname(currentDir)
     }
-
-    // Search in user's config directory
-    const configFile = await this.findConfigFileFromPath(configDir)
-    if (configFile) {
-      return configFile
-    }
-
     return null
   }
 

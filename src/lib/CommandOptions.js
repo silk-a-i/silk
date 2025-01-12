@@ -9,7 +9,7 @@ export class CommandOptions {
   /** path to the config file */
   config = ''
   /** path to the resolved config file */
-  configPath = '.'
+  configPath = ''
   root = ''
   dry = false
   tools = []
