@@ -16,11 +16,11 @@ export async function extractPrompt (promptOrFile, configRoot = '.') {
       const content = await tryReadFile(designPath)
       if (content) return content
 
-      const readmePath = 'README.md'
+      const readmePath = 'TODO.md'
       const readmeContent = await tryReadFile(readmePath)
       if (readmeContent) return readmeContent
 
-      throw new Error('No prompt provided and no .silk/design.md or README.md found')
+      throw new Error('No prompt provided and no .silk/design.md or TODO.md found')
     }
 
     // Check if prompt is a file path
