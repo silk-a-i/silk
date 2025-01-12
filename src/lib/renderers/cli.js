@@ -95,12 +95,21 @@ export class CliRenderer {
     }
     this.spinners.clear()
 
-    if (this.showStats) {
+    if (!this.raw) {
       this.displayStats()
+    }
+
+    if (this.showStats) {
+      this.displayVerboseStats()
     }
   }
 
   displayStats () {
+    const elapsedTime = ((Date.now() - this.stats.startTime) / 1000).toFixed(1)
+    console.log(`\nDone in ${elapsedTime}s`)
+  }
+
+  displayVerboseStats () {
     const elapsedTime = ((Date.now() - this.stats.startTime) / 1000).toFixed(1)
     console.log(chalk.cyan('\nStats:'))
     console.log(chalk.gray('├─') + ` Time: ${elapsedTime}s`)
@@ -109,7 +118,7 @@ export class CliRenderer {
     console.log(chalk.gray('└─') + ` Actions: ${this.stats.actions}`)
   }
 
-  formatBytes (bytes) {
+  formatBytes (bytes = 0) {
     if (bytes === 0) return '0 B'
     const sizes = ['B', 'KB', 'MB', 'GB']
     const i = Math.floor(Math.log(bytes) / Math.log(1024))
