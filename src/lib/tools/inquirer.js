@@ -1,6 +1,6 @@
 import inquirer from 'inquirer'
 
-async function useInquirerTool (res = {}) {
+async function useInquirerTool(res = {}) {
   try {
     const questions = JSON.parse(res.content)
     const answers = await inquirer.prompt(questions)
@@ -11,25 +11,22 @@ async function useInquirerTool (res = {}) {
   return {}
 }
 
-export function inquirerPlugin (settings = {}) {
+export function inquirerPlugin(settings = {}) {
   return {
     name: 'ask',
-    supportedModels: ['silk'],
-    setup (ctx, tools) {
-      ctx.on('finish', async (res, tools) => {
-        // push it to the tools queue
+    setup(ctx, tools) {
+      ctx.on("finish", async (res, tools) => {
         tools.queue.push(async (ctx) => {
-          const { state } = ctx
           const { questions, answers } = await useInquirerTool(res)
 
-          ctx.handlePrompt(answers[questions.name])
-
           // Push answers to the chat history
-          // state.history.push({
-          //   role: 'user',
-          //   content: answers[questions.name]
-          // });
-          // @todo And run again
+          const { state } = ctx;
+          const answer = answers && answers[questions.name]
+          state.history.push({
+            role: 'user',
+            content: `${questions.message} ${answer}`
+          });
+          // @issue user now still needs to press enter to submit
         })
       })
     }

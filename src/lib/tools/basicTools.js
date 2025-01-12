@@ -2,11 +2,17 @@ import fs from 'node:fs'
 import path from 'path'
 import { Tool } from './Tool.js'
 import { ACTION_TAG } from '../prompt.js'
+import { inquirerPlugin } from './inquirer.js'
+import cliTool from './cli.js'
 
-export function createBasicTools (options = {}, { tag = ACTION_TAG } = {}) {
+const OPTIONS = {
+  output: ''
+}
+
+export function createBasicTools(options = OPTIONS, { tag = ACTION_TAG } = {}) {
   const outputDir = options.output || ''
 
-  return [
+  const tools = [
     new Tool({
       name: 'create',
       description: 'Create a new file',
@@ -16,7 +22,7 @@ export function createBasicTools (options = {}, { tag = ACTION_TAG } = {}) {
 <${tag} tool="create" path="index.html">
   <div>Hello World</div>
 </${tag}>`,
-      onFinish (ctx) {
+      onFinish(ctx) {
         const fullPath = path.join(outputDir, ctx.path)
         const dir = path.dirname(fullPath)
         fs.mkdirSync(dir, { recursive: true })
@@ -33,7 +39,7 @@ export function createBasicTools (options = {}, { tag = ACTION_TAG } = {}) {
     color: blue;
   }
 </${tag}>`,
-      onFinish (ctx) {
+      onFinish(ctx) {
         const fullPath = path.join(outputDir, ctx.path)
 
         try {
@@ -50,7 +56,7 @@ export function createBasicTools (options = {}, { tag = ACTION_TAG } = {}) {
       description: 'Delete a file',
       examples: `
 <${tag} tool="delete" path="style.css"></${tag}>`,
-      onFinish (ctx) {
+      onFinish(ctx) {
         const fullPath = path.join(outputDir, ctx.path)
         try {
           fs.unlinkSync(fullPath)
@@ -58,6 +64,14 @@ export function createBasicTools (options = {}, { tag = ACTION_TAG } = {}) {
           throw new Error(`Cannot delete ${fullPath}: ${error.message}`)
         }
       }
-    })
+    }),
+
+    cliTool
   ]
+
+  if (options.provider === 'silk') {
+    tools.push(inquirerPlugin())
+  }
+
+  return tools
 }
