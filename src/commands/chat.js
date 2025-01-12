@@ -15,6 +15,8 @@ import { Config } from '../lib/config/Config.js'
 import { getContext } from '../lib/getContext.js'
 import { postActions } from '../lib/silk.js'
 
+const MOODS = ['brief', 'happy', 'sad', 'angry', 'professional', 'neutral', 'other']
+
 export class Chat {
   options = {}
   state = {
@@ -24,11 +26,10 @@ export class Chat {
     history: [],
     files: [],
     mood: '',
-    moods: ['brief', 'happy', 'sad', 'angry', 'professional', 'neutral', 'other'],
     model: ''
   }
 
-  constructor (options = new CommandOptions()) {
+  constructor(options = new CommandOptions()) {
     this.options = options
     this.logger = new Logger({
       verbose: options.verbose,
@@ -43,7 +44,7 @@ export class Chat {
     this.chatProgram.exitOverride()
   }
 
-  async init () {
+  async init() {
     this.state.config = await loadConfig(this.options)
     const { config } = this.state
 
@@ -63,7 +64,7 @@ export class Chat {
     this.askQuestion()
   }
 
-  setupCommands () {
+  setupCommands() {
     const { chatProgram, logger, ui, state } = this
 
     chatProgram
@@ -71,6 +72,30 @@ export class Chat {
       .description('Exit the chat')
       .action(() => {
         process.exit(0)
+      })
+
+    chatProgram
+      .command('context')
+      .description('Set the context mode')
+      .action(() => {
+        // @todo
+      })
+
+    chatProgram
+      .command('save')
+      .description('Save the chat state to file')
+      .action(() => {
+        // @todo
+        // const { history, mood } = state
+        // fs.writeFileSync('chat.json', JSON.stringify({ history, mood }, null, 2))
+        // ui.info('Chat state saved')
+      })
+
+      chatProgram
+      .command('restore')
+      .description('Restore the chat state from file')
+      .action(() => {
+        // @todo
       })
 
     chatProgram
@@ -84,9 +109,9 @@ export class Chat {
             type: 'list',
             name: 'toneOfVoice',
             message: 'Select tone of voice:',
-            choices: state.moods
+            choices: MOODS
           }])
-  
+
           if (toneOfVoice === 'other') {
             const { customMood } = await inquirer.prompt([{
               type: 'input',
@@ -94,7 +119,7 @@ export class Chat {
               message: 'Enter custom tone of voice:'
             }])
             return customMood
-          } 
+          }
           return toneOfVoice
         }
 
@@ -165,7 +190,7 @@ export class Chat {
       })
   }
 
-  async handleCommand (input) {
+  async handleCommand(input) {
     try {
       // also handle commands like `/tone "very happy"`
       const argv = input.match(/(?:[^\s"]+|"[^"]*")+/g).map(arg => arg.replace(/^"|"$/g, ''))
@@ -180,8 +205,8 @@ export class Chat {
   /**
    * @deprecation migrate to 'run'
    **/
-  async handlePrompt (input = '') {
-    const { state }  = this
+  async handlePrompt(input = '') {
+    const { state } = this
 
     this.logger.prompt(input)
 
@@ -191,11 +216,11 @@ export class Chat {
     const tools = state.config.tools.length
       ? state.config.tools
       : [
-          ...createBasicTools({
-            output: state.config.output
-          }),
-          ...state.config.additionalTools
-        ]
+        ...createBasicTools({
+          output: state.config.output
+        }),
+        ...state.config.additionalTools
+      ]
     const task = new Task({ prompt: input, context, tools })
 
     const system = `${state.mood}${task.fullSystem}`
@@ -222,11 +247,11 @@ export class Chat {
 
   // @todo migrate `handlePrompt` to this
   // but without taking a new input but just runs on the current history
-  async run () {
+  async run() {
 
   }
 
-  async askQuestion () {
+  async askQuestion() {
     try {
       const { input } = await inquirer.prompt([
         {
@@ -246,7 +271,7 @@ export class Chat {
     }
   }
 
-  async handleQuestion (input = '') {
+  async handleQuestion(input = '') {
     const trimmedInput = input.trim()
 
     const isCommand = trimmedInput.startsWith('/')
@@ -262,7 +287,7 @@ export class Chat {
       this.askQuestion()
       return
     }
-    
+
     try {
       this.state.history.push({ role: 'user', content: input })
       const { content, currentTask } = await this.handlePrompt(input)
@@ -272,12 +297,12 @@ export class Chat {
     } catch (error) {
       this.ui.error(`Error: ${error.message}`)
     }
-    
+
     this.askQuestion()
   }
 }
 
-export async function chat (options = new CommandOptions()) {
+export async function chat(options = new CommandOptions()) {
   const chat = new Chat(options)
   await chat.init()
 }
