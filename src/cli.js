@@ -65,6 +65,19 @@ addSharedOptions(
 
 addSharedOptions(
   program
+    .command('ask')
+    .argument('[prompt]', 'prompt or file')
+    .description('Execute a task without additional context')
+    .action((promptOrFile, options) => {
+      run(promptOrFile, {
+        ...options,
+        context: '' // Override context to be empty
+      })
+    })
+)
+
+addSharedOptions(
+  program
     .command('run')
     .alias('do')
     .argument('[prompt]', 'prompt or file')
