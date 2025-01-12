@@ -41,7 +41,5 @@ export async function streamHandler (stream, cb = (c) => {}) {
       cb(chunk)
     }
   }
-  // Extra newline to flush any action
-  cb('\n')
   return fullContent
 }

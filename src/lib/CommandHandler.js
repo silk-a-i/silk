@@ -77,8 +77,9 @@ export class CommandHandler {
       const content = await streamHandler(stream, chunk => {
         task.toolProcessor.process(chunk)
       })
-
-      postActions(task, { logger: this.logger })
+      task.toolProcessor.cleanup()
+      
+      await postActions(task)
     } catch (error) {
       logger.error(`Error: ${error.message}`)
     }
