@@ -11,11 +11,7 @@ export async function run (promptOrFile = "", options = new CommandOptions()) {
   const handler = new CommandHandler(config)
   logConfiguration(config, handler.logger)
 
-  try {
-    const configRoot = path.dirname(config.configPath)
-    const prompt = await extractPrompt(promptOrFile, configRoot)
-    handler.execute(prompt)
-  } catch (error) {
-    handler.logger.error(error)
-  }
+  const configRoot = path.dirname(config.configPath)
+  const prompt = await extractPrompt(promptOrFile, configRoot)
+  handler.execute(prompt)
 }
