@@ -3,8 +3,10 @@ export class CommandOptions {
   raw = false
   stats = false
   output = ''
-  context = ''
+  /** set context resolving, false is off */
+  context = true
   system = ''
+  /** glob pattern */
   include = ['**/*']
   /** path to the config file */
   config = ''

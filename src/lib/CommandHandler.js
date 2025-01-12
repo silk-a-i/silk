@@ -38,7 +38,9 @@ export class CommandHandler {
 
     logger.prompt(prompt)
 
-    const validFiles = await getContext(options)
+    const validFiles = options.context ? 
+      await getContext(options):
+      []
 
     if (stats) {
       const fileStats = new FileStats()
