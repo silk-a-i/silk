@@ -5,6 +5,11 @@ import { FileStats } from '../lib/stats.js'
 import { CommandOptions } from '../lib/CommandOptions.js'
 import { getContext } from '../lib/getContext.js'
 
+// function to display only start and end of the key
+function safeKey(key) {
+  return key.slice(0, 5) + '...' + key.slice(-5)
+}
+
 export function logConfiguration(config, logger = new Logger()) {
   const provider = Object.values(PROVIDERS).find(p => p.value === config.provider)
 
@@ -12,12 +17,15 @@ export function logConfiguration(config, logger = new Logger()) {
     { label: 'Config', value: config.configPath },
     { label: 'Provider', value: provider?.displayName || config.provider },
     { label: 'Model', value: config.model },
+    { label: 'Key', value: safeKey(config.apiKey) },
     { label: 'Base URL', value: config.baseUrl },
-    { label: 'include', value: config.include },
-    { label: 'ignore', value: config.ignore },
-    { label: 'root', value: config.root },
-    { label: 'cwd', value: config.cwd },
-    { label: 'max_tokens', value: config.max_tokens || 'N/A' }
+    { label: 'Include', value: config.include },
+    { label: 'Ignore', value: config.ignore },
+    { label: 'Root', value: config.root },
+    { label: 'Context', value: config.context },
+    { label: 'Working directory', value: config.cwd },
+    { label: 'Tools', value: config.tools },
+    { label: 'Max tokens', value: config.max_tokens || 'N/A' }
   ])
 }
 
