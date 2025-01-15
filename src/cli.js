@@ -25,6 +25,7 @@ program
 program
   .command('init')
   .argument('[root]', 'root directory')
+  .option('-y, --yes', 'yes')
   .description('Initialize a new Silk project')
   .action(init)
 

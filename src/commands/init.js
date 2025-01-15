@@ -6,16 +6,20 @@ import { INIT_PROViDERS as PROVIDERS } from '../lib/constants.js'
 import fs from 'fs'
 import path from 'path'
 
-export async function init (root = '') {
-  const logger = new Logger({ verbose: true })
+const OPTIONS = {
+  yes: false
+}
 
-  if (root) {
-    fs.mkdirSync(root, { recursive: true })
-    process.chdir(root)
-  }
-
-  try {
-    const answers = await inquirer.prompt([
+async function getAnswers(options) {
+  if (options.yes) {
+    return {
+      root: '.',
+      provider: Object.keys(PROVIDERS)[0],
+      apiKey: '',
+      model: PROVIDERS[Object.keys(PROVIDERS)[0]].defaultModel
+    }
+  } else {
+    return await inquirer.prompt([
       {
         type: 'input',
         name: 'root',
@@ -59,38 +63,60 @@ export async function init (root = '') {
         }
       }
     ])
+  }
+}
 
+function createProjectDirectory(root) {
+  if (root) {
+    fs.mkdirSync(root, { recursive: true })
+    process.chdir(root)
+  }
+}
+
+function handleOtherProvider(logger, answers) {
+  logger.info('\nPlease manually configure your provider in .silk/config.js')
+  answers.model = 'openai/gpt-3.5-turbo'
+  answers.apiKey = ''
+}
+
+async function createConfiguration(logger, answers) {
+  const provider = PROVIDERS[answers.provider]
+  const tag = `${provider.value}/${answers.model}`
+
+  const config = {
+    apiKey: answers.apiKey || '',
+    model: tag,
+    root: answers.root
+  }
+
+  if (!config.apiKey) {
+    delete config.apiKey
+  }
+
+  const configPath = await createConfig(config, 'js')
+
+  logger.success('Configuration created successfully!')
+  logger.success(configPath)
+  logger.info('\nYou can now use Silk with the following commands:\n')
+  logger.info(chalk.cyan('  silk do "create a hello world program"'))
+  logger.info(chalk.cyan('  silk chat'))
+}
+
+export async function init (root = '', options = OPTIONS) {
+  const logger = new Logger({ verbose: true })
+
+  createProjectDirectory(root)
+
+  try {
+    const answers = await getAnswers(options)
     const projectDir = path.resolve(answers.root)
     fs.mkdirSync(projectDir, { recursive: true })
 
     if (answers.provider === 'other') {
-      logger.info('\nPlease manually configure your provider in .silk/config.js')
-      answers.model = 'openai/gpt-3.5-turbo'
-      answers.apiKey = ''
+      handleOtherProvider(logger, answers)
     }
 
-    const provider = PROVIDERS[answers.provider]
-    const tag = `${provider.value}/${answers.model}`
-
-    const config = {
-      apiKey: answers.apiKey || '',
-      model: tag,
-      // provider: provider.name,
-      root: answers.root
-    }
-
-    // @todo check for a better way to handle a fallback to env
-    if (!config.apiKey) {
-      delete config.apiKey
-    }
-
-    const configPath = await createConfig(config, 'js')
-
-    logger.success('Configuration created successfully!')
-    logger.success(configPath)
-    logger.info('\nYou can now use Silk with the following commands:\n')
-    logger.info(chalk.cyan('  silk do "create a hello world program"'))
-    logger.info(chalk.cyan('  silk chat'))
+    await createConfiguration(logger, answers)
   } catch (error) {
     logger.error(`Failed to initialize: ${error.message}`)
     process.exit(1)
