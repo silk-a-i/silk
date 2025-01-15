@@ -20,7 +20,7 @@ silk chat
 
 ## Configuration
 
-Silk can be configured using a `.silk/config.js` or `.silk/config.json` file in your project root.
+Silk can be configured using a `.silk/config.js` file in your project root.
 
 Example config:
 ```js
@@ -36,6 +36,7 @@ export default {
 
 - `silk init` - Initialize a new Silk project
 - `silk do` - Execute a single task
+- `silk ask` - Execute a single task without context
 - `silk chat` - Start interactive chat mode
 - `silk info` - Show current configuration
 - `silk parse` - Parse markdown file into individual files

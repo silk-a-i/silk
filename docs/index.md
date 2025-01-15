@@ -5,7 +5,7 @@ layout: home
 hero:
   name: "Silk CLI"
   text: "A powerful CLI tool for quick task automation using LLMs."
-  tagline: My great project tagline
+  tagline: "Automate your tasks with ease"
   actions:
     - theme: brand
       text: Plugins
