@@ -2,21 +2,18 @@ import { Command, program } from 'commander'
 import inquirer from 'inquirer'
 import { Task } from '../task.js'
 import { CliRenderer } from '../renderers/cli.js'
-import { Logger } from '../logger.js'
+import { Logger, Messages } from '../logger.js'
 import { loadConfig } from '../config/load.js'
-import { info } from '../../commands/info.js'
 import fs from 'fs'
 import { CommandOptions } from '../CommandOptions.js'
-import { gatherContextInfo, resolveContent } from '../fs.js'
+import { resolveContent } from '../fs.js'
 import { createBasicTools } from '../tools/basicTools.js'
 import { execute, streamHandler } from '../llm.js'
-import { FileStats } from '../stats.js'
-import { Config } from '../config/Config.js'
+import { Config, CONTEXT_MODES } from '../config/Config.js'
 import { getContext } from '../getContext.js'
 import { postActions } from '../silk.js'
-import { cliHook } from './cli-new.js'
-
-const MOODS = ['brief', 'happy', 'sad', 'angry', 'professional', 'neutral', 'other']
+import { cliHook } from './cli.js'
+import { setupCommands } from './commands.js'
 
 export class Chat {
   options = {}
@@ -27,7 +24,8 @@ export class Chat {
     history: [],
     files: [],
     mood: '',
-    model: ''
+    model: '',
+    // contextMode: CONTEXT_MODES.LATEST
   }
 
   constructor(options = new CommandOptions()) {
@@ -66,129 +64,7 @@ export class Chat {
   }
 
   setupCommands() {
-    const { chatProgram, logger, ui, state } = this
-
-    chatProgram
-      .command('exit')
-      .description('Exit the chat')
-      .action(() => {
-        process.exit(0)
-      })
-
-    chatProgram
-      .command('context')
-      .description('Set the context mode')
-      .action(() => {
-        // @todo
-      })
-
-    chatProgram
-      .command('save')
-      .description('Save the chat state to file')
-      .action(() => {
-        // @todo
-        // const { history, mood } = state
-        // fs.writeFileSync('chat.json', JSON.stringify({ history, mood }, null, 2))
-        // ui.info('Chat state saved')
-      })
-
-      chatProgram
-      .command('restore')
-      .description('Restore the chat state from file')
-      .action(() => {
-        // @todo
-      })
-
-    chatProgram
-      .command('tone')
-      .alias('t')
-      .argument('[tone]', 'tone')
-      .description('Set the mood')
-      .action(async (tone = '') => {
-        async function askMood() {
-          const { toneOfVoice } = await inquirer.prompt([{
-            type: 'list',
-            name: 'toneOfVoice',
-            message: 'Select tone of voice:',
-            choices: MOODS
-          }])
-
-          if (toneOfVoice === 'other') {
-            const { customMood } = await inquirer.prompt([{
-              type: 'input',
-              name: 'customMood',
-              message: 'Enter custom tone of voice:'
-            }])
-            return customMood
-          }
-          return toneOfVoice
-        }
-
-        const mood = tone || await askMood()
-        ui.info(`Tone of voice set to: ${mood}`)
-        state.mood = mood
-      })
-
-    chatProgram
-      .command('info')
-      .alias('i')
-      .description('Show config info')
-      .action(async () => {
-        await info()
-      })
-
-    chatProgram
-      .command('model')
-      .alias('m')
-      .description('Select model')
-      .action(async () => {
-        const { model } = await inquirer.prompt([{
-          type: 'list',
-          name: 'model',
-          message: 'Select model:',
-          choices: state.config.models,
-          default: state.config.model
-        }])
-        state.config.model = model
-      })
-
-    chatProgram
-      .command('context')
-      .alias('c')
-      .description('List context')
-      .action(async () => {
-        const files = await getContext(state.config)
-        const stats = new FileStats()
-        files.forEach(file => stats.addFile(file.path, file))
-        stats.summary({ showLargestFiles: 20 })
-      })
-
-    chatProgram
-      .command('state')
-      .alias('s')
-      .description('Show internal state')
-      .action(async () => {
-        console.log(state)
-      })
-
-    chatProgram
-      .command('clear')
-      .description('Clear history')
-      .action(async () => {
-        state.history = []
-      })
-
-    chatProgram
-      .command('history')
-      .alias('h')
-      .description('Show chat history')
-      .action(() => {
-        if (!state.history?.length) {
-          console.log('No chat history')
-          return
-        }
-        new Logger({ verbose: true }).messages(state.history)
-      })
+    setupCommands(this)
   }
 
   async handleCommand(input) {
@@ -207,7 +83,7 @@ export class Chat {
    * @deprecation migrate to 'run'
    **/
   async handlePrompt(input = '') {
-    const { state } = this
+    const { state, renderer } = this
 
     this.logger.prompt(input)
 
@@ -226,7 +102,8 @@ export class Chat {
 
     const system = `${state.mood}${task.fullSystem}`
 
-    this.renderer.attach(task.toolProcessor)
+    renderer.attach(task.toolProcessor)
+    renderer.reset()
 
     const messages = [
       { role: 'system', content: system },
@@ -240,7 +117,7 @@ export class Chat {
       task.toolProcessor.process(chunk)
     })
 
-    this.renderer.cleanup()
+    renderer.cleanup()
     process.stdout.write('\n')
 
     return { content, currentTask: task }
