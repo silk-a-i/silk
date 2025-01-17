@@ -9,6 +9,7 @@ import fs from 'fs/promises';
 import inquirer from 'inquirer';
 import chalk from 'chalk'
 import { GET_STARTED } from './messages/index.js'
+import { SILK_DIR } from '../lib/constants.js'
 
 export async function create(folder = "", promptOrFile = "", options = {}) {
   options.root = folder
@@ -21,7 +22,7 @@ export async function create(folder = "", promptOrFile = "", options = {}) {
   if (config.root) {
     UI.info(`Creating directory: ${config.root}`)
     // handler.setupRoot(config.root)
-    await fs.mkdir('.silk', { recursive: true })
+    await fs.mkdir(SILK_DIR, { recursive: true })
   }
 
   const DEFAULTS = {

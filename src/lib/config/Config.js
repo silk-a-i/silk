@@ -2,7 +2,7 @@ import fs from 'fs/promises'
 import path from 'path'
 import {join} from 'path'
 import dotenv from 'dotenv'
-import { PROVIDERS, DEFAULT_PROVIDER } from '../constants.js'
+import { PROVIDERS, DEFAULT_PROVIDER, SILK_DIR } from '../constants.js'
 import { homedir } from 'os'
 
 export const GLOBAL_CONFIG_DIR = path.join(homedir(), '.config', 'silk')
@@ -160,7 +160,7 @@ export class Config {
   async findProjectConfigFile (startDir) {
     let currentDir = startDir
     while (currentDir !== path.parse(currentDir).root) {
-      const silkDir = path.join(currentDir, '.silk')
+      const silkDir = path.join(currentDir, SILK_DIR)
       const configFile = await this.findConfigFileFromPath(silkDir)
       if (configFile) {
         return configFile

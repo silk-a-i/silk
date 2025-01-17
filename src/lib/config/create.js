@@ -1,14 +1,15 @@
 import fs from 'fs/promises'
 import path from 'path'
 import { Logger } from '../logger.js'
+import { SILK_DIR } from '../constants.js'
 
 const logger = new Logger()
 
 export async function createConfig (config, format = 'js') {
   try {
-    await fs.mkdir('.silk', { recursive: true })
+    await fs.mkdir(SILK_DIR, { recursive: true })
 
-    const configPath = path.join('.silk', `config.${format}`)
+    const configPath = path.join(SILK_DIR, `config.${format}`)
     const configContent = format === 'js'
       ? `export default ${JSON.stringify(config, null, 2)};`
       : JSON.stringify(config, null, 2)
