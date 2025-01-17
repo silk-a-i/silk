@@ -11,7 +11,7 @@ export async function cliHook({ trimmedInput }) {
     return
 }
 
-function execStream(command) {
+export function execStream(command = "") {
     return new Promise((resolve, reject) => {
         const [cmd, ...args] = command.split(' ')
         const child = spawn(cmd, args, { shell: true })
