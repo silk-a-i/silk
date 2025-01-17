@@ -3,19 +3,19 @@ import ora from 'ora'
 import { ToolProcessor } from '../tools/ToolProcessor.js'
 import { formatBytes } from './utils.js'
 
-const STATS = Object.freeze({
-  totalBytes: 0,
-  textBytes: 0,
-  actions: 0,
-  startTime: Date.now()
-})
+class Stats {
+  totalBytes = 0
+  textBytes = 0
+  actions = 0
+  startTime = Date.now()
+}
 
 export class CliRenderer {
   toolProcessor = new ToolProcessor()
   raw = false
   showStats = false
   spinners = new Map()
-  stats = {...STATS}
+  stats = new Stats()
 
   constructor (options = {}) {
     this.raw = options.raw || false
@@ -23,7 +23,7 @@ export class CliRenderer {
   }
 
   reset() {
-    this.stats = {...STATS}
+    this.stats = new Stats()
   }
 
   attach (toolProcessor) {
