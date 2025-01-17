@@ -68,32 +68,13 @@ export class Logger {
   messages(messages = []) {
     if (!this.verbose) return
 
-    console.log(chalk.yellow('\nMessages:'))
-    messages.forEach(message => {
-      this.message(message)
-    })
+    Messages(messages, { maxLength: this.maxMessageLength })
   }
 
-  message(message = {}, options = {}) {
+  message(message = {}, options) {
     if (!this.verbose) return
 
-    const _maxLength = options.maxLength || this.maxMessageLength
-
-    const roleColor = {
-      system: chalk.magenta,
-      user: chalk.cyan,
-      assistant: chalk.green
-    }[message.role] || chalk.white
-
-    console.log(roleColor(`[${message.role}]`))
-    if (_maxLength && message.content.length > _maxLength) {
-      const truncatedContent = message.content.slice(0, _maxLength)
-      const remainingBytes = Buffer.byteLength(message.content) - Buffer.byteLength(truncatedContent)
-      console.log(COLORS.message(truncatedContent + `... (${remainingBytes} more bytes)`))
-    } else {
-      console.log(COLORS.message(message.content))
-    }
-    console.log()
+    Message(message, options)
   }
 }
 
@@ -114,4 +95,35 @@ export function stats(title = "", items = []) {
     const keyValue = raw || `${label}: ${value || 'N/A'}`
     console.log(COLORS.message(prefix) + keyValue)
   })
+}
+
+const MESSAGE_OPTIONS = {
+  maxLength: 0
+}
+
+export function Messages(messages = [], options = MESSAGE_OPTIONS) {
+  console.log(chalk.yellow('\nMessages:'))
+  messages.forEach(message => {
+    Message(message, options)
+  })
+}
+
+export function Message(message = {}, options = MESSAGE_OPTIONS) {
+  const _maxLength = options.maxLength
+
+  const roleColor = {
+    system: chalk.magenta,
+    user: chalk.cyan,
+    assistant: chalk.green
+  }[message.role] || chalk.white
+
+  console.log(roleColor(`[${message.role}]`))
+  if (_maxLength && message.content.length > _maxLength) {
+    const truncatedContent = message.content.slice(0, _maxLength)
+    const remainingBytes = Buffer.byteLength(message.content) - Buffer.byteLength(truncatedContent)
+    console.log(COLORS.message(truncatedContent + `... (${remainingBytes} more bytes)`))
+  } else {
+    console.log(COLORS.message(message.content))
+  }
+  console.log()
 }
