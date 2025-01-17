@@ -7,52 +7,64 @@ export class FileStats {
     this.files.add({ filePath, metadata })
   }
 
-  summary ({ showLargestFiles = 3 } = {}, {logger = new Logger} = {}) {
-    let totalSize = 0
-    const byExtension = {}
-    const sizeByExtension = {}
+  summary (options = {}, { logger = new Logger() } = {}) {
+    const summaryData = generateSummary(this.files, options)
+    renderSummary(summaryData, options, logger)
+  }
+}
 
-    this.files.forEach(({ filePath, metadata }) => {
-      const size = metadata.size || 0
-      const ext = getExtension(filePath)
+export function generateSummary(files, options = {}) {
+  let totalSize = 0
+  const byExtension = {}
+  const sizeByExtension = {}
 
-      totalSize += size
-      byExtension[ext] = (byExtension[ext] || 0) + 1
-      sizeByExtension[ext] = (sizeByExtension[ext] || 0) + size
-    })
+  files.forEach(({ filePath, metadata }) => {
+    const size = metadata.size || 0
+    const ext = getExtension(filePath)
 
-    logger.stats('Context stats', [
-      { label: 'Total size', value: formatBytes(totalSize) },
-      { label: 'Files', value: this.files.size }
-    ])
+    totalSize += size
+    byExtension[ext] = (byExtension[ext] || 0) + 1
+    sizeByExtension[ext] = (sizeByExtension[ext] || 0) + size
+  })
 
-    if (Object.keys(byExtension).length > 0) {
-      logger.stats('Files by Type',
-        Object.entries(byExtension)
-          .sort(([, a], [, b]) => b - a)
-          .map(([ext, count]) => ({
-            label: ext,
-            value: `${count} (${formatBytes(sizeByExtension[ext])})`
-          }))
-      )
-    }
+  return {
+    totalSize,
+    byExtension,
+    sizeByExtension,
+    files
+  }
+}
 
-    if (this.files.size > 0) {
-      const largestFiles = Array.from(this.files)
-        .sort((a, b) => b.metadata.size - a.metadata.size)
-        .slice(0, showLargestFiles)
-        .map(({ filePath, metadata }) => ({
-          label: filePath,
-          value: formatBytes(metadata.size)
+function renderSummary(summaryData, { showLargestFiles = 3 } = {}, logger) {
+  const { totalSize, byExtension, sizeByExtension, files } = summaryData
+  const filesArray = Array.from(files)
+  const filesCount = filesArray.length
+
+  const largestFiles = filesArray
+    .sort((a, b) => b.metadata.size - a.metadata.size)
+    .map(({ filePath, metadata }) => ({
+      label: filePath,
+      value: formatBytes(metadata.size)
+    }))
+
+  logger.stats('Context stats', [
+    { label: 'Total size', value: formatBytes(totalSize) },
+    { label: 'Files', value: filesCount }
+  ])
+
+  if (Object.keys(byExtension).length > 0) {
+    logger.stats('Files by Type',
+      Object.entries(byExtension)
+        .sort(([, a], [, b]) => b - a)
+        .map(([ext, count]) => ({
+          label: ext,
+          value: `${count} (${formatBytes(sizeByExtension[ext])})`
         }))
+    )
+  }
 
-      const remainingFilesCount = this.files.size - showLargestFiles
-      if (remainingFilesCount > 0) {
-        largestFiles.push({ raw: `+ ${remainingFilesCount} more files` })
-      }
-
-      logger.stats('Files by size', largestFiles)
-    }
+  if (filesCount > 0) {
+    logger.stats('Files by size', limit(largestFiles, showLargestFiles))
   }
 }
 
@@ -66,4 +78,14 @@ export function formatBytes (bytes = 0) {
 function getExtension (filePath) {
   const ext = filePath.split('.').pop() || 'no-ext'
   return ext.toLowerCase()
+}
+
+function limit(array = [], maxLength = -1) {
+  if (maxLength === -1) {
+    return array
+  }
+  if (array.length > maxLength) {
+    return array.slice(0, maxLength).concat({ raw: `+ ${array.length - maxLength} more items` })
+  }
+  return array
 }
