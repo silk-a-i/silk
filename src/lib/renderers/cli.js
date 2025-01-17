@@ -1,6 +1,7 @@
 import chalk from 'chalk'
 import ora from 'ora'
 import { ToolProcessor } from '../tools/ToolProcessor.js'
+import { formatBytes } from './utils.js'
 
 const STATS = Object.freeze({
   totalBytes: 0,
@@ -69,7 +70,7 @@ export class CliRenderer {
 
       if (spinner && tool) {
         const bytes = Buffer.from(blockContent).length
-        spinner.text = `${tool.name}: ${chalk.cyan(path || '')}... (${this.formatBytes(bytes)})`
+        spinner.text = `${tool.name}: ${chalk.cyan(path || '')}... (${formatBytes(bytes)})`
       }
     })
 
@@ -105,30 +106,10 @@ export class CliRenderer {
     if (!this.raw) {
       this.displayStats()
     }
-
-    if (this.showStats) {
-      this.displayVerboseStats()
-    }
   }
 
   displayStats () {
     const elapsedTime = ((Date.now() - this.stats.startTime) / 1000).toFixed(1)
     console.log(`\nDone in ${elapsedTime}s`)
-  }
-
-  displayVerboseStats () {
-    const elapsedTime = ((Date.now() - this.stats.startTime) / 1000).toFixed(1)
-    console.log(chalk.cyan('\nStats:'))
-    console.log(chalk.gray('├─') + ` Time: ${elapsedTime}s`)
-    console.log(chalk.gray('├─') + ` Text: ${this.formatBytes(this.stats.textBytes)}`)
-    console.log(chalk.gray('├─') + ` Total: ${this.formatBytes(this.stats.totalBytes)}`)
-    console.log(chalk.gray('└─') + ` Actions: ${this.stats.actions}`)
-  }
-
-  formatBytes (bytes = 0) {
-    if (bytes === 0) return '0 B'
-    const sizes = ['B', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(1024))
-    return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`
   }
 }
