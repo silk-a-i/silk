@@ -1,10 +1,10 @@
 import inquirer from 'inquirer'
-import chalk from 'chalk'
 import { createConfig } from '../lib/config/create.js'
 import { Logger } from '../lib/logger.js'
 import { INIT_PROViDERS as PROVIDERS } from '../lib/constants.js'
 import fs from 'fs'
 import path from 'path'
+import { GET_STARTED } from './messages/index.js'
 
 const OPTIONS = {
   yes: false
@@ -97,9 +97,7 @@ async function createConfiguration(logger, answers) {
 
   logger.success('Configuration created successfully!')
   logger.success(configPath)
-  logger.info('\nYou can now use Silk with the following commands:\n')
-  logger.info(chalk.cyan('  silk do "create a hello world program"'))
-  logger.info(chalk.cyan('  silk chat'))
+  GET_STARTED()
 }
 
 export async function init (root = '', options = OPTIONS) {
