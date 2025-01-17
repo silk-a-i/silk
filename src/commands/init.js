@@ -93,7 +93,7 @@ async function createConfiguration(logger, answers) {
     delete config.apiKey
   }
 
-  const configPath = await createConfig(config, 'js')
+  const configPath = await createConfig(config, 'mjs')
 
   logger.success('Configuration created successfully!')
   logger.success(configPath)
