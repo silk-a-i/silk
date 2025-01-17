@@ -1,10 +1,18 @@
 import fs from 'fs/promises'
 import path from 'path'
+import {join} from 'path'
 import dotenv from 'dotenv'
 import { PROVIDERS, DEFAULT_PROVIDER } from '../constants.js'
 import { homedir } from 'os'
 
-export const configDir = path.join(homedir(), '.config', 'silk')
+export const GLOBAL_CONFIG_DIR = path.join(homedir(), '.config', 'silk')
+
+export async function loadGlobalConfig(file = 'config.mjs') {
+  const path = join(GLOBAL_CONFIG_DIR, file)
+  // const data = readFileSync(path, 'utf-8')
+  const module = await import(path)
+  return module.default
+}
 
 export class Config {
   static DEFAULT_CONFIG = {
@@ -86,7 +94,7 @@ export class Config {
 
   loadEnvConfig () {
     const env = dotenv.config({
-      path: ['.env', path.join(configDir, '.env')]
+      path: ['.env', path.join(GLOBAL_CONFIG_DIR, '.env')]
     })
 
     return {
@@ -120,7 +128,7 @@ export class Config {
       return projectConfigFile
     }
 
-    return this.findConfigFileFromPath(configDir)
+    return this.findConfigFileFromPath(GLOBAL_CONFIG_DIR)
   }
 
   async findConfigFileByPath (configPath) {
@@ -147,7 +155,7 @@ export class Config {
     return null
   }
 
-  async loadConfigFile (configFile) {
+  async loadConfigFile (configFile = {}) {
     if (!configFile) return {}
 
     const content = await fs.readFile(configFile.path, 'utf-8')
