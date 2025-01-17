@@ -42,7 +42,7 @@ export async function info(options = {}) {
     return
   }
 
-  // @todo also support info on files
+  // @todo support info on files e.g. silk info files
   const files = await getContext(config)
   // if(options.json) {
   //   const obj = JSON.stringify(files, null, 2)

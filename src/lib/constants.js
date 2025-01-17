@@ -1,6 +1,5 @@
 export const PROVIDERS = {
-  // @todo better lookup structure.
-  // either use value or key of the lookup object not both.
+  // @todo better lookup structure. either use value or key of the lookup object not both.
   SILK: {
     name: 'Silk',
     value: 'silk',

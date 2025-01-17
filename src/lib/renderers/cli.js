@@ -67,8 +67,7 @@ export class CliRenderer {
 
     toolProcessor.on('tool:finish', (context) => {
       const { tool, args, blockContent } = context
-      // @todo fix api see tool:progress
-      // const {path} = args
+      // @todo use similar api as `tool:progress`
       const { path } = context
 
       const spinner = this.spinners.get(path)
