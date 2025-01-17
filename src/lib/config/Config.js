@@ -1,6 +1,6 @@
 import fs from 'fs/promises'
 import path from 'path'
-import {join} from 'path'
+import { join } from 'path'
 import dotenv from 'dotenv'
 import { PROVIDERS, DEFAULT_PROVIDER, SILK_DIR } from '../constants.js'
 import { homedir } from 'os'
@@ -28,14 +28,28 @@ export async function loadGlobalConfig(file = 'config.mjs') {
   return module.default
 }
 
-export class Config {
-  static DEFAULT_CONFIG = {
+export const configDefaults = Object.freeze({
     apiKey: '',
     model: DEFAULT_PROVIDER.defaultModel,
     provider: DEFAULT_PROVIDER.value,
     models: [],
-    include: ['**/*']
-  }
+  include: ['**/*'],
+  logLevel: 'info',
+  customLogger: undefined
+})
+
+export class Config {
+  static DEFAULT_CONFIG = configDefaults
+
+  /**
+   * Log level.
+   * @default 'info'
+   */
+  logLevel
+  /**
+   * Custom logger.
+   */
+  customLogger
 
   baseUrl = ''
   configPath = ''
