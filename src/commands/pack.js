@@ -4,8 +4,9 @@ import { globby } from 'globby'
 import { Logger } from '../lib/logger.js'
 import { File } from '../lib/File.js'
 import { getGlobOptions } from '../lib/fs.js'
-import { FileStats, formatBytes } from '../lib/stats.js'
+import { FileStats } from '../lib/stats.js'
 import { loadConfig } from '../lib/config/load.js'
+import { formatBytes } from '../lib/renderers/utils.js'
 
 export async function pack (folder = "", options = {}) {
   const logger = new Logger()
