@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { program } from 'commander'
 import { run } from './commands/run.js'
-import { Chat, chat } from './commands/chat.js'
+import { chat } from './commands/chat.js'
 import { map } from './commands/map.js'
 import { init } from './commands/init.js'
 import { pack } from './commands/pack.js'
