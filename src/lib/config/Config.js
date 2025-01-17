@@ -7,6 +7,20 @@ import { homedir } from 'os'
 
 export const GLOBAL_CONFIG_DIR = path.join(homedir(), '.config', 'silk')
 
+/** strategies to communicate context */
+export const CONTEXT_MODES = {
+  /** don't send any context */
+  NONE: 'none',
+  /** always send the latests */
+  LATEST: 'latest',
+  /** user specified list */
+  MANUAL: 'MANUAL',
+  /** (chat only) initially send an artifact, cacheble but manual code changes aren't reflected */
+  APPEND: 'append',
+  /** auto */
+  AUTO: 'AUTO'
+}
+
 export async function loadGlobalConfig(file = 'config.mjs') {
   const path = join(GLOBAL_CONFIG_DIR, file)
   // const data = readFileSync(path, 'utf-8')
@@ -43,6 +57,7 @@ export class Config {
   cwd = ''
   verbose = false
   projects = []
+  contextMode = CONTEXT_MODES.LATEST
 
   constructor (obj = {}) {
     Object.assign(this, obj)
