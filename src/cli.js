@@ -9,8 +9,6 @@ import { info } from './commands/info.js'
 import { parse } from './commands/parse.js'
 import { login } from './commands/login.js'
 import { addSharedOptions } from './options.js'
-import { loadConfig } from './lib/config/load.js'
-import { UI } from './lib/logger.js'
 import { create } from './commands/create.js'
 
 program
@@ -62,16 +60,6 @@ addSharedOptions(
     .option('-y, --yes', 'yes')
     .description('Create a new project.')
 ).action(create)
-
-addSharedOptions(
-  program
-    .command('list')
-    .alias('l')
-    .description('List projects')
-).action(async () => {
-  const config = await loadConfig()
-  UI.stats(config.projects)
-})
 
 addSharedOptions(
   program
