@@ -1,16 +1,10 @@
 import { Logger } from "./logger.js"
 
 export class FileStats {
-  filePaths = new Set()
-  fileMetadata = new Map() // Store file metadata
+  files = new Set()
 
   addFile (filePath, metadata = { size: 0 }) {
-    this.filePaths.add(filePath)
-    this.fileMetadata.set(filePath, {
-      // createdAt: metadata.createdAt || new Date(),
-      // modifiedAt: metadata.modifiedAt || new Date(),
-      ...metadata
-    })
+    this.files.add({ filePath, metadata })
   }
 
   summary ({ showLargestFiles = 3 } = {}, {logger = new Logger} = {}) {
@@ -18,7 +12,7 @@ export class FileStats {
     const byExtension = {}
     const sizeByExtension = {}
 
-    this.fileMetadata.forEach((metadata, filePath) => {
+    this.files.forEach(({ filePath, metadata }) => {
       const size = metadata.size || 0
       const ext = getExtension(filePath)
 
@@ -29,7 +23,7 @@ export class FileStats {
 
     logger.stats('Context stats', [
       { label: 'Total size', value: formatBytes(totalSize) },
-      { label: 'Files', value: this.filePaths.size }
+      { label: 'Files', value: this.files.size }
     ])
 
     if (Object.keys(byExtension).length > 0) {
@@ -43,16 +37,16 @@ export class FileStats {
       )
     }
 
-    if (this.fileMetadata.size > 0) {
-      const largestFiles = Array.from(this.fileMetadata.entries())
-        .sort(([, a], [, b]) => b.size - a.size)
+    if (this.files.size > 0) {
+      const largestFiles = Array.from(this.files)
+        .sort((a, b) => b.metadata.size - a.metadata.size)
         .slice(0, showLargestFiles)
-        .map(([path, { size }]) => ({
-          label: path,
-          value: formatBytes(size)
+        .map(({ filePath, metadata }) => ({
+          label: filePath,
+          value: formatBytes(metadata.size)
         }))
 
-      const remainingFilesCount = this.fileMetadata.size - showLargestFiles
+      const remainingFilesCount = this.files.size - showLargestFiles
       if (remainingFilesCount > 0) {
         largestFiles.push({ raw: `+ ${remainingFilesCount} more files` })
       }
