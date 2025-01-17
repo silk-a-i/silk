@@ -35,7 +35,7 @@ export class Config {
   cwd = ''
   verbose = false
   projects = []
-  
+
   constructor (obj = {}) {
     Object.assign(this, obj)
   }
@@ -154,7 +154,7 @@ export class Config {
 
     switch (configFile.type) {
       case 'js':
-        // @todo when importing from another 'commonjs' package this fails.
+        // @note when importing from a 'commonjs' package this fails.
         const module = await import(configFile.path)
         return module.default
       default:
