@@ -10,6 +10,7 @@ import { parse } from './commands/parse.js'
 import { login } from './commands/login.js'
 import { addSharedOptions } from './options.js'
 import { create } from './commands/create.js'
+import { newCommand } from './commands/new.js'
 
 program
   .name('silk')
@@ -111,5 +112,12 @@ addSharedOptions(
     .argument('[prompt]', 'prompt or file')
     .description('Run a prompt over multiple files')
 ).action(map)
+
+program
+  .command('new')
+  .alias('n')
+  .argument('[file]', 'file to parse')
+  .description('Create a new design file')
+  .action(newCommand)
 
 program.parse()
