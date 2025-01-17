@@ -2,7 +2,12 @@
   "name": "silk-cli",
   "version": "0.1.0",
   "private": true,
+  "description": "A powerful CLI tool for quick task automation using LLMs.",
   "type": "module",
+  "author": {
+    "name": "SilkLabs",
+    "website": "https://silk-labs.com"
+  },
   "main": "src/cli.js",
   "bin": {
     "silk": "./src/cli.js"
