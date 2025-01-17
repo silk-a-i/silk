@@ -17,6 +17,7 @@ export class Config {
 
   baseUrl = ''
   configPath = ''
+  globalConfigPath = ''
   api = {
     baseUrl: '',
     endpoint: ''
@@ -33,7 +34,8 @@ export class Config {
   root = ''
   cwd = ''
   verbose = false
-
+  projects = []
+  
   constructor (obj = {}) {
     Object.assign(this, obj)
   }
