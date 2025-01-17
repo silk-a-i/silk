@@ -2,19 +2,27 @@ import chalk from 'chalk'
 import ora from 'ora'
 import { ToolProcessor } from '../tools/ToolProcessor.js'
 
+const STATS = Object.freeze({
+  totalBytes: 0,
+  textBytes: 0,
+  actions: 0,
+  startTime: Date.now()
+})
+
 export class CliRenderer {
   toolProcessor = new ToolProcessor()
+  raw = false
+  showStats = false
+  spinners = new Map()
+  stats = {...STATS}
 
   constructor (options = {}) {
     this.raw = options.raw || false
     this.showStats = options.stats !== false
-    this.spinners = new Map()
-    this.stats = {
-      totalBytes: 0,
-      textBytes: 0,
-      actions: 0,
-      startTime: Date.now()
-    }
+  }
+
+  reset() {
+    this.stats = {...STATS}
   }
 
   attach (toolProcessor) {
