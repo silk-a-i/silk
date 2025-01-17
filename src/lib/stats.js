@@ -1,5 +1,5 @@
 import { Logger } from "./logger.js"
-import { formatBytes } from "./renderers/utils.js"
+import { formatBytes, limit } from "./renderers/utils.js"
 
 export class FileStats {
   files = new Set()
@@ -72,14 +72,4 @@ function renderSummary(summaryData, { showLargestFiles = 3 } = {}, logger) {
 function getExtension (filePath) {
   const ext = filePath.split('.').pop() || 'no-ext'
   return ext.toLowerCase()
-}
-
-function limit(array = [], maxLength = -1) {
-  if (maxLength === -1) {
-    return array
-  }
-  if (array.length > maxLength) {
-    return array.slice(0, maxLength).concat({ raw: `+ ${array.length - maxLength} more items` })
-  }
-  return array
 }
