@@ -11,12 +11,13 @@ import { formatBytes } from '../lib/renderers/utils.js'
 export async function pack (folder = "", options = {}) {
   const logger = new Logger()
 
+  const output = options.output || 'packed.md'
   try {
-    const config = await loadConfig(options)
+    // const config = await loadConfig(options)
 
     const globOptions = await getGlobOptions({
       cwd: folder,
-      ignore: [options.output || 'packed.md']
+      ignore: [output]
     })
 
     const files = await globby('**/*', globOptions)
@@ -38,7 +39,7 @@ export async function pack (folder = "", options = {}) {
       content += file.render()
     }
 
-    const outputPath = path.resolve(options.output || 'packed.md')
+    const outputPath = path.resolve(output)
     await fs.writeFile(outputPath, content)
 
     logger.success(`\nPacked ${files.length} files into ${outputPath}`)
