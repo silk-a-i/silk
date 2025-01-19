@@ -62,7 +62,7 @@ export class Logger {
   list(items = []) {
     if (!this.verbose) return
 
-    stats('', items)
+    list(items)
   }
 
   messages(messages = []) {
@@ -90,6 +90,10 @@ export function heading(title = "") { console.log(chalk.cyan(title)) }
 
 export function stats(title = "", items = []) {
   heading(`\n${title}:`)
+  list(items)
+}
+
+export function list(items = []) {
   items.forEach(({ label, value, raw }, i, arr) => {
     const prefix = i === arr.length - 1 ? '└─' : '├─'
     const keyValue = raw || `${label}: ${value || 'N/A'}`
