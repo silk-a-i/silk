@@ -29,8 +29,11 @@ export class CliRenderer {
   attach (toolProcessor) {
     this.toolProcessor = toolProcessor
 
-    toolProcessor.on('chunk', text => {
+    toolProcessor.on('text', text => {
       this.stats.textBytes += Buffer.from(text).length
+    })
+
+    toolProcessor.on('chunk', text => {
       this.stats.totalBytes += Buffer.from(text).length
     })
 
@@ -84,10 +87,6 @@ export class CliRenderer {
         spinner.succeed()
         this.spinners.delete(path)
       }
-    })
-
-    toolProcessor.on('text', text => {
-      // already handled
     })
 
     return this
