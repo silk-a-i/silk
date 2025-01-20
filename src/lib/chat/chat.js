@@ -12,7 +12,6 @@ import { execute, streamHandler } from '../llm.js'
 import { Config } from '../config/Config.js'
 import { getContext } from '../getContext.js'
 import { postActions } from '../silk.js'
-import { cliHook } from './tools/cli.js'
 import { setupCommands } from './commands.js'
 
 export class Chat {
@@ -25,7 +24,6 @@ export class Chat {
     files: [],
     mood: '',
     model: '',
-    // contextMode: CONTEXT_MODES.LATEST
   }
 
   constructor(options = new CommandOptions()) {
@@ -135,7 +133,7 @@ export class Chat {
         {
           type: 'input',
           name: 'input',
-          message: '> '
+          message: `${this.state.config.contextMode} > `
         }
       ])
 
@@ -167,12 +165,12 @@ export class Chat {
       return
     }
 
-    const isCliCommand = trimmedInput.startsWith('$')
-    if(isCliCommand) {
-      await cliHook(this)
-      this.askQuestion()
-      return
-    }
+    // const isCliCommand = trimmedInput.startsWith('$')
+    // if(isCliCommand) {
+    //   await cliHook(this)
+    //   this.askQuestion()
+    //   return
+    // }
 
     // Else use LLM
     try {

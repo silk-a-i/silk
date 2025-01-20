@@ -46,6 +46,12 @@ async function gatherFiles (patterns = [], options) {
   return new Set(files)
 }
 
+/**
+ * Gather all files in the project with metadata
+ * @param {*} patterns 
+ * @param {*} options 
+ * @returns {Promise<File[]>} files
+ */
 export async function gatherContextInfo(patterns, options = {}) {
   if (!patterns) return []
 
@@ -53,7 +59,12 @@ export async function gatherContextInfo(patterns, options = {}) {
   try {
     const allFiles = await gatherFiles(patterns, options)
     const fileInfos = await getFileInfos(Array.from(allFiles), cwd)
-    return fileInfos.filter(Boolean)
+    const files = fileInfos
+      .filter(Boolean)
+      // Sort aphabatically so cache matches
+      .sort((a, b) => a.path.toLocaleLowerCase().localeCompare(b.path.toLocaleLowerCase())
+    )
+    return files
   } catch (error) {
     console.warn(`Warning: Error gathering context info: ${error.message}`)
     return []

@@ -12,10 +12,12 @@ import { addSharedOptions } from './options.js'
 import { create } from './commands/create.js'
 import { newCommand } from './commands/new.js'
 
+import "./features.js"
+
 program
   .name('silk')
   .description('CLI tool for quick task automation using LLMs')
-  .version(process.env.npm_package_version)
+  .version('0.0.1')
 
 program
   .command('login')

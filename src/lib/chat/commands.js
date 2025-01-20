@@ -1,10 +1,11 @@
 import { Chat } from "./chat.js"
 import inquirer from 'inquirer'
-import { Logger, Messages } from '../logger.js'
+import { Messages } from '../logger.js'
 import { info } from '../../commands/info.js'
 import { FileStats } from '../stats.js'
-import { Config, CONTEXT_MODES } from '../config/Config.js'
+import { CONTEXT_MODES } from '../config/Config.js'
 import { getContext } from '../getContext.js'
+import { install as scopePlugin } from "./tools/scope.js"
 
 const MOODS = ['brief', 'happy', 'sad', 'angry', 'professional', 'neutral', 'other']
 
@@ -17,6 +18,8 @@ export function setupCommands(ctx = new Chat) {
         .action(() => {
             process.exit(0)
         })
+
+    scopePlugin(chatProgram, ctx)
 
     chatProgram
         .command('mode')

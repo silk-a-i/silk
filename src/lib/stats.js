@@ -54,14 +54,13 @@ function renderSummary(summaryData, { showLargestFiles = 3 } = {}, logger) {
   ])
 
   if (Object.keys(byExtension).length > 0) {
-    logger.stats('Files by Type',
-      Object.entries(byExtension)
-        .sort(([, a], [, b]) => b - a)
-        .map(([ext, count]) => ({
-          label: ext,
-          value: `${count} (${formatBytes(sizeByExtension[ext])})`
-        }))
-    )
+    const fileByTypes = Object.entries(byExtension)
+      .sort(([, a], [, b]) => b - a)
+      .map(([ext, count]) => ({
+        label: ext,
+        value: `${count} (${formatBytes(sizeByExtension[ext])})`
+      }))
+    logger.stats('Files by Type', limit(fileByTypes, 5))
   }
 
   if (filesCount > 0) {
@@ -69,7 +68,7 @@ function renderSummary(summaryData, { showLargestFiles = 3 } = {}, logger) {
   }
 }
 
-function getExtension (filePath) {
+function getExtension(filePath) {
   const ext = filePath.split('.').pop() || 'no-ext'
   return ext.toLowerCase()
 }

@@ -4,6 +4,7 @@ import { PROVIDERS } from '../lib/constants.js'
 import { FileStats } from '../lib/stats.js'
 import { CommandOptions } from '../lib/CommandOptions.js'
 import { getContext } from '../lib/getContext.js'
+import { CONTEXT_MODES } from '../lib/config/Config.js'
 
 // function to display only start and end of the key
 function safeKey(key) {
@@ -43,7 +44,7 @@ export async function info(options = {}) {
   }
 
   // @todo support info on files e.g. silk info files
-  const files = await getContext(config)
+  const files = await getContext({ contextMode: CONTEXT_MODES.ALL })
   // if(options.json) {
   //   const obj = JSON.stringify(files, null, 2)
   //   console.log(obj)

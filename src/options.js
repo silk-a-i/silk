@@ -10,3 +10,22 @@ export function addSharedOptions (command) {
     .option('-s, --stats', 'Show stats', false)
     .option('--config <path>', 'Path to config file')
 }
+
+export class CommandOptions {
+  output = ''
+  /** set context resolving, false is off */
+  context = true
+  /** glob pattern */
+  include = ['**/*']
+  verbose = false
+  raw = false
+  dry = false
+  root = ''
+  stats = false
+  /** path to the config file */
+  config = ''
+
+  constructor (options = {}) {
+    Object.assign(this, options)
+  }
+}

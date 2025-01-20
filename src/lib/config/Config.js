@@ -11,18 +11,26 @@ export const GLOBAL_CONFIG_DIR = path.join(homedir(), '.config', 'silk')
 export const CONTEXT_MODES = {
   /** don't send any context */
   NONE: 'none',
-  /** always send the latests */
-  LATEST: 'latest',
+  /** always send the full latests (works great with small projects) */
+  ALL: 'all',
   /** user specified list */
-  MANUAL: 'MANUAL',
+  MANUAL: 'manual',
   /** (chat only) initially send an artifact, cacheble but manual code changes aren't reflected */
   APPEND: 'append',
   /** auto */
-  AUTO: 'AUTO'
+  AUTO: 'auto'
+}
+
+function autoGuessBestContextMode(files = []) {
+  if (files.length > 50) {
+    return CONTEXT_MODES.NONE
+  }
+  return CONTEXT_MODES.ALL
 }
 
 export async function loadGlobalConfig(file = 'config.mjs') {
   const path = join(GLOBAL_CONFIG_DIR, file)
+  /** @todo perhaps also accept a .json file */
   // const data = readFileSync(path, 'utf-8')
   const module = await import(path)
   return module.default
@@ -64,6 +72,12 @@ export class Config {
   env = {}
   model = ''
   include = []
+  ignore = [
+    'node_modules/**',
+    '.git/**',
+    'dist/**',
+    'build/**',
+  ]
   tools = []
   additionalTools = []
   output = ''
@@ -71,6 +85,10 @@ export class Config {
   cwd = ''
   verbose = false
   projects = []
+
+  /** Enable or disable context */
+  context = true
+  /** Set the context strategy */
   contextMode = CONTEXT_MODES.LATEST
 
   constructor (obj = {}) {

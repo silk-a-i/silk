@@ -1,61 +1,66 @@
-import { Logger } from './logger.js'
-import { TaskExecutor } from './TaskExecutor.js'
+import { Logger, UI } from './logger.js'
 import { Task } from './task.js'
 import { CliRenderer } from './renderers/cli.js'
 import { createBasicTools } from './tools/basicTools.js'
 import { getContext } from './getContext.js'
-import { gatherContextInfo, resolveContent } from './fs.js'
+import { resolveContent } from './fs.js'
 import { FileStats } from './stats.js'
-import { CommandOptions } from './CommandOptions.js'
 import { LimitChecker } from './LimitChecker.js'
 import fs from 'fs'
 import ora from 'ora'
-import { streamHandler } from './llm.js'
+import { execute, streamHandler } from './llm.js'
 import { postActions } from './silk.js'
+import { Config } from './config/Config.js'
+import { limit } from './renderers/utils.js'
 
 export class CommandHandler {
   logger = new Logger()
-  options = new CommandOptions()
-  executor = new TaskExecutor()
+  config = new Config()
   limitChecker = new LimitChecker()
 
-  constructor(options = {}) {
-    this.options = new CommandOptions(options)
+  constructor(config = new Config) {
+    this.config = config
     this.logger = new Logger({
-      verbose: options.verbose
+      verbose: config.verbose
       // @todo proxy more options
-      // ...options.logger
+      // ...config.logger
     })
-    this.executor = new TaskExecutor(this.options)
-    this.limitChecker = new LimitChecker(options)
+    this.limitChecker = new LimitChecker(config)
   }
 
   async execute(prompt = '') {
-    const { logger, options } = this
-    const { root, include, dry, stats } = this.options
+    const { logger, config } = this
+    const { root, dry, stats } = this.config
     await this.setupRoot(root)
     logger.info(`Project root: ${process.cwd()}`)
 
     logger.prompt(prompt)
 
-    const validFiles = options.context ? 
-      await getContext(options):
+    const spinner = ora({
+      text: 'gathering context...',
+      color: 'yellow'
+    }).start()
+    const validFiles = config.context ? 
+      await getContext(config, { prompt }) :
       []
-
+    spinner.succeed(`using ${validFiles.length} files`)
+    UI.info(limit(validFiles.map(e=>e.path), 10))
+    // console.log(validFiles)
+    
     if (stats) {
       const fileStats = new FileStats()
       validFiles.forEach(file => fileStats.addFile(file.path, file.content))
       fileStats.summary(undefined, { logger })
     }
 
-    const tools = options.tools.length
-      ? options.tools
+    const tools = config.tools.length
+      ? config.tools
       : [
-        ...createBasicTools(options),
-        ...options.additionalTools
+        ...createBasicTools(config),
+        ...config.additionalTools
       ]
     logger.info(`Using tools: ${tools.map(t => t.name).join(', ')}`)
-    logger.json({ tools, options })
+    logger.json({ tools, config })
 
     if (dry) {
       logger.info('Dry run, skipping execution')
@@ -64,7 +69,7 @@ export class CommandHandler {
 
     const context = await resolveContent(validFiles)
     const task = new Task({ prompt, context, tools })
-    const renderer = new CliRenderer(options).attach(task.toolProcessor)
+    const renderer = new CliRenderer(config).attach(task.toolProcessor)
 
     try {
       const spinner = ora({
@@ -72,8 +77,12 @@ export class CommandHandler {
         color: 'yellow'
       }).start()
 
-      const { stream } = await this.executor.createStream(task)
-
+      const messages = [
+        { role: 'system', content: task.fullSystem },
+        { role: 'user', content: task.render() }
+      ]
+      const { stream } = await execute(messages, config)
+  
       spinner.stop()
 
       const content = await streamHandler(stream, chunk => {
@@ -82,6 +91,8 @@ export class CommandHandler {
       task.toolProcessor.cleanup()
       
       await postActions(task)
+      console.log(`\nUsage [send/received]: ${JSON.stringify(messages).length} / ${renderer.stats.totalBytes}`)
+
     } catch (error) {
       logger.error(`Error: ${error.message}`)
     }

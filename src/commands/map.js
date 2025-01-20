@@ -1,4 +1,3 @@
-import { TaskExecutor } from '../lib/TaskExecutor.js'
 import { loadConfig } from '../lib/config/load.js'
 import { logConfiguration } from './info.js'
 import { gatherContextInfo } from '../lib/fs.js'
@@ -10,6 +9,7 @@ import { CliRenderer } from '../lib/renderers/cli.js'
 import { createBasicTools } from '../lib/tools/basicTools.js'
 import { mkdirSync } from 'fs'
 import { CommandOptions } from '../lib/CommandOptions.js'
+import { execute, streamHandler } from '../lib/llm.js'
 
 export async function map (promptOrFile = "", options = new CommandOptions()) {
   const config = await loadConfig(options)
@@ -47,8 +47,13 @@ export async function map (promptOrFile = "", options = new CommandOptions()) {
       })
 
       const renderer = new CliRenderer(options).attach(task.toolProcessor)
-      const executor = new TaskExecutor({ ...options, config })
-      await executor.execute(task)
+
+      const messages = [
+        { role: 'system', content: task.fullSystem },
+        { role: 'user', content: task.render() }
+      ]
+      const { stream } = await execute(messages, config)
+      const content = await streamHandler(stream)
       renderer.cleanup()
     }
   }
