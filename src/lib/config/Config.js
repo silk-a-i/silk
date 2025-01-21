@@ -89,7 +89,7 @@ export class Config {
   /** Enable or disable context */
   context = true
   /** Set the context strategy */
-  contextMode = CONTEXT_MODES.LATEST
+  contextMode = CONTEXT_MODES.ALL
 
   constructor (obj = {}) {
     Object.assign(this, obj)

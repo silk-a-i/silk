@@ -62,8 +62,7 @@ export async function gatherContextInfo(patterns, options = {}) {
     const files = fileInfos
       .filter(Boolean)
       // Sort aphabatically so cache matches
-      .sort((a, b) => a.path.toLocaleLowerCase().localeCompare(b.path.toLocaleLowerCase())
-    )
+      .toSorted((a, b) => a.path.toLocaleLowerCase().localeCompare(b.path.toLocaleLowerCase()))
     return files
   } catch (error) {
     console.warn(`Warning: Error gathering context info: ${error.message}`)
@@ -71,7 +70,7 @@ export async function gatherContextInfo(patterns, options = {}) {
   }
 }
 
-async function getFileInfos(files, cwd) {
+async function getFileInfos(files = [], cwd) {
   return Promise.all(files.map(path => getFileInfo(path, cwd)))
 }
 
@@ -80,10 +79,8 @@ async function getFileInfo(relPath = '', cwd = '') {
   try {
     const stats = await fs.stat(path)
     return new File({
-      // pathRelative: relative(cwd, path),
       path: relative(cwd, path),
       size: stats.size,
-      content: null
     })
   } catch (error) {
     console.warn(`Warning: Could not read file ${path}: ${error.message}`)

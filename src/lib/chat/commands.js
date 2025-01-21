@@ -1,7 +1,7 @@
 import { Chat } from "./chat.js"
 import inquirer from 'inquirer'
 import { Messages } from '../logger.js'
-import { info } from '../../commands/info.js'
+import { installInfoCommand } from '../../commands/info.js'
 import { FileStats } from '../stats.js'
 import { CONTEXT_MODES } from '../config/Config.js'
 import { getContext } from '../getContext.js'
@@ -23,14 +23,21 @@ export function setupCommands(ctx = new Chat) {
 
     chatProgram
         .command('mode')
+        .argument('[mode]', 'mode')
         .description('Set the context mode')
-        .action(async () => {
-            const { contextMode } = await inquirer.prompt([{
-                type: 'list',
-                name: 'contextMode',
-                message: 'Select context mode:',
-                choices: Object.values(CONTEXT_MODES)
-            }])
+        .action(async (mode = '') => {
+            async function ask() {
+                const { contextMode } = await inquirer.prompt([{
+                    type: 'list',
+                    name: 'contextMode',
+                    message: 'Select context mode:',
+                    choices: Object.values(CONTEXT_MODES)
+                }])
+                return contextMode
+            }
+
+            const contextMode = mode || await ask()
+
             state.config.contextMode = contextMode
             ui.info(`Context mode set to: ${contextMode}`)
         })
@@ -82,14 +89,8 @@ export function setupCommands(ctx = new Chat) {
             state.mood = mood
         })
 
-    chatProgram
-        .command('info')
-        .alias('i')
-        .description('Show config info')
-        .action(async () => {
-            await info()
-        })
-
+    installInfoCommand(chatProgram)
+    
     chatProgram
         .command('model')
         .alias('m')

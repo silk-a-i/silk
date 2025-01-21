@@ -5,8 +5,22 @@ import { FileStats } from '../lib/stats.js'
 import { CommandOptions } from '../lib/CommandOptions.js'
 import { getContext } from '../lib/getContext.js'
 import { CONTEXT_MODES } from '../lib/config/Config.js'
+import { gatherContextInfo } from '../lib/fs.js'
 
-// function to display only start and end of the key
+export function installInfoCommand(program) {
+  program
+    .command('info')
+    .alias('i')
+    .option('--json', 'json')
+    .description('Show current configuration')
+    .action(info)
+}
+
+/**
+ * function to display only start and end of the key
+ * @param {*} key 
+ * @returns 
+ */
 function safeKey(key) {
   return key.slice(0, 5) + '...' + key.slice(-5)
 }
@@ -38,22 +52,27 @@ export async function info(options = {}) {
 
   const config = await loadConfig(new CommandOptions(options))
   
+  // @todo support info on files e.g. silk info files
+  // const files = await getContext({ 
+  //   ...config,
+  //   contextMode: CONTEXT_MODES.ALL 
+  // })
+  const files = await gatherContextInfo(config.include, config)
+
+  const isCliOutput = !options.json
   if(options.json) {
-    new Logger().json(config)
+    new Logger().json({
+      config,
+      files
+    })
     return
   }
 
-  // @todo support info on files e.g. silk info files
-  const files = await getContext({ contextMode: CONTEXT_MODES.ALL })
-  // if(options.json) {
-  //   const obj = JSON.stringify(files, null, 2)
-  //   console.log(obj)
-  //   return
-  // }
-
-  logConfiguration(config, logger)
+  if(isCliOutput) {
+    const stats = new FileStats()
+    files.forEach(file => stats.addFile(file.path, file))
   
-  const stats = new FileStats()
-  files.forEach(file => stats.addFile(file.path, file))
-  stats.summary()
+    logConfiguration(config, logger)
+    stats.summary()
+  }
 }

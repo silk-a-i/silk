@@ -5,7 +5,7 @@ import { chat } from './commands/chat.js'
 import { map } from './commands/map.js'
 import { init } from './commands/init.js'
 import { pack } from './commands/pack.js'
-import { info } from './commands/info.js'
+import { info, installInfoCommand } from './commands/info.js'
 import { parse } from './commands/parse.js'
 import { login } from './commands/login.js'
 import { addSharedOptions } from './options.js'
@@ -33,12 +33,7 @@ program
   .description('Initialize a new Silk project')
   .action(init)
 
-program
-  .command('info')
-  // @todo add json option
-  .option('--json', 'json')
-  .description('Show current configuration')
-  .action(info)
+installInfoCommand(program)
 
 program
   .command('parse')
