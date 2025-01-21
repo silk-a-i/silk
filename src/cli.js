@@ -14,6 +14,12 @@ import { newCommand } from './commands/new.js'
 
 import "./features.js"
 
+process.on('uncaughtException', function(err) {
+  // handle the error safely
+  console.error(err.message)
+  console.error(err.stack)
+})
+
 program
   .name('silk')
   .description('CLI tool for quick task automation using LLMs')
