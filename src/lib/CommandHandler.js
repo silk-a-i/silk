@@ -11,7 +11,8 @@ import ora from 'ora'
 import { execute, streamHandler } from './llm.js'
 import { postActions } from './silk.js'
 import { Config } from './config/Config.js'
-import { limit } from './renderers/utils.js'
+import { formatBytes, limit } from './renderers/utils.js'
+import { COLORS } from './constants.js'
 
 export class CommandHandler {
   logger = new Logger()
@@ -91,13 +92,16 @@ export class CommandHandler {
       task.toolProcessor.cleanup()
       
       await postActions(task)
-      console.log(`\nUsage [send/received]: ${JSON.stringify(messages).length} / ${renderer.stats.totalBytes}`)
 
+      const sendBytes = JSON.stringify(messages).length
+      const usage = `(${formatBytes(sendBytes)} / ${formatBytes(renderer.stats.totalBytes)})`
+      UI.info(`\nDone in ${renderer.elapsedTime}s. ${COLORS.note(usage)}`)
     } catch (error) {
       logger.error(`Error: ${error.message}`)
     }
 
     renderer.cleanup()
+    
   }
 
   async setupRoot(root) {

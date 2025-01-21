@@ -75,6 +75,7 @@ async function getFileInfos(files = [], cwd) {
 }
 
 async function getFileInfo(relPath = '', cwd = '') {
+  console.log(path)
   const path = join(cwd, relPath)
   try {
     const stats = await fs.stat(path)

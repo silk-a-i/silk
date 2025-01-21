@@ -1,4 +1,17 @@
+import chalk from 'chalk'
+
 export const SILK_DIR = '.silk';
+
+export const COLORS = {
+  note: chalk.gray.italic,
+  json: chalk.gray,
+  info: chalk.blue,
+  success: chalk.green,
+  hint: chalk.blue,
+  error: chalk.red,
+  debug: chalk.gray,
+  message: chalk.gray
+}
 
 export const PROVIDERS = {
   // @todo better lookup structure. either use value or key of the lookup object not both.

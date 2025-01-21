@@ -102,13 +102,16 @@ export class CliRenderer {
     }
     this.spinners.clear()
 
-    if (!this.raw) {
-      this.displayStats()
-    }
+    // if (!this.raw) {
+    //   this.displayStats()
+    // }
+  }
+
+  get elapsedTime() {
+    return ((Date.now() - this.stats.startTime) / 1000).toFixed(1)
   }
 
   displayStats () {
-    const elapsedTime = ((Date.now() - this.stats.startTime) / 1000).toFixed(1)
-    console.log(`\nDone in ${elapsedTime}s`)
+    console.log(`\nDone in ${this.elapsedTime}s`)
   }
 }

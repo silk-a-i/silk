@@ -1,14 +1,4 @@
-import chalk from 'chalk'
-
-const COLORS = {
-  json: chalk.gray,
-  info: chalk.blue,
-  success: chalk.green,
-  hint: chalk.blue,
-  error: chalk.red,
-  debug: chalk.gray,
-  message: chalk.gray
-}
+import { COLORS } from "./constants.js"
 
 export class Logger {
   maxMessageLength = 0
