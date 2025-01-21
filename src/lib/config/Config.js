@@ -58,19 +58,19 @@ export class Config {
    * Custom logger.
    */
   customLogger
-
   baseUrl = ''
   configPath = ''
-  globalConfigPath = ''
+  globalConfigPath = GLOBAL_CONFIG_DIR
   api = {
     baseUrl: '',
     endpoint: ''
   }
-
   max_tokens = null
   provider = ''
+  apiKey = ''
   env = {}
   model = ''
+  /** glob options */
   include = []
   ignore = [
     'node_modules/**',
@@ -81,11 +81,14 @@ export class Config {
   tools = []
   additionalTools = []
   output = ''
+  /** Relative path to a directory in a project */
   root = ''
+  /** The project absolute root folder  */
+  absoluteRoot = ''
+  /** Current working directory */
   cwd = ''
   verbose = false
   projects = []
-
   /** Enable or disable context */
   context = true
   /** Set the context strategy */
@@ -102,6 +105,8 @@ export class Config {
     const config = this.mergeConfigs(Config.DEFAULT_CONFIG, envConfig, fileConfig)
     this.configPath = configFile?.path || ''
     const validatedConfig = this.validate(config)
+    this.absoluteRoot = join(this.cwd, this.root)
+
     return validatedConfig
   }
 
@@ -145,7 +150,6 @@ export class Config {
     })
 
     return {
-      // apiKey: process.env.SILK_API_KEY,
       model: process.env.SILK_MODEL,
       env: env.parsed
     }

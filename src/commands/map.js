@@ -18,13 +18,6 @@ export async function map (promptOrFile = "", options = new CommandOptions()) {
 
   logConfiguration(config, logger)
 
-  const { root } = config
-  console.log({ config, options })
-  if (root) {
-    mkdirSync(root, { recursive: true })
-    process.chdir(root)
-  }
-
   const files = await gatherContextInfo(config.include)
 
   if (files.length === 0) {

@@ -1,5 +1,4 @@
 import { CommandHandler } from '../lib/CommandHandler.js'
-import { CommandOptions } from '../lib/CommandOptions.js'
 import { loadConfig } from '../lib/config/load.js'
 import { UI } from '../lib/logger.js'
 import { extractPrompt } from '../lib/prompt-extractor.js'
@@ -7,7 +6,6 @@ import { logConfiguration } from './info.js'
 import path from 'path'
 import fs from 'fs/promises';
 import inquirer from 'inquirer';
-import chalk from 'chalk'
 import { GET_STARTED } from './messages/index.js'
 import { SILK_DIR } from '../lib/constants.js'
 

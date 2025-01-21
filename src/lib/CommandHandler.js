@@ -6,13 +6,12 @@ import { getContext } from './getContext.js'
 import { resolveContent } from './fs.js'
 import { FileStats } from './stats.js'
 import { LimitChecker } from './LimitChecker.js'
-import fs from 'fs'
 import ora from 'ora'
 import { execute, streamHandler } from './llm.js'
 import { postActions } from './silk.js'
 import { Config } from './config/Config.js'
 import { formatBytes, limit } from './renderers/utils.js'
-import { COLORS } from './constants.js'
+import { COLORS } from './colors.js'
 
 export class CommandHandler {
   logger = new Logger()
@@ -31,12 +30,14 @@ export class CommandHandler {
 
   async execute(prompt = '') {
     const { logger, config } = this
-    const { root, dry, stats } = this.config
-    await this.setupRoot(root)
-    logger.info(`Project root: ${process.cwd()}`)
+    const { root, dry, stats } = config
+    // await this.setupRoot(root)
+    // logger.info(`Project root: ${config.absoluteRoot}`)
+    // logger.info(`cwd: ${process.cwd()}`)
 
     logger.prompt(prompt)
 
+    // Gather context
     const spinner = ora({
       text: 'gathering context...',
       color: 'yellow'
@@ -45,8 +46,7 @@ export class CommandHandler {
       await getContext(config, { prompt }) :
       []
     spinner.succeed(`using ${validFiles.length} files`)
-    UI.info(limit(validFiles.map(e=>e.path), 10))
-    // console.log(validFiles)
+    UI.hint(limit(validFiles.map(e=>e.path), 6).join(', '))
     
     if (stats) {
       const fileStats = new FileStats()
@@ -64,11 +64,12 @@ export class CommandHandler {
     logger.json({ tools, config })
 
     if (dry) {
-      logger.info('Dry run, skipping execution')
+      UI.info('Dry run, execution skipped.')
       return
     }
 
-    const context = await resolveContent(validFiles)
+    const context = await resolveContent(validFiles, process.cwd())
+    // const context = await resolveContent(validFiles, config.absoluteRoot)
     const task = new Task({ prompt, context, tools })
     const renderer = new CliRenderer(config).attach(task.toolProcessor)
 
@@ -104,10 +105,10 @@ export class CommandHandler {
     
   }
 
-  async setupRoot(root) {
-    if (root) {
-      fs.mkdirSync(root, { recursive: true })
-      process.chdir(root)
-    }
-  }
+  // async setupRoot(root) {
+  //   if (root) {
+  //     fs.mkdirSync(root, { recursive: true })
+  //     process.chdir(root)
+  //   }
+  // }
 }

@@ -47,13 +47,7 @@ export class Chat {
 
     this.logger.debug(`Using provider: ${config.provider}`)
     this.logger.debug(`Using model: ${config.model}`)
-
-    const { root } = config
-    if (root) {
-      fs.mkdirSync(root, { recursive: true })
-      process.chdir(root)
-    }
-    this.logger.info(`Project root: ${process.cwd()}`)
+    this.logger.info(`Project root: ${config.absoluteRoot}`)
 
     this.ui.info('Starting chat mode (type "exit" to quit, "/help" for available commands)')
 

@@ -30,6 +30,7 @@ export function logConfiguration(config, logger = new Logger()) {
 
   logger.stats('Configuration', [
     { label: 'Config', value: config.configPath },
+    { label: 'Config (global)', value: config.globalConfigPath },
     { label: 'Provider', value: provider?.displayName || config.provider },
     { label: 'Model', value: config.model },
     { label: 'Key', value: safeKey(config.apiKey) },
@@ -37,6 +38,7 @@ export function logConfiguration(config, logger = new Logger()) {
     { label: 'Include', value: config.include },
     { label: 'Ignore', value: config.ignore },
     { label: 'Root', value: config.root },
+    { label: 'Root (absolute)', value: config.absoluteRoot },
     { label: 'Context', value: config.context },
     { label: 'Working directory', value: config.cwd },
     { label: 'Tools', value: config.tools },
