@@ -1,4 +1,5 @@
-import { COLORS } from "./constants.js"
+import chalk from "chalk"
+import { COLORS } from "./colors.js"
 
 export class Logger {
   maxMessageLength = 0
