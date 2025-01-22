@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import path from 'path'
-import { Tool } from './Tool.js'
+import { Tool } from '../Tool.js'
 import { ACTION_TAG } from '../prompt.js'
 import { inquirerPlugin } from './inquirer.js'
 import cliTool from './cli.js'

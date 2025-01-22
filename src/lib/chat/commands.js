@@ -6,6 +6,7 @@ import { FileStats } from '../stats.js'
 import { CONTEXT_MODES } from '../config/Config.js'
 import { getContext } from '../getContext.js'
 import { install as scopePlugin } from "./tools/scope.js"
+import { installShellCommand } from "./commands/shell.js"
 
 const MOODS = ['brief', 'happy', 'sad', 'angry', 'professional', 'neutral', 'other']
 
@@ -20,6 +21,8 @@ export function setupCommands(ctx = new Chat) {
         })
 
     scopePlugin(chatProgram, ctx)
+
+    installShellCommand(chatProgram)
 
     chatProgram
         .command('mode')
@@ -90,7 +93,7 @@ export function setupCommands(ctx = new Chat) {
         })
 
     installInfoCommand(chatProgram)
-    
+
     chatProgram
         .command('model')
         .alias('m')

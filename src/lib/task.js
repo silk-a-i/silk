@@ -1,4 +1,4 @@
-import { ToolProcessor } from './tools/ToolProcessor.js'
+import { ToolProcessor } from './ToolProcessor.js'
 import { createBasicTools } from './tools/basicTools.js'
 
 export class Task {

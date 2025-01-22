@@ -1,6 +1,6 @@
 import chalk from 'chalk'
 import ora from 'ora'
-import { ToolProcessor } from '../tools/ToolProcessor.js'
+import { ToolProcessor } from '../ToolProcessor.js'
 import { formatBytes } from './utils.js'
 
 class Stats {

@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import { SYSTEM } from '../prompt.js'
+import { SYSTEM } from './prompt.js'
 import { Tool } from './Tool.js'
 
 export class ToolProcessor extends EventEmitter {

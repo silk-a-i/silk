@@ -67,7 +67,6 @@ export async function gatherContextInfo(patterns, config = new Config()) {
       ...config,
       cwd: config.absoluteRoot
     })
-    console.log(allFiles)
     // Sort aphabatically so cache matches
     const _files = Array.from(allFiles)
       .toSorted((a, b) => a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase()))

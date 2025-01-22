@@ -131,6 +131,11 @@ export class Chat {
         }
       ])
 
+      if(!input) {
+        console.log('Please enter a message or a command')
+        this.askQuestion()
+        return
+      }
       this.handleQuestion(input)
     } catch (error) {
       if (error.name === 'ExitPromptError') {
