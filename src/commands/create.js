@@ -8,6 +8,19 @@ import fs from 'fs/promises';
 import inquirer from 'inquirer';
 import { GET_STARTED } from './messages/index.js'
 import { SILK_DIR } from '../lib/constants.js'
+import { addSharedOptions } from '../options.js'
+
+export function installCreate(program) {
+  addSharedOptions(
+    program
+      .command('create')
+      .alias('c')
+      .argument('<folder>', 'folder')
+      .argument('[prompt]', 'prompt or file')
+      .option('-y, --yes', 'yes')
+      .description('Create a new project.')
+  ).action(create)
+}
 
 export async function create(folder = "", promptOrFile = "", options = {}) {
   options.root = folder

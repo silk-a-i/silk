@@ -7,9 +7,18 @@ import { Task } from '../lib/task.js'
 import { Logger } from '../lib/logger.js'
 import { CliRenderer } from '../lib/renderers/cli.js'
 import { createBasicTools } from '../lib/tools/basicTools.js'
-import { mkdirSync } from 'fs'
-import { CommandOptions } from '../lib/CommandOptions.js'
+import { addSharedOptions, CommandOptions } from '../lib/CommandOptions.js'
 import { execute, streamHandler } from '../lib/llm.js'
+
+export function installMap(program) {
+  addSharedOptions(
+    program
+      .command('each')
+      .alias('map')
+      .argument('[prompt]', 'prompt or file')
+      .description('Run a prompt over multiple files')
+  ).action(map)
+}
 
 export async function map (promptOrFile = "", options = new CommandOptions()) {
   const config = await loadConfig(options)

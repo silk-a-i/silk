@@ -4,6 +4,15 @@ import path from 'path'
 import { homedir } from 'os'
 import { Logger } from '../lib/logger.js'
 
+export function installLogin(program) {
+  program
+    .command('login')
+    .argument('[key]', 'key')
+    .description('Configure API key')
+    .option('-i, --interactive', 'Interactive mode')
+    .action(login)
+}
+
 export async function login (key = '', options = {}) {
   options.interactive = options.interactive || true
 

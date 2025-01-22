@@ -10,6 +10,15 @@ const OPTIONS = {
   yes: false
 }
 
+export function installInit(program) {
+  program
+    .command('init')
+    .argument('[root]', 'root directory')
+    .option('-y, --yes', 'yes')
+    .description('Initialize a new Silk project')
+    .action(init)
+}
+
 async function getAnswers(options) {
   if (options.yes) {
     return {

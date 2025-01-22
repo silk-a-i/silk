@@ -5,6 +5,15 @@ import { CliRenderer } from '../lib/renderers/cli.js'
 import fs from 'fs/promises'
 import { postActions } from '../lib/silk.js'
 
+export function installParse(program) {
+  program
+    .command('parse')
+    .alias('p')
+    .argument('[file]', 'file to parse')
+    .description('Parse markdown file into individual files')
+    .action(parse)
+}
+
 export async function parse(filePath) {
   const logger = new Logger()
 

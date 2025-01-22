@@ -5,8 +5,16 @@ import { Logger } from '../lib/logger.js'
 import { File } from '../lib/File.js'
 import { getGlobOptions } from '../lib/fs.js'
 import { FileStats } from '../lib/stats.js'
-import { loadConfig } from '../lib/config/load.js'
 import { formatBytes } from '../lib/renderers/utils.js'
+
+export function installPack(program) {
+  program
+    .command('pack')
+    .argument('<folder>', 'folder to pack')
+    .option('-o, --output <file>', 'output file', 'packed.md')
+    .description('Pack folder contents into a single markdown file')
+    .action(pack)
+}
 
 export async function pack (folder = "", options = {}) {
   const logger = new Logger()

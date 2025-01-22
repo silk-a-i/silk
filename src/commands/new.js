@@ -7,6 +7,15 @@ import chalk from 'chalk'
 
 const comment = (str = '') => `<!-- ${str} -->`
 
+export function installNew(program) {
+  program
+    .command('new')
+    .alias('n')
+    .argument('[file]', 'file to parse')
+    .description('Create a new design file')
+    .action(newCommand)
+}
+
 const DESIGN_DOCUMENT = `# Design Document
 
 ## Overview
@@ -30,7 +39,7 @@ ${comment('Any other relevant information')}
 
 export async function newCommand(name = "design", options = new CommandOptions()) {
   await fs.mkdir(SILK_DIR, { recursive: true })
-  
+
   const designPath = path.join(SILK_DIR, `${name}.md`)
 
   await fs.writeFile(designPath, DESIGN_DOCUMENT)
