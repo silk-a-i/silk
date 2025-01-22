@@ -22,7 +22,7 @@ A powerful CLI tool for quick task automation using LLMs.
 
 ```bash
 # Install
-npm install -g https://github.com/silk-a-i/silk-cli.git
+npm install -g https://github.com/silk-a-i/silk.git
 
 # Initialize
 silk init
