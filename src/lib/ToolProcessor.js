@@ -65,6 +65,16 @@ ${availableTools.map(tool => tool.system).join('\n\n')}
   }
 
   processLine (line = '') {
+    // Check for action start and end on the same line
+    const actionStartEnd = line.match(new RegExp(`<${this.tagName}\\s+([^>]+)>([^<]+)</${this.tagName}>`))
+    if (actionStartEnd) {
+      const args = this.extractArgs(actionStartEnd[1])
+      this.startAction(args)
+      this.currentState.blockContent = actionStartEnd[2]
+      this.endAction()
+      return
+    }
+  
     // Check for action start
     const actionStart = line.match(new RegExp(`<${this.tagName}\\s+([^>]+)>`))
     if (actionStart) {
@@ -72,13 +82,13 @@ ${availableTools.map(tool => tool.system).join('\n\n')}
       this.startAction(args)
       return
     }
-
+  
     // Check for action end
     if (line.includes(`</${this.tagName}>`)) {
       this.endAction()
       return
     }
-
+  
     // Check for file block start
     const fileBlockStart = line.match(/#{5}\s+`([^`]+)`/)
     if (fileBlockStart) {
@@ -86,7 +96,7 @@ ${availableTools.map(tool => tool.system).join('\n\n')}
       this.startFileBlock({ path })
       return
     }
-
+  
     // Check for file block content markers
     if (this.currentState.inFileBlock) {
       if (line.startsWith('```')) {
@@ -96,7 +106,7 @@ ${availableTools.map(tool => tool.system).join('\n\n')}
         return
       }
     }
-
+  
     // Accumulate content
     if (this.currentState.inAction || this.currentState.inFileBlock) {
       this.currentState.blockContent += line + '\n'
@@ -139,14 +149,12 @@ ${availableTools.map(tool => tool.system).join('\n\n')}
 
   endAction () {
     const { tool = new Tool(), args, blockContent } = this.currentState
-    if (tool) {
-      tool.emit('finish', { ...args, content: blockContent }, this)
-      this.emit('tool:finish', {
-        ...args,
-        tool,
-        content: blockContent
-      })
+    if(!tool) {
+      throw new Error('Tool not found')
     }
+    const payload = { ...args, tool, content: blockContent }
+    tool.emit('finish', payload, this)
+    this.emit('tool:finish', payload)
 
     this.resetState()
   }
