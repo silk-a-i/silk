@@ -12,12 +12,19 @@ import { installCreate } from './commands/create.js'
 import { installNew } from './commands/new.js'
 
 import "./features.js"
+import { installConfigCommand } from './commands/config.js'
 
-process.on('uncaughtException', function(err) {
-  // handle the error safely
-  console.error(err.message)
-  console.error(err.stack)
-})
+process.on('uncaughtException', (error) => {
+  if (error instanceof Error && error.name === 'ExitPromptError') {
+    console.log('👋 until next time!');
+  } else {
+    // handle the error safely
+    console.error(error.message)
+    console.error(error.stack)
+    // Rethrow unknown errors
+    // throw error;
+  }
+});
 
 program
   .name('silk')
@@ -43,5 +50,7 @@ installChat(program)
 installMap(program)
 
 installNew(program)
+
+installConfigCommand(program)
 
 program.parse()
