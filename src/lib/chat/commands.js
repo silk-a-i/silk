@@ -7,6 +7,7 @@ import { CONTEXT_MODES } from '../config/Config.js'
 import { getContext } from '../getContext.js'
 import { install as scopePlugin } from "./tools/scope.js"
 import { installShellCommand } from "./commands/shell.js"
+import { installConfigCommand } from "../../commands/config.js"
 
 const MOODS = ['brief', 'happy', 'sad', 'angry', 'professional', 'neutral', 'other']
 
@@ -20,6 +21,8 @@ export function setupCommands(ctx = new Chat) {
             process.exit(0)
         })
 
+    installConfigCommand(chatProgram)
+    
     scopePlugin(chatProgram, ctx)
 
     installShellCommand(chatProgram)
