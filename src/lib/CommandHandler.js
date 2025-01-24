@@ -13,6 +13,7 @@ import { Config } from './config/Config.js'
 import { formatBytes, limit } from './renderers/utils.js'
 import { COLORS } from './colors.js'
 
+/** @deprecated use executeCommand  */
 export class CommandHandler {
   logger = new Logger()
   config = new Config()

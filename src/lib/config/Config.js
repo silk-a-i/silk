@@ -15,9 +15,7 @@ export const CONTEXT_MODES = {
   ALL: 'all',
   /** user specified list */
   MANUAL: 'manual',
-  /** (chat only) initially send an artifact, cacheble but manual code changes aren't reflected */
-  APPEND: 'append',
-  /** auto */
+  /** auto an LLM call is used to scope the files */
   AUTO: 'auto'
 }
 
@@ -92,7 +90,9 @@ export class Config {
   /** Enable or disable context */
   context = true
   /** Set the context strategy */
-  contextMode = CONTEXT_MODES.ALL
+  contextMode = CONTEXT_MODES.AUTO
+  /** Disable LLM execution */
+  dry = false
 
   constructor (obj = {}) {
     Object.assign(this, obj)

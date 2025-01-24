@@ -1,9 +1,11 @@
-import { config } from 'dotenv'
 import { AIClient } from './ai/client.js'
 import { CommandHandler } from './CommandHandler.js'
+import { Config } from './config/Config.js'
 import { loadConfig } from './config/load.js'
-import { streamHandler } from './llm.js'
+import { execute, streamHandler } from './llm.js'
 import { Logger, UI } from './logger.js'
+import { Task } from './task.js'
+import { ToolProcessor } from './ToolProcessor.js'
 
 export async function silk(prompt = '', options) {
     const config = await loadConfig(options)
@@ -12,10 +14,10 @@ export async function silk(prompt = '', options) {
 }
 
 class State {
-    config = {}
+    config = new Config()
     /** Full messages state without any running messages */
     history = []
-    
+
     constructor(obj = {}) {
         Object.assign(this, obj)
     }
@@ -27,6 +29,10 @@ const MOCK_CTX = {
 
 export async function postActions(task, ctx = MOCK_CTX, logger = new Logger) {
     const { queue } = task?.toolProcessor
+    return finishToolQueue(queue, ctx, logger)
+}
+
+export async function finishToolQueue(queue = [], ctx = MOCK_CTX, logger = new Logger) {
     for (const task of queue) {
         try {
             await task(ctx)
@@ -36,9 +42,36 @@ export async function postActions(task, ctx = MOCK_CTX, logger = new Logger) {
     }
 }
 
-export function getSilkFromConfig(config = {}) {
+// const TASK = {
+//     intend: '',
+//     /** @type {Array[Object]} */
+//     context: []
+// }
+
+export function getMessagesFromTask(task = {}) {
+    const _task = new Task(task)
+    return [
+        { role: 'system', content: _task.fullSystem },
+        { role: 'user', content: _task.render() }
+    ]
+}
+
+export function getSilkFromConfig(config = new Config) {
+    const state = new State({
+        config
+    })
+
     return {
-        state: new State(),
+        state,
+        async run(messages = [], toolProcessor = new ToolProcessor) {
+            const { stream } = await execute(messages, config)
+
+            const content = await streamHandler(stream, chunk => {
+                toolProcessor.process(chunk)
+            })
+            toolProcessor.cleanup()
+            return content
+        },
         llm: async ({
             messages = []
         }) => {
