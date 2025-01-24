@@ -1,10 +1,9 @@
 import { Command } from 'commander'
-import inquirer from 'inquirer'
+import { input } from '@inquirer/prompts'
 import { Task } from '../task.js'
 import { CliRenderer } from '../renderers/cli.js'
-import { Logger } from '../logger.js'
+import { Logger, UI } from '../logger.js'
 import { loadConfig } from '../config/load.js'
-import fs from 'fs'
 import { CommandOptions } from '../CommandOptions.js'
 import { resolveContent } from '../fs.js'
 import { createBasicTools } from '../tools/basicTools.js'
@@ -13,6 +12,10 @@ import { Config } from '../config/Config.js'
 import { getContext } from '../getContext.js'
 import { postActions } from '../silk.js'
 import { setupCommands } from './commands.js'
+import ora from 'ora'
+import { limit } from '../renderers/utils.js'
+
+const GET_STARTED = `Starting chat mode (type "exit" to quit, "/help" for available commands)`
 
 export class Chat {
   options = {}
@@ -42,14 +45,27 @@ export class Chat {
   }
 
   async init() {
-    this.state.config = await loadConfig(this.options)
+    const { state } = this
+    state.config = await loadConfig(this.options)
     const { config } = this.state
+
+    // Set tools
+    config.tools = state.config.tools.length
+      ? state.config.tools
+      : [
+        ...createBasicTools({
+          output: state.config.output
+        }),
+        ...state.config.additionalTools
+      ]
 
     this.logger.debug(`Using provider: ${config.provider}`)
     this.logger.debug(`Using model: ${config.model}`)
     this.logger.info(`Project root: ${config.absoluteRoot}`)
 
-    this.ui.info('Starting chat mode (type "exit" to quit, "/help" for available commands)')
+    UI.info(GET_STARTED)
+    UI.info('Using tools:', config.tools.map(e => e.name).join(', '))
+    UI.info('Using context:', config.contextMode)
 
     this.setupCommands()
     this.askQuestion()
@@ -74,26 +90,24 @@ export class Chat {
   /**
    * @deprecation migrate to 'run'
    **/
-  async handlePrompt(input = '') {
+  async handlePrompt(prompt = '') {
     const { state, renderer } = this
 
-    this.logger.prompt(input)
+    this.logger.prompt(prompt)
+
+    const spinner = ora({
+      text: 'scoping...',
+      color: 'yellow'
+    }).start()
 
     const files = await getContext(state.config)
     const context = await resolveContent(files)
 
-    const tools = state.config.tools.length
-      ? state.config.tools
-      : [
-        ...createBasicTools({
-          output: state.config.output
-        }),
-        ...state.config.additionalTools
-      ]
-    const task = new Task({ prompt: input, context, tools })
+    const c = limit(files.map(e=>e.file), 5)
+    spinner.succeed(`Used context [${c}]`)
 
+    const task = new Task({ prompt, context, tools: state.config.tools })
     const system = `${state.mood}${task.fullSystem}`
-
     renderer.attach(task.toolProcessor)
     renderer.reset()
 
@@ -102,7 +116,7 @@ export class Chat {
       ...state.history,
       { role: 'user', content: task.render() }
     ]
-    this.logger.info('message size:', JSON.stringify(messages).length)
+    UI.info('message size:', JSON.stringify(messages).length)
 
     const { stream } = await execute(messages, state.config)
     const content = await streamHandler(stream, chunk => {
@@ -123,20 +137,18 @@ export class Chat {
 
   async askQuestion() {
     try {
-      const { input } = await inquirer.prompt([
+      const answer = await input(
         {
-          type: 'input',
-          name: 'input',
-          message: `${this.state.config.contextMode} > `
+          message: `>>> `
         }
-      ])
+      )
 
-      if(!input) {
+      if (!answer) {
         console.log('Please enter a message or a command')
         this.askQuestion()
         return
       }
-      this.handleQuestion(input)
+      this.handleQuestion(answer)
     } catch (error) {
       if (error.name === 'ExitPromptError') {
         return
@@ -163,13 +175,6 @@ export class Chat {
       this.askQuestion()
       return
     }
-
-    // const isCliCommand = trimmedInput.startsWith('$')
-    // if(isCliCommand) {
-    //   await cliHook(this)
-    //   this.askQuestion()
-    //   return
-    // }
 
     // Else use LLM
     try {

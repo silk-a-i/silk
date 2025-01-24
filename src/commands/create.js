@@ -29,12 +29,13 @@ export async function create(folder = "", promptOrFile = "", options = {}) {
   const handler = new CommandHandler(config)
   logConfiguration(config, handler.logger)
 
-  // Create directory
-  if (config.root) {
-    UI.info(`Creating directory: ${config.root}`)
+  // Create config directory
+  // if (config.root) {
+  const configDir = `${folder}/${SILK_DIR}`
+    UI.info(`Creating directory: ${configDir}`)
     // handler.setupRoot(config.root)
-    await fs.mkdir(SILK_DIR, { recursive: true })
-  }
+    await fs.mkdir(configDir, { recursive: true })
+  // }
 
   const DEFAULTS = {
     makeDesignFile: true

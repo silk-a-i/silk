@@ -1,5 +1,5 @@
 import fs from 'fs/promises'
-import path from 'path'
+import path, { dirname } from 'path'
 import { join } from 'path'
 import dotenv from 'dotenv'
 import { PROVIDERS, DEFAULT_PROVIDER, SILK_DIR } from '../constants.js'
@@ -57,7 +57,10 @@ export class Config {
    */
   customLogger
   baseUrl = ''
+  /** Path to config file */
   configPath = ''
+  /** Path to config directory */
+  configDir = ''
   globalConfigPath = GLOBAL_CONFIG_DIR
   api = {
     baseUrl: '',
@@ -76,6 +79,7 @@ export class Config {
     'dist/**',
     'build/**',
   ]
+  /** Tools */
   tools = []
   additionalTools = []
   output = ''
@@ -103,7 +107,9 @@ export class Config {
     const configFile = await this.findConfigFile(process.cwd(), path)
     const fileConfig = await this.loadConfigFile(configFile)
     const config = this.mergeConfigs(Config.DEFAULT_CONFIG, envConfig, fileConfig)
+
     this.configPath = configFile?.path || ''
+    this.configDir = dirname(this.configPath)
     const validatedConfig = this.validate(config)
     this.absoluteRoot = join(this.cwd, this.root)
 

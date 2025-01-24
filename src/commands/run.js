@@ -2,6 +2,8 @@ import { CommandHandler } from '../lib/CommandHandler.js'
 import { addSharedOptions, CommandOptions } from '../lib/CommandOptions.js'
 import { loadConfig } from '../lib/config/load.js'
 import { extractPrompt } from '../lib/prompt-extractor.js'
+import { promptForFile } from './helpers/helpers.js'
+import { askContextMode } from './helpers/interactive.js'
 import { logConfiguration } from './info.js'
 import path from 'path'
 
@@ -47,8 +49,13 @@ export async function run(promptOrFile = "", options = new CommandOptions()) {
 
   const handler = new CommandHandler(config)
   logConfiguration(config, handler.logger)
-
+  
   const configRoot = path.dirname(config.configPath)
-  const prompt = await extractPrompt(promptOrFile, configRoot)
+
+  if(options.interactive) {
+    await askContextMode(config)
+  }
+
+  const prompt = promptOrFile ? await extractPrompt(promptOrFile, configRoot) : await promptForFile(config)
   handler.execute(prompt)
 }

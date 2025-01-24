@@ -4,20 +4,27 @@ import { createBasicTools } from '../lib/tools/basicTools.js'
 import { CliRenderer } from '../lib/renderers/cli.js'
 import fs from 'fs/promises'
 import { postActions } from '../lib/silk.js'
+import inquirer from 'inquirer'
+import path from 'path'
 
 export function installParse(program) {
   program
     .command('parse')
     .alias('p')
     .argument('[file]', 'file to parse')
+    .option('-i, --interactive', 'interactive mode', '')
     .description('Parse markdown file into individual files')
     .action(parse)
 }
 
-export async function parse(filePath) {
+export async function parse(filePath = "", options = {}) {
   const logger = new Logger()
 
   try {
+    if (!filePath || options.interactive) {
+      filePath = await promptForFile()
+    }
+
     // Read input from stdin or file
     const content = filePath
       ? await fs.readFile(filePath, 'utf-8')
@@ -53,4 +60,24 @@ async function readStdin() {
     chunks.push(chunk)
   }
   return Buffer.concat(chunks).toString('utf8')
+}
+
+async function promptForFile() {
+  const files = await fs.readdir(process.cwd())
+  const mdFiles = files.filter(file => path.extname(file) === '.md')
+
+  if (mdFiles.length === 0) {
+    throw new Error('No markdown files found in the current directory.')
+  }
+
+  const answers = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'file',
+      message: 'Select a markdown file to parse:',
+      choices: mdFiles
+    }
+  ])
+
+  return answers.file
 }

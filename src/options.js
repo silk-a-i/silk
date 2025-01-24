@@ -2,7 +2,8 @@ export function addSharedOptions (command) {
   return command
     .option('-o, --output <dir>', 'Output directory for generated files', '')
     .option('-c, --context [mode]', 'Set context mode', true)
-    .option('-i, --include [glob]', 'File glob pattern to process')
+    .option('--include [glob]', 'File glob pattern to process')
+    .option('-i, --interactive', 'Interactive mode', false)
     .option('-v, --verbose', 'Show additional information including the used prompt', false)
     .option('-r, --raw', 'Show raw LLM output without formatting', false)
     .option('-d, --dry', 'Run the command without any processing', false)
@@ -24,6 +25,7 @@ export class CommandOptions {
   stats = false
   /** path to the config file */
   config = ''
+  interactive = false
 
   constructor (options = {}) {
     Object.assign(this, options)
