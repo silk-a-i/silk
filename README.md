@@ -36,7 +36,7 @@ silk chat
 
 ## Documentation
 
-For detailed documentation, visit [docs.silk-cli.com](https://docs.silk-labs.com)
+For detailed documentation, visit [docs.silk-labs.com](https://docs.silk-labs.com)
 
 ## License
 

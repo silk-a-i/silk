@@ -1,14 +1,5 @@
-import chalk from 'chalk'
-
-const COLORS = {
-  json: chalk.gray,
-  info: chalk.blue,
-  success: chalk.green,
-  hint: chalk.blue,
-  error: chalk.red,
-  debug: chalk.gray,
-  message: chalk.gray
-}
+import chalk from "chalk"
+import { COLORS } from "./colors.js"
 
 export class Logger {
   maxMessageLength = 0
@@ -62,7 +53,7 @@ export class Logger {
   list(items = []) {
     if (!this.verbose) return
 
-    stats('', items)
+    list(items)
   }
 
   messages(messages = []) {
@@ -90,6 +81,10 @@ export function heading(title = "") { console.log(chalk.cyan(title)) }
 
 export function stats(title = "", items = []) {
   heading(`\n${title}:`)
+  list(items)
+}
+
+export function list(items = []) {
   items.forEach(({ label, value, raw }, i, arr) => {
     const prefix = i === arr.length - 1 ? '└─' : '├─'
     const keyValue = raw || `${label}: ${value || 'N/A'}`

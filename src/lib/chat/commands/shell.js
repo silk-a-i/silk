@@ -1,14 +1,30 @@
-import { spawn } from 'child_process'
+import { exec, spawn } from 'child_process'
 
-export async function cliHook({ trimmedInput }) {
-    const command = trimmedInput.substring(1)
+export default function install(program) {
+    program
+        .command('shell')
+        .alias('/')
+        .argument('[command]', 'command')
+        .description('Run a shell script (experimental)')
+        .action(shell)
+}
+
+export const installShellCommand = install
+
+export function shell(command = "") {
+    // exec(command, (error, stdout, stderr) => {
+    //     if (error) {
+    //         console.error(`exec error: ${error}`)
+    //         return
+    //     }
+    //     console.log(stdout)
+    // })
     console.log(`Executing command: ${command}`)
     try {
         execStream(command)
     } catch (error) {
         console.error(`Error executing command: ${error.message}`)
     }
-    return
 }
 
 export function execStream(command = "") {

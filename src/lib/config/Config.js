@@ -1,5 +1,5 @@
 import fs from 'fs/promises'
-import path from 'path'
+import path, { dirname } from 'path'
 import { join } from 'path'
 import dotenv from 'dotenv'
 import { PROVIDERS, DEFAULT_PROVIDER, SILK_DIR } from '../constants.js'
@@ -11,18 +11,24 @@ export const GLOBAL_CONFIG_DIR = path.join(homedir(), '.config', 'silk')
 export const CONTEXT_MODES = {
   /** don't send any context */
   NONE: 'none',
-  /** always send the latests */
-  LATEST: 'latest',
+  /** always send the full latests (works great with small projects) */
+  ALL: 'all',
   /** user specified list */
-  MANUAL: 'MANUAL',
-  /** (chat only) initially send an artifact, cacheble but manual code changes aren't reflected */
-  APPEND: 'append',
-  /** auto */
-  AUTO: 'AUTO'
+  MANUAL: 'manual',
+  /** auto an LLM call is used to scope the files */
+  AUTO: 'auto'
+}
+
+function autoGuessBestContextMode(files = []) {
+  if (files.length > 50) {
+    return CONTEXT_MODES.NONE
+  }
+  return CONTEXT_MODES.ALL
 }
 
 export async function loadGlobalConfig(file = 'config.mjs') {
   const path = join(GLOBAL_CONFIG_DIR, file)
+  /** @todo perhaps also accept a .json file */
   // const data = readFileSync(path, 'utf-8')
   const module = await import(path)
   return module.default
@@ -50,28 +56,47 @@ export class Config {
    * Custom logger.
    */
   customLogger
-
   baseUrl = ''
+  /** Path to config file */
   configPath = ''
-  globalConfigPath = ''
+  /** Path to config directory */
+  configDir = ''
+  globalConfigPath = GLOBAL_CONFIG_DIR
   api = {
     baseUrl: '',
     endpoint: ''
   }
-
   max_tokens = null
   provider = ''
+  apiKey = ''
   env = {}
   model = ''
+  /** glob options */
   include = []
+  ignore = [
+    'node_modules/**',
+    '.git/**',
+    'dist/**',
+    'build/**',
+  ]
+  /** Tools */
   tools = []
   additionalTools = []
   output = ''
+  /** Relative path to a directory in a project */
   root = ''
+  /** The project absolute root folder  */
+  absoluteRoot = ''
+  /** Current working directory */
   cwd = ''
   verbose = false
   projects = []
-  contextMode = CONTEXT_MODES.LATEST
+  /** Enable or disable context */
+  context = true
+  /** Set the context strategy */
+  contextMode = CONTEXT_MODES.AUTO
+  /** Disable LLM execution */
+  dry = false
 
   constructor (obj = {}) {
     Object.assign(this, obj)
@@ -82,8 +107,12 @@ export class Config {
     const configFile = await this.findConfigFile(process.cwd(), path)
     const fileConfig = await this.loadConfigFile(configFile)
     const config = this.mergeConfigs(Config.DEFAULT_CONFIG, envConfig, fileConfig)
+
     this.configPath = configFile?.path || ''
+    this.configDir = dirname(this.configPath)
     const validatedConfig = this.validate(config)
+    this.absoluteRoot = join(this.cwd, this.root)
+
     return validatedConfig
   }
 
@@ -127,7 +156,6 @@ export class Config {
     })
 
     return {
-      // apiKey: process.env.SILK_API_KEY,
       model: process.env.SILK_MODEL,
       env: env.parsed
     }

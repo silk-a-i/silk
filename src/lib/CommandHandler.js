@@ -1,70 +1,79 @@
-import { Logger } from './logger.js'
-import { TaskExecutor } from './TaskExecutor.js'
+import { Logger, UI } from './logger.js'
 import { Task } from './task.js'
 import { CliRenderer } from './renderers/cli.js'
 import { createBasicTools } from './tools/basicTools.js'
 import { getContext } from './getContext.js'
-import { gatherContextInfo, resolveContent } from './fs.js'
+import { resolveContent } from './fs.js'
 import { FileStats } from './stats.js'
-import { CommandOptions } from './CommandOptions.js'
 import { LimitChecker } from './LimitChecker.js'
-import fs from 'fs'
 import ora from 'ora'
-import { streamHandler } from './llm.js'
+import { execute, streamHandler } from './llm.js'
 import { postActions } from './silk.js'
+import { Config } from './config/Config.js'
+import { formatBytes, limit } from './renderers/utils.js'
+import { COLORS } from './colors.js'
+import { allDone } from './cli.js'
 
+/** @deprecated use executeCommand  */
 export class CommandHandler {
   logger = new Logger()
-  options = new CommandOptions()
-  executor = new TaskExecutor()
+  config = new Config()
   limitChecker = new LimitChecker()
 
-  constructor(options = {}) {
-    this.options = new CommandOptions(options)
+  constructor(config = new Config) {
+    this.config = config
     this.logger = new Logger({
-      verbose: options.verbose
+      verbose: config.verbose
       // @todo proxy more options
-      // ...options.logger
+      // ...config.logger
     })
-    this.executor = new TaskExecutor(this.options)
-    this.limitChecker = new LimitChecker(options)
+    this.limitChecker = new LimitChecker(config)
   }
 
   async execute(prompt = '') {
-    const { logger, options } = this
-    const { root, include, dry, stats } = this.options
-    await this.setupRoot(root)
-    logger.info(`Project root: ${process.cwd()}`)
+    const { logger, config } = this
+    const { root, dry, stats } = config
+    // await this.setupRoot(root)
+    // logger.info(`Project root: ${config.absoluteRoot}`)
+    // logger.info(`cwd: ${process.cwd()}`)
 
     logger.prompt(prompt)
 
-    const validFiles = options.context ? 
-      await getContext(options):
+    // Gather context
+    const spinner = ora({
+      text: 'gathering context...',
+      color: 'yellow'
+    }).start()
+    const validFiles = config.context ? 
+      await getContext(config, { prompt }) :
       []
-
+    spinner.succeed(`using ${validFiles.length} files`)
+    UI.hint(limit(validFiles.map(e=>e.path), 6).join(', '))
+    
     if (stats) {
       const fileStats = new FileStats()
       validFiles.forEach(file => fileStats.addFile(file.path, file.content))
       fileStats.summary(undefined, { logger })
     }
 
-    const tools = options.tools.length
-      ? options.tools
+    const tools = config.tools.length
+      ? config.tools
       : [
-        ...createBasicTools(options),
-        ...options.additionalTools
+        ...createBasicTools(config),
+        ...config.additionalTools
       ]
     logger.info(`Using tools: ${tools.map(t => t.name).join(', ')}`)
-    logger.json({ tools, options })
+    logger.json({ tools, config })
 
     if (dry) {
-      logger.info('Dry run, skipping execution')
+      UI.info('Dry run, execution skipped.')
       return
     }
 
-    const context = await resolveContent(validFiles)
+    const context = await resolveContent(validFiles, process.cwd())
+    // const context = await resolveContent(validFiles, config.absoluteRoot)
     const task = new Task({ prompt, context, tools })
-    const renderer = new CliRenderer(options).attach(task.toolProcessor)
+    const renderer = new CliRenderer(config).attach(task.toolProcessor)
 
     try {
       const spinner = ora({
@@ -72,8 +81,12 @@ export class CommandHandler {
         color: 'yellow'
       }).start()
 
-      const { stream } = await this.executor.createStream(task)
-
+      const messages = [
+        { role: 'system', content: task.fullSystem },
+        { role: 'user', content: task.render() }
+      ]
+      const { stream } = await execute(messages, config)
+  
       spinner.stop()
 
       const content = await streamHandler(stream, chunk => {
@@ -82,17 +95,20 @@ export class CommandHandler {
       task.toolProcessor.cleanup()
       
       await postActions(task)
+
+      UI.info(allDone({ renderer, messages }))
     } catch (error) {
       logger.error(`Error: ${error.message}`)
     }
 
     renderer.cleanup()
+    
   }
 
-  async setupRoot(root) {
-    if (root) {
-      fs.mkdirSync(root, { recursive: true })
-      process.chdir(root)
-    }
-  }
+  // async setupRoot(root) {
+  //   if (root) {
+  //     fs.mkdirSync(root, { recursive: true })
+  //     process.chdir(root)
+  //   }
+  // }
 }

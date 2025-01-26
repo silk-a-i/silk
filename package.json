@@ -20,6 +20,7 @@
     "docs:preview": "npx vitepress preview docs"
   },
   "dependencies": {
+    "@inquirer/prompts": "^7.2.3",
     "chalk": "^5.3.0",
     "commander": "^11.1.0",
     "dotenv": "^16.3.1",

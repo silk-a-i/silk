@@ -1,6 +1,6 @@
 import inquirer from 'inquirer'
 import { exec } from 'child_process'
-import { Tool } from './Tool.js'
+import { Tool } from '../Tool.js'
 import { ACTION_TAG } from '../prompt.js'
 import chalk from 'chalk'
 

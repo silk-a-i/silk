@@ -12,8 +12,8 @@ async function useInquirerTool(res = {}) {
 }
 
 export function inquirerPlugin(settings = {}) {
-  return {
-    name: 'ask',
+  const tool = {
+    name: 'inquirer',
     setup(ctx, tools) {
       ctx.on("finish", async (res, tools) => {
         tools.queue.push(async (ctx) => {
@@ -31,4 +31,6 @@ export function inquirerPlugin(settings = {}) {
       })
     }
   }
+
+  settings.tools.push(tool)
 }

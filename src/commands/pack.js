@@ -5,18 +5,27 @@ import { Logger } from '../lib/logger.js'
 import { File } from '../lib/File.js'
 import { getGlobOptions } from '../lib/fs.js'
 import { FileStats } from '../lib/stats.js'
-import { loadConfig } from '../lib/config/load.js'
 import { formatBytes } from '../lib/renderers/utils.js'
+
+export function installPack(program) {
+  program
+    .command('pack')
+    .argument('<folder>', 'folder to pack')
+    .option('-o, --output <file>', 'output file', 'packed.md')
+    .description('Pack folder contents into a single markdown file')
+    .action(pack)
+}
 
 export async function pack (folder = "", options = {}) {
   const logger = new Logger()
 
+  const output = options.output || 'packed.md'
   try {
-    const config = await loadConfig(options)
+    // const config = await loadConfig(options)
 
     const globOptions = await getGlobOptions({
       cwd: folder,
-      ignore: [options.output || 'packed.md']
+      ignore: [output]
     })
 
     const files = await globby('**/*', globOptions)
@@ -38,7 +47,7 @@ export async function pack (folder = "", options = {}) {
       content += file.render()
     }
 
-    const outputPath = path.resolve(options.output || 'packed.md')
+    const outputPath = path.resolve(output)
     await fs.writeFile(outputPath, content)
 
     logger.success(`\nPacked ${files.length} files into ${outputPath}`)

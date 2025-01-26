@@ -1,4 +1,4 @@
-import { ToolProcessor } from './tools/ToolProcessor.js'
+import { ToolProcessor } from './ToolProcessor.js'
 import { createBasicTools } from './tools/basicTools.js'
 
 export class Task {
@@ -6,11 +6,11 @@ export class Task {
   context = []
   system = ''
   toolProcessor = new ToolProcessor()
-
+  
   constructor (ctx) {
     Object.assign(this, ctx)
     const { tools } = ctx
-    this.toolProcessor = ctx.toolProcessor || new ToolProcessor(tools.length ? tools : createBasicTools())
+    this.toolProcessor = ctx.toolProcessor || new ToolProcessor(tools?.length ? tools : createBasicTools())
   }
 
   get fullSystem () {

@@ -1,6 +1,6 @@
 import chalk from 'chalk'
 import ora from 'ora'
-import { ToolProcessor } from '../tools/ToolProcessor.js'
+import { ToolProcessor } from '../ToolProcessor.js'
 import { formatBytes } from './utils.js'
 
 class Stats {
@@ -29,8 +29,11 @@ export class CliRenderer {
   attach (toolProcessor) {
     this.toolProcessor = toolProcessor
 
-    toolProcessor.on('chunk', text => {
+    toolProcessor.on('text', text => {
       this.stats.textBytes += Buffer.from(text).length
+    })
+
+    toolProcessor.on('chunk', text => {
       this.stats.totalBytes += Buffer.from(text).length
     })
 
@@ -86,10 +89,6 @@ export class CliRenderer {
       }
     })
 
-    toolProcessor.on('text', text => {
-      // already handled
-    })
-
     return this
   }
 
@@ -103,13 +102,16 @@ export class CliRenderer {
     }
     this.spinners.clear()
 
-    if (!this.raw) {
-      this.displayStats()
-    }
+    // if (!this.raw) {
+    //   this.displayStats()
+    // }
+  }
+
+  get elapsedTime() {
+    return ((Date.now() - this.stats.startTime) / 1000).toFixed(1)
   }
 
   displayStats () {
-    const elapsedTime = ((Date.now() - this.stats.startTime) / 1000).toFixed(1)
-    console.log(`\nDone in ${elapsedTime}s`)
+    console.log(`\nDone in ${this.elapsedTime}s`)
   }
 }

@@ -1,5 +1,4 @@
 import { CommandHandler } from '../lib/CommandHandler.js'
-import { CommandOptions } from '../lib/CommandOptions.js'
 import { loadConfig } from '../lib/config/load.js'
 import { UI } from '../lib/logger.js'
 import { extractPrompt } from '../lib/prompt-extractor.js'
@@ -7,9 +6,21 @@ import { logConfiguration } from './info.js'
 import path from 'path'
 import fs from 'fs/promises';
 import inquirer from 'inquirer';
-import chalk from 'chalk'
 import { GET_STARTED } from './messages/index.js'
 import { SILK_DIR } from '../lib/constants.js'
+import { addSharedOptions } from '../options.js'
+
+export function installCreate(program) {
+  addSharedOptions(
+    program
+      .command('create')
+      .alias('c')
+      .argument('<folder>', 'folder')
+      .argument('[prompt]', 'prompt or file')
+      .option('-y, --yes', 'yes')
+      .description('Create a new project.')
+  ).action(create)
+}
 
 export async function create(folder = "", promptOrFile = "", options = {}) {
   options.root = folder
@@ -18,12 +29,13 @@ export async function create(folder = "", promptOrFile = "", options = {}) {
   const handler = new CommandHandler(config)
   logConfiguration(config, handler.logger)
 
-  // Create directory
-  if (config.root) {
-    UI.info(`Creating directory: ${config.root}`)
+  // Create config directory
+  // if (config.root) {
+  const configDir = `${folder}/${SILK_DIR}`
+    UI.info(`Creating directory: ${configDir}`)
     // handler.setupRoot(config.root)
-    await fs.mkdir(SILK_DIR, { recursive: true })
-  }
+    await fs.mkdir(configDir, { recursive: true })
+  // }
 
   const DEFAULTS = {
     makeDesignFile: true

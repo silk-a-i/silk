@@ -1,10 +1,15 @@
 import { Chat } from "./chat.js"
 import inquirer from 'inquirer'
-import { Logger, Messages } from '../logger.js'
-import { info } from '../../commands/info.js'
+import { Messages } from '../logger.js'
+import { installInfoCommand } from '../../commands/info.js'
 import { FileStats } from '../stats.js'
-import { Config, CONTEXT_MODES } from '../config/Config.js'
+import { CONTEXT_MODES } from '../config/Config.js'
 import { getContext } from '../getContext.js'
+import { install as scopePlugin } from "./tools/scope.js"
+import { installShellCommand } from "./commands/shell.js"
+import { installConfigCommand } from "../../commands/config.js"
+import { installRun } from "../../commands/run.js"
+import * as fs from "node:fs"
 
 const MOODS = ['brief', 'happy', 'sad', 'angry', 'professional', 'neutral', 'other']
 
@@ -18,16 +23,34 @@ export function setupCommands(ctx = new Chat) {
             process.exit(0)
         })
 
+    // Add the global commands
+    installConfigCommand(chatProgram)
+    
+    scopePlugin(chatProgram, ctx)
+
+    installShellCommand(chatProgram)
+
+    installRun(chatProgram)
+
+    // Chat specific commands
     chatProgram
         .command('mode')
+        .alias('m')
+        .argument('[mode]', 'mode')
         .description('Set the context mode')
-        .action(async () => {
-            const { contextMode } = await inquirer.prompt([{
-                type: 'list',
-                name: 'contextMode',
-                message: 'Select context mode:',
-                choices: Object.values(CONTEXT_MODES)
-            }])
+        .action(async (mode = '') => {
+            async function ask() {
+                const { contextMode } = await inquirer.prompt([{
+                    type: 'list',
+                    name: 'contextMode',
+                    message: 'Select context mode:',
+                    choices: Object.values(CONTEXT_MODES)
+                }])
+                return contextMode
+            }
+
+            const contextMode = mode || await ask()
+
             state.config.contextMode = contextMode
             ui.info(`Context mode set to: ${contextMode}`)
         })
@@ -41,6 +64,22 @@ export function setupCommands(ctx = new Chat) {
             // fs.writeFileSync('chat.json', JSON.stringify({ history, mood }, null, 2))
             // ui.info('Chat state saved')
         })
+
+        // chatProgram
+        // .command('dump')
+        // .description('Dump current chat history to a markdown file')
+        // .action(() => {
+        //     // function toMarkdown(history = []) {
+        //     //     return history.map(({ role, content }) => {
+        //     //         return `${role === 'user' ? 'You' : 'Bot'}: ${content}`
+        //     //     }).join('\n')
+        //     // }
+
+        //     const { history } = state
+        //     const markdown = toMarkdown(history)
+        //     fs.writeFileSync('chat.md', markdown)
+        //     ui.info('Chat state saved')
+        // })
 
     chatProgram
         .command('restore')
@@ -79,17 +118,10 @@ export function setupCommands(ctx = new Chat) {
             state.mood = mood
         })
 
-    chatProgram
-        .command('info')
-        .alias('i')
-        .description('Show config info')
-        .action(async () => {
-            await info()
-        })
+    installInfoCommand(chatProgram)
 
     chatProgram
         .command('model')
-        .alias('m')
         .description('Select model')
         .action(async () => {
             const { model } = await inquirer.prompt([{

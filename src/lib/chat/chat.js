@@ -1,10 +1,9 @@
 import { Command } from 'commander'
-import inquirer from 'inquirer'
+import { input } from '@inquirer/prompts'
 import { Task } from '../task.js'
 import { CliRenderer } from '../renderers/cli.js'
-import { Logger } from '../logger.js'
+import { Logger, UI } from '../logger.js'
 import { loadConfig } from '../config/load.js'
-import fs from 'fs'
 import { CommandOptions } from '../CommandOptions.js'
 import { resolveContent } from '../fs.js'
 import { createBasicTools } from '../tools/basicTools.js'
@@ -12,8 +11,11 @@ import { execute, streamHandler } from '../llm.js'
 import { Config } from '../config/Config.js'
 import { getContext } from '../getContext.js'
 import { postActions } from '../silk.js'
-import { cliHook } from './tools/cli.js'
 import { setupCommands } from './commands.js'
+import ora from 'ora'
+import { limit } from '../renderers/utils.js'
+
+const GET_STARTED = `Starting chat mode (type "exit" to quit, "/help" for available commands)`
 
 export class Chat {
   options = {}
@@ -25,7 +27,6 @@ export class Chat {
     files: [],
     mood: '',
     model: '',
-    // contextMode: CONTEXT_MODES.LATEST
   }
 
   constructor(options = new CommandOptions()) {
@@ -44,20 +45,25 @@ export class Chat {
   }
 
   async init() {
-    this.state.config = await loadConfig(this.options)
+    const { state } = this
+    state.config = await loadConfig(this.options)
     const { config } = this.state
+
+    // Set tools
+    config.tools = state.config.tools.length
+      ? state.config.tools
+      : [
+        ...createBasicTools(state.config),
+        ...state.config.additionalTools
+      ]
 
     this.logger.debug(`Using provider: ${config.provider}`)
     this.logger.debug(`Using model: ${config.model}`)
+    this.logger.info(`Project root: ${config.absoluteRoot}`)
 
-    const { root } = config
-    if (root) {
-      fs.mkdirSync(root, { recursive: true })
-      process.chdir(root)
-    }
-    this.logger.info(`Project root: ${process.cwd()}`)
-
-    this.ui.info('Starting chat mode (type "exit" to quit, "/help" for available commands)')
+    UI.info(GET_STARTED)
+    UI.info('Using tools:', config.tools.map(e => e.name).join(', '))
+    UI.info('Context mode set to:', config.contextMode)
 
     this.setupCommands()
     this.askQuestion()
@@ -82,26 +88,39 @@ export class Chat {
   /**
    * @deprecation migrate to 'run'
    **/
-  async handlePrompt(input = '') {
-    const { state, renderer } = this
+  async handlePrompt(prompt = '') {
+    const { state, renderer, logger } = this
 
-    this.logger.prompt(input)
+    logger.prompt(prompt)
 
-    const files = await getContext(state.config)
-    const context = await resolveContent(files)
+    async function findContext() {
+      const spinner = ora({
+        text: 'scoping...',
+        color: 'yellow'
+      }).start()
+      try {
+        const files = await getContext(state.config, { prompt })
+        const context = await resolveContent(files)
+    
+        const c = limit(files.map(e=>e.file), 5)
+        spinner.succeed(`Used context [${c}]`)
+        return context
+      } catch(err) {
+        logger.error(err.message)
+      }
+      spinner.fail('No context found')
+      return []
+    }
 
-    const tools = state.config.tools.length
-      ? state.config.tools
-      : [
-        ...createBasicTools({
-          output: state.config.output
-        }),
-        ...state.config.additionalTools
-      ]
-    const task = new Task({ prompt: input, context, tools })
+    const context = await findContext()
+    if(!context) {
+      throw new Error('No context found')
+    }
 
+    // @todo add option to ask to continue with selected context
+
+    const task = new Task({ prompt, context, tools: state.config.tools })
     const system = `${state.mood}${task.fullSystem}`
-
     renderer.attach(task.toolProcessor)
     renderer.reset()
 
@@ -110,12 +129,13 @@ export class Chat {
       ...state.history,
       { role: 'user', content: task.render() }
     ]
-    this.logger.info('message size:', JSON.stringify(messages).length)
+    UI.info('message size:', JSON.stringify(messages).length)
 
     const { stream } = await execute(messages, state.config)
     const content = await streamHandler(stream, chunk => {
       task.toolProcessor.process(chunk)
     })
+
 
     renderer.cleanup()
     process.stdout.write('\n')
@@ -131,15 +151,18 @@ export class Chat {
 
   async askQuestion() {
     try {
-      const { input } = await inquirer.prompt([
+      const answer = await input(
         {
-          type: 'input',
-          name: 'input',
-          message: '> '
+          message: `>>> `
         }
-      ])
+      )
 
-      this.handleQuestion(input)
+      if (!answer) {
+        console.log('Please enter a message or a command')
+        this.askQuestion()
+        return
+      }
+      this.handleQuestion(answer)
     } catch (error) {
       if (error.name === 'ExitPromptError') {
         return
@@ -163,13 +186,6 @@ export class Chat {
 
     if (isCommand) {
       await this.handleCommand(trimmedInput.substring(1))
-      this.askQuestion()
-      return
-    }
-
-    const isCliCommand = trimmedInput.startsWith('$')
-    if(isCliCommand) {
-      await cliHook(this)
       this.askQuestion()
       return
     }
