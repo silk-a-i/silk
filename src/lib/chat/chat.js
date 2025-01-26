@@ -14,6 +14,7 @@ import { postActions } from '../silk.js'
 import { setupCommands } from './commands.js'
 import ora from 'ora'
 import { limit } from '../renderers/utils.js'
+import { VERSION } from '../constants.js'
 
 const GET_STARTED = `Starting chat mode (type "exit" to quit, "/help" for available commands)`
 
@@ -62,7 +63,8 @@ export class Chat {
     this.logger.info(`Project root: ${config.absoluteRoot}`)
 
     UI.info(GET_STARTED)
-    UI.info('Using tools:', config.tools.map(e => e.name).join(', '))
+    UI.info(`Silk v${VERSION}`)
+    UI.info(`Using ${config.tools.length} tools (${config.tools.map(e => e.name).join(', ')})`)
     UI.info('Context mode set to:', config.contextMode)
 
     this.setupCommands()
@@ -135,7 +137,6 @@ export class Chat {
     const content = await streamHandler(stream, chunk => {
       task.toolProcessor.process(chunk)
     })
-
 
     renderer.cleanup()
     process.stdout.write('\n')
