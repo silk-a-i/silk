@@ -91,20 +91,35 @@ export class Chat {
    * @deprecation migrate to 'run'
    **/
   async handlePrompt(prompt = '') {
-    const { state, renderer } = this
+    const { state, renderer, logger } = this
 
-    this.logger.prompt(prompt)
+    logger.prompt(prompt)
 
-    const spinner = ora({
-      text: 'scoping...',
-      color: 'yellow'
-    }).start()
+    async function findContext() {
+      const spinner = ora({
+        text: 'scoping...',
+        color: 'yellow'
+      }).start()
+      try {
+        const files = await getContext(state.config, { prompt })
+        const context = await resolveContent(files)
+    
+        const c = limit(files.map(e=>e.file), 5)
+        spinner.succeed(`Used context [${c}]`)
+        return context
+      } catch(err) {
+        logger.error(err.message)
+      }
+      spinner.fail('No context found')
+      return []
+    }
 
-    const files = await getContext(state.config)
-    const context = await resolveContent(files)
+    const context = await findContext()
+    if(!context) {
+      throw new Error('No context found')
+    }
 
-    const c = limit(files.map(e=>e.file), 5)
-    spinner.succeed(`Used context [${c}]`)
+    // @todo add option to ask to continue with selected context
 
     const task = new Task({ prompt, context, tools: state.config.tools })
     const system = `${state.mood}${task.fullSystem}`
@@ -122,6 +137,7 @@ export class Chat {
     const content = await streamHandler(stream, chunk => {
       task.toolProcessor.process(chunk)
     })
+
 
     renderer.cleanup()
     process.stdout.write('\n')

@@ -14,6 +14,10 @@ export async function getContext(config = new Config, {prompt} = {prompt: ''}) {
   }
 
   if(config.contextMode === CONTEXT_MODES.AUTO) {
+    if(!prompt) {
+      throw new Error('Prompt is required for auto context mode')
+    }
+    
     const files = await gatherContextInfo(config.include, config)    
 
     const {llm} = getSilkFromConfig(config)

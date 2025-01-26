@@ -56,3 +56,7 @@ ${this.content}
 `
   }
 }
+
+export function file(name = "", content = "") {
+  return new File({ path: name, content }).render()
+}

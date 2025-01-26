@@ -4,6 +4,7 @@ import { Tool } from '../Tool.js'
 import { ACTION_TAG } from '../prompt.js'
 import { inquirerPlugin } from './inquirer.js'
 import cliTool from './cli.js'
+import { installSurgeonAction } from './surgeon/surgeon.js'
 
 const OPTIONS = {
   output: ''
@@ -69,9 +70,9 @@ export function createBasicTools(options = OPTIONS, { tag = ACTION_TAG } = {}) {
     cliTool
   ]
 
-  if (options.provider === 'silk') {
-    tools.push(inquirerPlugin())
-  }
+  inquirerPlugin({ tools })
+
+  installSurgeonAction({ tools })
 
   return tools
 }
