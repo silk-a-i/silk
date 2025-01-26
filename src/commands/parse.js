@@ -6,6 +6,7 @@ import fs from 'fs/promises'
 import { postActions } from '../lib/silk.js'
 import inquirer from 'inquirer'
 import path from 'path'
+import { loadConfig } from '../lib/config/load.js'
 
 export function installParse(program) {
   program
@@ -19,6 +20,8 @@ export function installParse(program) {
 
 export async function parse(filePath = "", options = {}) {
   const logger = new Logger()
+
+  const config = await loadConfig(options)
 
   try {
     if (!filePath || options.interactive) {
@@ -34,7 +37,7 @@ export async function parse(filePath = "", options = {}) {
     const task = new Task({
       prompt: content,
       context: [],
-      tools: createBasicTools()
+      tools: createBasicTools(config)
     })
 
     // Create and attach renderer

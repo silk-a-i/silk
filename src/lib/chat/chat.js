@@ -53,9 +53,7 @@ export class Chat {
     config.tools = state.config.tools.length
       ? state.config.tools
       : [
-        ...createBasicTools({
-          output: state.config.output
-        }),
+        ...createBasicTools(state.config),
         ...state.config.additionalTools
       ]
 

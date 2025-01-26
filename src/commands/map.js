@@ -45,7 +45,7 @@ export async function map (promptOrFile = "", options = new CommandOptions()) {
       const task = new Task({
         prompt: `${promptOrFile}\n\nFile to process: ${file.render()}`,
         context: [],
-        tools: createBasicTools(options)
+        tools: createBasicTools(config)
       })
 
       const renderer = new CliRenderer(options).attach(task.toolProcessor)

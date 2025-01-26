@@ -5,13 +5,10 @@ import { ACTION_TAG } from '../prompt.js'
 import { inquirerPlugin } from './inquirer.js'
 import cliTool from './cli.js'
 import { installSurgeonAction } from './surgeon/surgeon.js'
+import { Config } from '../config/Config.js'
 
-const OPTIONS = {
-  output: ''
-}
-
-export function createBasicTools(options = OPTIONS, { tag = ACTION_TAG } = {}) {
-  const outputDir = options.output || ''
+export function createBasicTools(config = new Config(), { tag = ACTION_TAG } = {}) {
+  const outputDir = config.output || ''
 
   const tools = [
     new Tool({
@@ -70,9 +67,11 @@ export function createBasicTools(options = OPTIONS, { tag = ACTION_TAG } = {}) {
     cliTool
   ]
 
-  inquirerPlugin({ tools })
-
-  installSurgeonAction({ tools })
+  if(config.provider === 'silk') {
+    inquirerPlugin({ tools })
+  
+    installSurgeonAction({ tools })
+  }
 
   return tools
 }
