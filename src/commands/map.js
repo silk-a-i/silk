@@ -7,7 +7,7 @@ import { Task } from '../lib/task.js'
 import { Logger } from '../lib/logger.js'
 import { CliRenderer } from '../lib/renderers/cli.js'
 import { createBasicTools } from '../lib/tools/basicTools.js'
-import { addSharedOptions, CommandOptions } from '../lib/CommandOptions.js'
+import { addSharedOptions, CommandOptions } from '../options.js'
 import { execute, streamHandler } from '../lib/llm.js'
 
 export function installMap(program) {

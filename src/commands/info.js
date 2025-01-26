@@ -2,7 +2,7 @@ import { loadConfig } from '../lib/config/load.js'
 import { Log, Logger } from '../lib/logger.js'
 import { PROVIDERS } from '../lib/constants.js'
 import { FileStats } from '../lib/stats.js'
-import { CommandOptions } from '../lib/CommandOptions.js'
+import { CommandOptions } from '../options.js'
 import { gatherContextInfo } from '../lib/fs.js'
 
 export function installInfoCommand(program) {

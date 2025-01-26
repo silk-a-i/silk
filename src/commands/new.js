@@ -1,4 +1,4 @@
-import { CommandOptions } from '../lib/CommandOptions.js'
+import { CommandOptions } from '../options.js'
 import path from 'path'
 import fs from 'fs/promises'
 import { SILK_DIR } from '../lib/constants.js'

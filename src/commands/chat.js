@@ -1,5 +1,5 @@
 import { Chat } from '../lib/chat/chat.js'
-import { addSharedOptions, CommandOptions } from '../lib/CommandOptions.js'
+import { addSharedOptions, CommandOptions } from '../options.js'
 
 export async function chat(options = new CommandOptions()) {
   // @todo Detect if is a project first

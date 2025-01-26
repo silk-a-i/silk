@@ -1,6 +1,6 @@
 import { loadConfig } from '../lib/config/load.js'
 import { Log, Logger } from '../lib/logger.js'
-import { CommandOptions } from '../lib/CommandOptions.js'
+import { CommandOptions } from '../options.js'
 import { logConfiguration } from './info.js'
 
 export function installConfigCommand(program) {

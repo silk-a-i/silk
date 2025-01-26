@@ -1,7 +1,6 @@
 export { AIClient } from './ai/client.js'
 export { AIResponseStream } from './ai/stream.js'
 export { CommandHandler } from './CommandHandler.js'
-export { CommandOptions } from './CommandOptions.js'
 export { Config } from './config/Config.js'
 export { File } from './File.js'
 export { LimitChecker } from './LimitChecker.js'

@@ -1,5 +1,5 @@
 import { CommandHandler } from '../lib/CommandHandler.js'
-import { addSharedOptions, CommandOptions } from '../lib/CommandOptions.js'
+import { addSharedOptions, CommandOptions } from '../options.js'
 import { loadConfig } from '../lib/config/load.js'
 import { extractPrompt } from '../lib/prompt-extractor.js'
 import { promptForFile } from './helpers/helpers.js'
