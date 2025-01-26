@@ -12,6 +12,7 @@ import { postActions } from './silk.js'
 import { Config } from './config/Config.js'
 import { formatBytes, limit } from './renderers/utils.js'
 import { COLORS } from './colors.js'
+import { allDone } from './cli.js'
 
 /** @deprecated use executeCommand  */
 export class CommandHandler {
@@ -95,9 +96,7 @@ export class CommandHandler {
       
       await postActions(task)
 
-      const sendBytes = JSON.stringify(messages).length
-      const usage = `(${formatBytes(sendBytes)} / ${formatBytes(renderer.stats.totalBytes)})`
-      UI.info(`\nDone in ${renderer.elapsedTime}s. ${COLORS.note(usage)}`)
+      UI.info(allDone({ renderer, messages }))
     } catch (error) {
       logger.error(`Error: ${error.message}`)
     }
