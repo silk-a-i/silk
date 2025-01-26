@@ -95,10 +95,6 @@ export class CliRenderer {
       spinner.stop()
     }
     this.spinners.clear()
-
-    // if (!this.raw) {
-    //   this.displayStats()
-    // }
   }
 
   get elapsedTime() {

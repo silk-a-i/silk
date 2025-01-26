@@ -98,7 +98,7 @@ export class CommandHandler {
       
       await postActions(task)
 
-      UI.info(allDone({ renderer, messages }))
+      UI.info(allDone({ stats: renderer.stats, messages }))
     } catch (error) {
       logger.error(`Error: ${error.message}`)
     }
