@@ -66,15 +66,14 @@ ${availableTools.map(tool => tool.system).join('\n\n')}
 
   processLine (line = '') {
     // Check for action start and end on the same line
-    const actionStartEnd = line.match(new RegExp(`<${this.tagName}\\s+([^>]+)>([^<]+)</${this.tagName}>`))
+    const actionStartEnd = line.match(new RegExp(`<${this.tagName}\\s+([^>]+)>([^<]*)</${this.tagName}>`))
     if (actionStartEnd) {
       const args = this.extractArgs(actionStartEnd[1])
       this.startAction(args)
-      this.currentState.blockContent = actionStartEnd[2]
+      this.currentState.blockContent = actionStartEnd[2] || ''
       this.endAction()
       return
     }
-  
     // Check for action start
     const actionStart = line.match(new RegExp(`<${this.tagName}\\s+([^>]+)>`))
     if (actionStart) {
