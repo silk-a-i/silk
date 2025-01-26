@@ -20,6 +20,9 @@ export async function getContext(config = new Config, {prompt} = {prompt: ''}) {
     
     const files = await gatherContextInfo(config.include, config)    
 
+    if(files.length === 0) {
+      return []
+    }
     const {llm} = getSilkFromConfig(config)
     const selectedFiles = await autoscope({files, prompt, llm})
     return selectedFiles.map(({file}) => file)

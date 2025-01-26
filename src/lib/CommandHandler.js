@@ -44,15 +44,17 @@ export class CommandHandler {
       text: 'gathering context...',
       color: 'yellow'
     }).start()
-    const validFiles = config.context ? 
+    const files = config.context ? 
       await getContext(config, { prompt }) :
       []
-    spinner.succeed(`using ${validFiles.length} files`)
-    UI.hint(limit(validFiles.map(e=>e.path), 6).join(', '))
+
+    const c = limit(files.map(e=>e.file), 2)
+    spinner.succeed(`using ${files.length} files ${c}`)
+    UI.hint(limit(files.map(e=>e.path), 6).join(', '))
     
     if (stats) {
       const fileStats = new FileStats()
-      validFiles.forEach(file => fileStats.addFile(file.path, file.content))
+      files.forEach(file => fileStats.addFile(file.path, file.content))
       fileStats.summary(undefined, { logger })
     }
 
@@ -62,7 +64,7 @@ export class CommandHandler {
         ...createBasicTools(config),
         ...config.additionalTools
       ]
-    logger.info(`Using tools: ${tools.map(t => t.name).join(', ')}`)
+    UI.info(`Using tools: ${tools.map(t => t.name).join(', ')}`)
     logger.json({ tools, config })
 
     if (dry) {
@@ -70,8 +72,8 @@ export class CommandHandler {
       return
     }
 
-    const context = await resolveContent(validFiles, process.cwd())
-    // const context = await resolveContent(validFiles, config.absoluteRoot)
+    const context = await resolveContent(files, process.cwd())
+    // const context = await resolveContent(files, config.absoluteRoot)
     const task = new Task({ prompt, context, tools })
     const renderer = new CliRenderer(config).attach(task.toolProcessor)
 
