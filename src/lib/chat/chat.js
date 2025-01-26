@@ -65,7 +65,7 @@ export class Chat {
 
     UI.info(GET_STARTED)
     UI.info('Using tools:', config.tools.map(e => e.name).join(', '))
-    UI.info('Using context:', config.contextMode)
+    UI.info('Context mode set to:', config.contextMode)
 
     this.setupCommands()
     this.askQuestion()
