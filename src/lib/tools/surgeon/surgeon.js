@@ -9,6 +9,7 @@ export const NAME = 'surgeon'
  * @class
  */
 export const surgeon = new Tool({
+    version: '0.0.0beta',
     name: NAME,
     description: 'Paste a piece of text into a file at a specific location',
     examples: `
