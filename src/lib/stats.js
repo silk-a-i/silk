@@ -72,3 +72,14 @@ function getExtension(filePath) {
   const ext = filePath.split('.').pop() || 'no-ext'
   return ext.toLowerCase()
 }
+
+export class LLMStats {
+  totalBytes = 0
+  textBytes = 0
+  actions = 0
+  startTime = Date.now()
+
+  get elapsedTime() {
+    return ((Date.now() - this.startTime) / 1000).toFixed(1)
+  }
+}

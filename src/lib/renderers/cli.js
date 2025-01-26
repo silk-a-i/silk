@@ -2,20 +2,14 @@ import chalk from 'chalk'
 import ora from 'ora'
 import { ToolProcessor } from '../ToolProcessor.js'
 import { formatBytes } from './utils.js'
-
-class Stats {
-  totalBytes = 0
-  textBytes = 0
-  actions = 0
-  startTime = Date.now()
-}
+import { LLMStats } from '../stats.js'
 
 export class CliRenderer {
   toolProcessor = new ToolProcessor()
   raw = false
   showStats = false
   spinners = new Map()
-  stats = new Stats()
+  stats = new LLMStats()
 
   constructor (options = {}) {
     this.raw = options.raw || false
@@ -23,7 +17,7 @@ export class CliRenderer {
   }
 
   reset() {
-    this.stats = new Stats()
+    this.stats = new LLMStats()
   }
 
   attach (toolProcessor) {
@@ -108,7 +102,7 @@ export class CliRenderer {
   }
 
   get elapsedTime() {
-    return ((Date.now() - this.stats.startTime) / 1000).toFixed(1)
+    return this.stats.elapsedTime
   }
 
   displayStats () {
