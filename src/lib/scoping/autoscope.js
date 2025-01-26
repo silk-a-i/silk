@@ -1,17 +1,5 @@
-/**
- * Autoscope the context to a specific set of files
- * @param {*} param0 
- * @returns 
- */
-export async function autoscope({ files, verbose = false, prompt = "", llm }) {
-    const example = verbose ? `[
-    ["file1", "reason", "importance"],
-    ["file2", "reason", "importance"] 
-]` : `[
-    ["file1"],
-    ["file2"] 
-]`
-    const messages = [
+const createMessages = ({ prompt = '', verbose = false, files = [] }) => {
+    return [
         {
             role: 'system',
             content:
@@ -23,14 +11,19 @@ Your name is 'Silk'. You are an agent that helps developers to scope their conte
 - Respond with a JSON array.
 
 # Example
-${example}
+${verbose ? `[
+    ["file1", "reason", "importance"],
+    ["file2", "reason", "importance"] 
+]` : `[
+    ["file1"],
+    ["file2"] 
+]`}
 `
         },
         {
             role: 'user',
             content:
-                `
-# Intend
+                `# Intend
 ${prompt} 
 
 Select files to include in context: 
@@ -38,8 +31,16 @@ ${files.map(file => file.path).join('\n')}
 `
         }
     ]
+}
 
-    // Use LLM to get the selected files
+/**
+ * Autoscope the context to a specific set of files
+ * @param {*} param0 
+ * @returns 
+ */
+export async function autoscope({ files = [], prompt = "", llm }, { verbose = false } = {}) {
+    const messages = createMessages({ prompt, verbose, files })
+
     const rawMessage = await llm({
         messages,
     })
