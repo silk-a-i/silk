@@ -28,10 +28,9 @@ export const PROVIDERS = {
     requiresApiKey: false,
     endpoint: '/chat/completions'
   }
-  // Contact contact@silky.dev to add your providers here
 }
 
-export const INIT_PROViDERS = [PROVIDERS.SILK, PROVIDERS.OLLAMA, PROVIDERS.OPENAI]
+export const INIT_PROViDERS = [PROVIDERS.SILK, PROVIDERS.OLLAMA]
 export const DEFAULT_PROVIDER = PROVIDERS.SILK
 
 export const DEFAULT_IGNORE = [
