@@ -1,6 +1,6 @@
 {
   "name": "silk-cli",
-  "version": "0.1.0",
+  "version": "0.1.0-beta",
   "private": true,
   "description": "A powerful CLI tool for quick task automation using LLMs.",
   "type": "module",
