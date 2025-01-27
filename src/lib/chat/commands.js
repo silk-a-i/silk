@@ -4,12 +4,12 @@ import { Messages } from '../logger.js'
 import { installInfoCommand } from '../../commands/info.js'
 import { FileStats } from '../stats.js'
 import { CONTEXT_MODES } from '../config/Config.js'
-import { getContext } from '../getContext.js'
 import { install as scopePlugin } from "./tools/scope.js"
 import { installShellCommand } from "./commands/shell.js"
 import { installConfigCommand } from "../../commands/config.js"
 import { installRun } from "../../commands/run.js"
-import * as fs from "node:fs"
+import { gatherContextInfo } from "../fs.js"
+import { renderFileStructure } from "../renderers/renderFileStructure.js"
 
 const MOODS = ['brief', 'happy', 'sad', 'angry', 'professional', 'neutral', 'other']
 
@@ -137,12 +137,24 @@ export function setupCommands(ctx = new Chat) {
     chatProgram
         .command('context')
         .alias('c')
+        .option('-v, --verbose', 'Show full context', false)
         .description('List context')
-        .action(async () => {
-            const files = await getContext(state.config)
+        .action(async (options = {}) => {
+            // const files = await getContext(state.config)
+            const files = await gatherContextInfo(state.config.include, state.config)
             const stats = new FileStats()
             files.forEach(file => stats.addFile(file.path, file))
-            stats.summary({ showLargestFiles: -1 })
+            stats.summary({ showLargestFiles: options.verbose ? -1 : 10 })
+        })
+
+    chatProgram
+        .command('files')
+        .alias('f')
+        .description('List files')
+        .action(async (options = {}) => {
+            const files = await gatherContextInfo(state.config.include, state.config)
+            const s = renderFileStructure(files.map(f => f.path))
+            console.log(s)
         })
 
     chatProgram
@@ -151,6 +163,13 @@ export function setupCommands(ctx = new Chat) {
         .description('Show internal state')
         .action(async () => {
             console.log(state)
+        })
+
+    chatProgram
+        .command('debug')
+        .description('Show debugging info about last call')
+        .action(async () => {
+            console.log(state.config.debugger.render())
         })
 
     chatProgram

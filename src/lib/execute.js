@@ -7,6 +7,7 @@ import { Config } from './config/Config.js'
 import { formatBytes } from './renderers/utils.js'
 import { COLORS } from './colors.js'
 import { ToolProcessor } from './ToolProcessor.js'
+import { allDone } from './cli.js'
 
 export const executeTask = async (task = new Task, config = new Config()) => {
   const { root, dry, tools } = config
@@ -33,9 +34,8 @@ export const executeTask = async (task = new Task, config = new Config()) => {
 
     await postActions(task)
 
-    const sendBytes = JSON.stringify(messages).length
-    const usage = `(${formatBytes(sendBytes)} / ${formatBytes(renderer.stats.totalBytes)})`
-    UI.info(`\nDone in ${renderer.elapsedTime}s. ${COLORS.note(usage)}`)
+    renderer.stats.promptBytes = JSON.stringify(messages).length
+    UI.info(allDone({ stats: renderer.stats }))
   } catch (error) {
     UI.error(`Error: ${error.message}`)
   }
@@ -56,9 +56,8 @@ export async function executeMessages (messages = [], config = new Config()) {
 
   await finishToolQueue(toolProcessor.queue)
 
-  const sendBytes = JSON.stringify(messages).length
-  const usage = `(${formatBytes(sendBytes)} / ${formatBytes(renderer.stats.totalBytes)})`
-  UI.info(`\nDone in ${renderer.elapsedTime}s. ${COLORS.note(usage)}`)
+  renderer.stats.promptBytes = JSON.stringify(messages).length
+  UI.info(allDone({ stats: renderer.stats }))
 
   renderer.cleanup()
 }

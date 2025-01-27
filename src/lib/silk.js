@@ -72,16 +72,33 @@ export function getSilkFromConfig(config = new Config) {
             toolProcessor.cleanup()
             return content
         },
-        llm: async ({
-            messages = []
-        }) => {
-            const client = new AIClient(config)
-            const stream = await client.createCompletion({ messages })
-            const content = await streamHandler(stream, chunk => {
-                // process.stdout.write(chunk)
-            })
-            return content
-        },
         ui: UI
     }
+}
+
+/**
+ * 
+ * @param {*} param0 
+ * @returns 
+ */
+export async function generateText({ config, messages = [] }) {
+    const client = new AIClient(config)
+    const stream = await client.createCompletion({ messages })
+    const content = await streamHandler(stream, chunk => {
+        // process.stdout.write(chunk)
+    })
+    return content
+}
+
+/**
+ * 
+ * @param {*} param0 
+ * @returns 
+ */
+export async function generateJson({ config = new Config, messages = [] }) {
+    const text = await generateText({config, messages })
+    const json = JSON.parse(text)
+    config.debugger.info(messages)
+    config.debugger.info(`Generated JSON: ${text}`)
+    return {json, text}
 }

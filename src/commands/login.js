@@ -3,6 +3,7 @@ import fs from 'fs'
 import path from 'path'
 import { homedir } from 'os'
 import { Logger } from '../lib/logger.js'
+import { input, confirm } from '@inquirer/prompts'
 
 export function installLogin(program) {
   program
@@ -27,13 +28,11 @@ export async function login (key = '', options = {}) {
   }
 
   async function askOverwrite () {
-    const answers = await inquirer.prompt([{
-      type: 'confirm',
-      name: 'overwrite',
+    const answer = await confirm({
       message: '.env file already exists. Do you want to overwrite it?',
       default: false
-    }])
-    return answers.overwrite
+    })
+    return answer
   }
 
   const logger = new Logger({

@@ -74,9 +74,12 @@ function getExtension(filePath) {
 }
 
 export class LLMStats {
+  /** received total bytes */
   totalBytes = 0
   textBytes = 0
   actions = 0
+  /** sent total bytes */
+  promptBytes = 0
   startTime = Date.now()
 
   get elapsedTime() {

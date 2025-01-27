@@ -11,7 +11,6 @@ import { execute, streamHandler } from './llm.js'
 import { postActions } from './silk.js'
 import { Config } from './config/Config.js'
 import { formatBytes, limit } from './renderers/utils.js'
-import { COLORS } from './colors.js'
 import { allDone } from './cli.js'
 
 /** @deprecated use executeCommand  */
@@ -38,6 +37,9 @@ export class CommandHandler {
     // logger.info(`cwd: ${process.cwd()}`)
 
     logger.prompt(prompt)
+    if (!prompt) {
+      throw new Error('Prompt is required')
+    }
 
     // Gather context
     const spinner = ora({

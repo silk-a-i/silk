@@ -4,8 +4,6 @@ import { gatherContextInfo } from '../../fs.js'
 export async function install(program, chatInstance) {
   program
     .command('scope')
-    .alias('s')
-    // .argument('[command]', 'command')
     .description('Scope the context to a specific set of files')
     .action(scopeContext(chatInstance))
 }

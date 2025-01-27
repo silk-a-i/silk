@@ -1,5 +1,5 @@
 import { Command } from 'commander'
-import { input } from '@inquirer/prompts'
+import { input, confirm } from '@inquirer/prompts'
 import { Task } from '../task.js'
 import { CliRenderer } from '../renderers/cli.js'
 import { Logger, UI } from '../logger.js'
@@ -13,8 +13,10 @@ import { getContext } from '../getContext.js'
 import { postActions } from '../silk.js'
 import { setupCommands } from './commands.js'
 import ora from 'ora'
-import { limit } from '../renderers/utils.js'
+import { formatBytes, limit } from '../renderers/utils.js'
 import { VERSION } from '../constants.js'
+import { allDone } from '../cli.js'
+import { LLMStats } from '../stats.js'
 
 const GET_STARTED = `Starting chat mode (type "exit" to quit, "/help" for available commands)`
 
@@ -66,7 +68,8 @@ export class Chat {
     UI.info(`Silk v${VERSION}`)
     UI.info(`Using ${config.tools.length} tools (${config.tools.map(e => e.name).join(', ')})`)
     UI.info('Context mode set to:', config.contextMode)
-
+    config.debugger.info('Debugger enabled')
+    
     this.setupCommands()
     this.askQuestion()
   }
@@ -87,6 +90,44 @@ export class Chat {
     }
   }
 
+  async findContext(prompt) {
+    const { state, logger } = this
+
+    const spinner = ora({
+      text: 'scoping...',
+      color: 'yellow'
+    }).start()
+    try {
+      /** @todo create a better stats system and make streaming */
+      const stats = new LLMStats()
+      const files = await getContext(state.config, {
+        prompt,
+        on(type, payload) {
+          if (type === 'context') {
+            spinner.text = `searching within ${payload.length} files...`
+          }
+          if (type === 'messages') {
+            stats.promptBytes = JSON.stringify(payload).length
+          }
+          if (type === 'text') {
+            stats.totalBytes = JSON.stringify(payload).length
+          }
+        }
+      })
+      const context = await resolveContent(files)
+
+      const fileList = limit(files.map(e => e.path), 5) || 'none'
+      spinner.succeed(`Using ${files.length} file(s). ${fileList}`)
+
+      UI.info(allDone({ stats }))
+      return context
+    } catch (err) {
+      logger.error(err.message)
+    }
+    spinner.fail('No context found')
+    return []
+  }
+
   /**
    * @deprecation migrate to 'run'
    **/
@@ -95,31 +136,10 @@ export class Chat {
 
     logger.prompt(prompt)
 
-    async function findContext() {
-      const spinner = ora({
-        text: 'scoping...',
-        color: 'yellow'
-      }).start()
-      try {
-        const files = await getContext(state.config, { prompt })
-        const context = await resolveContent(files)
-    
-        const c = limit(files.map(e=>e.file), 5)
-        spinner.succeed(`Used context [${c}]`)
-        return context
-      } catch(err) {
-        logger.error(err.message)
-      }
-      spinner.fail('No context found')
-      return []
-    }
-
-    const context = await findContext()
-    if(!context) {
+    const context = await this.findContext(prompt)
+    if (!context) {
       throw new Error('No context found')
     }
-
-    // @todo add option to ask to continue with selected context
 
     const task = new Task({ prompt, context, tools: state.config.tools })
     const system = `${state.mood}${task.fullSystem}`
@@ -131,7 +151,19 @@ export class Chat {
       ...state.history,
       { role: 'user', content: task.render() }
     ]
-    UI.info('message size:', JSON.stringify(messages).length)
+    UI.info('Upcoming message size:', formatBytes(JSON.stringify(messages).length))
+
+    // @todo add option to ask to continue with selected context
+    if (state.config.confirmMode) {
+      const proceed = await confirm({
+        message: 'Do you want to continue with the selected context?',
+        default: true
+      })
+
+      if (!proceed) {
+        throw new Error('User opted not to continue with the selected context')
+      }
+    }
 
     const { stream } = await execute(messages, state.config)
     const content = await streamHandler(stream, chunk => {

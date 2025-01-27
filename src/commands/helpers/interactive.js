@@ -13,10 +13,10 @@ export async function askContextMode(config) {
 }
 
 export async function list(context) {
-    const { name } = await inquirer.prompt([{
+    const { name } = await inquirer.prompt({
         type: 'list',
         name: 'name',
         ...context
-    }])
+    })
     return name
 }

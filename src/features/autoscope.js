@@ -11,14 +11,14 @@ export async function install(program, context) {
         .action(scopeContext(context))
 }
 
-const scopeContext = ({ state, llm, ui }) => async (prompt = "") => {
+const scopeContext = ({ state, ui }) => async (prompt = "") => {
     const { config } = state
 
     const files = await gatherContextInfo(['**/*'], {
         ignore: config.ignore
     })
 
-    const selectedFiles = await autoscope({ files, prompt, ui, llm })
+    const selectedFiles = await autoscope({ files, prompt, config })
 
     // Update the config's include option
     state.config.include = selectedFiles

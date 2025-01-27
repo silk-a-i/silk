@@ -62,6 +62,7 @@ async function getAnswers(options) {
         type: 'list',
         name: 'model',
         message: 'Select the model:',
+        default: (answers) => PROVIDERS[answers.provider]?.defaultModel,
         when: (answers) => answers.provider !== 'other',
         choices: (answers) => {
           const provider = PROVIDERS[answers.provider]

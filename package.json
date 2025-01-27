@@ -16,8 +16,10 @@
     "lint": "npx standard --fix",
     "start": "node src/cli.js",
     "test": "npx vitest",
+    "docs:dev": "npx vitepress dev docs",
     "docs:build": "npx vitepress build docs",
-    "docs:preview": "npx vitepress preview docs"
+    "docs:preview": "npx vitepress preview docs",
+    "docs:deploy": "npm run docs:build && wrangler pages deploy docs/.vitepress/dist"
   },
   "dependencies": {
     "@inquirer/prompts": "^7.2.3",

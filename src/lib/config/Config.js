@@ -4,6 +4,7 @@ import { join } from 'path'
 import dotenv from 'dotenv'
 import { PROVIDERS, DEFAULT_PROVIDER, SILK_DIR } from '../constants.js'
 import { homedir } from 'os'
+import { Debugger } from '../debugger.js'
 
 export const GLOBAL_CONFIG_DIR = path.join(homedir(), '.config', 'silk')
 
@@ -97,6 +98,10 @@ export class Config {
   contextMode = CONTEXT_MODES.AUTO
   /** Disable LLM execution */
   dry = false
+  /** Ask users to confirm */
+  confirmMode = true
+  /** Track events */
+  debugger = new Debugger
 
   constructor (obj = {}) {
     Object.assign(this, obj)
