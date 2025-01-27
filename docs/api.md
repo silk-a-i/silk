@@ -1,5 +1,7 @@
 # API Reference
 
+> NOTE This is a work in progress and will change frequently.
+
 ## Core Classes
 
 ### CommandHandler
