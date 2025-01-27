@@ -6,7 +6,7 @@ import { createAutoscopeMessages, mapPathsToContext } from './scoping/autoscope.
 /**
  * Gets the context files based on the configured context mode
  * @param {object} config Configuration object
- * @returns {Promise<Array>} Array of context files
+ * @returns {Promise<Array>} Array of files
  */
 export async function getContext(config = new Config, { prompt = '', on = (type, payload) => { } } = {}) {
   if (config.contextMode === CONTEXT_MODES.NONE) {
@@ -44,5 +44,3 @@ export async function getContext(config = new Config, { prompt = '', on = (type,
   const contextInfo = await gatherContextInfo(config.include, config)
   return contextInfo
 }
-
-// [ [ 'docs/configuration.md' ] ]

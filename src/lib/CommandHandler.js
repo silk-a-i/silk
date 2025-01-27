@@ -4,13 +4,13 @@ import { CliRenderer } from './renderers/cli.js'
 import { createBasicTools } from './tools/basicTools.js'
 import { getContext } from './getContext.js'
 import { resolveContent } from './fs.js'
-import { FileStats } from './stats.js'
+import { FileStats, LLMStats } from './stats.js'
 import { LimitChecker } from './LimitChecker.js'
 import ora from 'ora'
 import { execute, streamHandler } from './llm.js'
 import { postActions } from './silk.js'
 import { Config } from './config/Config.js'
-import { formatBytes, limit } from './renderers/utils.js'
+import { limit } from './renderers/utils.js'
 import { allDone } from './cli.js'
 
 /** @deprecated use executeCommand  */
@@ -29,6 +29,50 @@ export class CommandHandler {
     this.limitChecker = new LimitChecker(config)
   }
 
+
+  /**
+   * Find context from a given prompt
+   * @param {*} prompt 
+   * @returns 
+   */
+  async findContext(prompt = "") {
+    const { config, logger } = this
+
+    const spinner = ora({
+      text: 'scoping...',
+      color: 'yellow'
+    }).start()
+    try {
+      /** @todo create a better stats system and make streaming */
+      const stats = new LLMStats()
+      const files = await getContext(config, {
+        prompt,
+        on(type, payload) {
+          if (type === 'context') {
+            spinner.text = `searching within ${payload.length} files...`
+          }
+          if (type === 'messages') {
+            stats.promptBytes = JSON.stringify(payload).length
+          }
+          if (type === 'text') {
+            stats.totalBytes = JSON.stringify(payload).length
+          }
+        }
+      })
+      const context = await resolveContent(files)
+
+      const fileList = limit(files.map(e => e.path), 5) || 'none'
+      spinner.succeed(`Using ${files.length} file(s). ${fileList}`)
+
+      UI.info(allDone({ stats }))
+      return context
+    } catch (err) {
+      logger.error(err.message)
+    }
+    spinner.fail('No context found')
+    return []
+  }
+
   async execute(prompt = '') {
     const { logger, config } = this
     const { root, dry, stats } = config
@@ -41,19 +85,12 @@ export class CommandHandler {
       throw new Error('Prompt is required')
     }
 
-    // Gather context
-    const spinner = ora({
-      text: 'gathering context...',
-      color: 'yellow'
-    }).start()
-    const files = config.context ? 
-      await getContext(config, { prompt }) :
-      []
+    const files = await this.findContext(prompt)
+    if (!files) {
+      throw new Error('No context found')
+    }
 
-    const c = limit(files.map(e=>e.file), 2)
-    spinner.succeed(`using ${files.length} files ${c}`)
-    UI.hint(limit(files.map(e=>e.path), 6).join(', '))
-    
+
     if (stats) {
       const fileStats = new FileStats()
       files.forEach(file => fileStats.addFile(file.path, file.content))
@@ -90,14 +127,14 @@ export class CommandHandler {
         { role: 'user', content: task.render() }
       ]
       const { stream } = await execute(messages, config)
-  
+
       spinner.stop()
 
       const content = await streamHandler(stream, chunk => {
         task.toolProcessor.process(chunk)
       })
       task.toolProcessor.cleanup()
-      
+
       await postActions(task)
 
       UI.info(allDone({ stats: renderer.stats, messages }))
@@ -106,7 +143,7 @@ export class CommandHandler {
     }
 
     renderer.cleanup()
-    
+
   }
 
   // async setupRoot(root) {

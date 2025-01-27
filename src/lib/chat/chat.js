@@ -17,6 +17,7 @@ import { formatBytes, limit } from '../renderers/utils.js'
 import { VERSION } from '../constants.js'
 import { allDone } from '../cli.js'
 import { LLMStats } from '../stats.js'
+import { CommandHandler } from '../CommandHandler.js'
 
 const GET_STARTED = `Starting chat mode (type "exit" to quit, "/help" for available commands)`
 
@@ -90,44 +91,6 @@ export class Chat {
     }
   }
 
-  async findContext(prompt) {
-    const { state, logger } = this
-
-    const spinner = ora({
-      text: 'scoping...',
-      color: 'yellow'
-    }).start()
-    try {
-      /** @todo create a better stats system and make streaming */
-      const stats = new LLMStats()
-      const files = await getContext(state.config, {
-        prompt,
-        on(type, payload) {
-          if (type === 'context') {
-            spinner.text = `searching within ${payload.length} files...`
-          }
-          if (type === 'messages') {
-            stats.promptBytes = JSON.stringify(payload).length
-          }
-          if (type === 'text') {
-            stats.totalBytes = JSON.stringify(payload).length
-          }
-        }
-      })
-      const context = await resolveContent(files)
-
-      const fileList = limit(files.map(e => e.path), 5) || 'none'
-      spinner.succeed(`Using ${files.length} file(s). ${fileList}`)
-
-      UI.info(allDone({ stats }))
-      return context
-    } catch (err) {
-      logger.error(err.message)
-    }
-    spinner.fail('No context found')
-    return []
-  }
-
   /**
    * @deprecation migrate to 'run'
    **/
@@ -135,8 +98,9 @@ export class Chat {
     const { state, renderer, logger } = this
 
     logger.prompt(prompt)
+    const commandHandler = new CommandHandler(state.config)
 
-    const context = await this.findContext(prompt)
+    const context = await commandHandler.findContext(prompt)
     if (!context) {
       throw new Error('No context found')
     }
