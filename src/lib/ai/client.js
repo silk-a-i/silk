@@ -2,12 +2,15 @@ import { AIResponseStream } from './stream.js'
 import { PROVIDERS } from '../constants.js'
 
 export class AIClient {
-  constructor (config) {
+  /** max duration in ms */
+  timeout = 60 * 1000
+
+  constructor(config) {
     if (!config) throw new Error('Config required')
     this.config = config
   }
 
-  async createCompletion ({ messages }) {
+  async createCompletion({ messages }) {
     const { config } = this
     const provider = Object.values(PROVIDERS).find(p => p.value === config.provider)
     if (!provider) throw new Error(`Invalid provider: ${config.provider}`)
@@ -22,20 +25,30 @@ export class AIClient {
     const body = this.formatRequestBody(messages, provider)
 
     const url = `${config.api.baseUrl}${config.api.endpoint}`
-    const response = await fetch(url, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(body)
-    })
+    try {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), this.timeout)
 
-    if (!response.ok) {
-      console.log(`POST ${url}`, headers)
-      throw new Error(`AI request failed (${response.status}): ${(await response.text()).slice(0, 500)}`)
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        signal: controller.signal,
+        body: JSON.stringify(body)
+      })
+
+      if (!response.ok) {
+        console.log(`POST ${url}`, headers)
+        throw new Error(`AI request failed (${response.status}): ${(await response.text()).slice(0, 500)}`)
+      }
+      return new AIResponseStream(response, provider.value)
+    } catch (error) {
+      /** @note can't check error.code as it is undefined */
+      // const isRefused = error.code === 'ECONNREFUSED'
+      throw new Error(`Connection refused: ${url}. ${error.message}`)
     }
-    return new AIResponseStream(response, provider.value)
   }
 
-  formatRequestBody (messages, provider) {
+  formatRequestBody(messages, provider) {
     const base = {
       model: this.config.model,
       stream: true,

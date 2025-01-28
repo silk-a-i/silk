@@ -41,8 +41,9 @@ export class CommandHandler {
     const spinner = ora({
       text: 'scoping...',
       color: 'yellow'
-    }).start()
+    })
     try {
+      spinner.start()
       /** @todo create a better stats system and make streaming */
       const stats = new LLMStats()
       const files = await getContext(config, {
@@ -64,7 +65,9 @@ export class CommandHandler {
       const fileList = limit(files.map(e => e.path), 5) || 'none'
       spinner.succeed(`Using ${files.length} file(s). ${fileList}`)
 
-      UI.info(allDone({ stats }))
+      if(stats.elapsedTime) {
+        UI.info(allDone({ stats }))
+      }
       return context
     } catch (err) {
       logger.error(err.message)
@@ -89,7 +92,6 @@ export class CommandHandler {
     if (!files) {
       throw new Error('No context found')
     }
-
 
     if (stats) {
       const fileStats = new FileStats()
@@ -116,11 +118,13 @@ export class CommandHandler {
     const task = new Task({ prompt, context, tools })
     const renderer = new CliRenderer(config).attach(task.toolProcessor)
 
+    const spinner = ora({
+      text: 'thinking...',
+      color: 'yellow'
+    })
+
     try {
-      const spinner = ora({
-        text: 'thinking...',
-        color: 'yellow'
-      }).start()
+      spinner.start()
 
       const messages = [
         { role: 'system', content: task.fullSystem },
@@ -138,12 +142,15 @@ export class CommandHandler {
       await postActions(task)
 
       UI.info(allDone({ stats: renderer.stats, messages }))
+      renderer.cleanup()
+      spinner.stop()
     } catch (error) {
-      logger.error(`Error: ${error.message}`)
+      // logger.error(`Error: ${error.message}`)
+      spinner.fail(error.message)
+      renderer.cleanup()
+      spinner.stop()
+      throw error
     }
-
-    renderer.cleanup()
-
   }
 
   // async setupRoot(root) {
