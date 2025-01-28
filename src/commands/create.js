@@ -5,6 +5,7 @@ import { extractPrompt } from '../lib/prompt-extractor.js'
 import { logConfiguration } from './info.js'
 import path from 'path'
 import fs from 'fs/promises';
+import { existsSync } from 'fs';
 import inquirer from 'inquirer';
 import { GET_STARTED } from './messages/index.js'
 import { SILK_DIR } from '../lib/constants.js'
@@ -29,6 +30,11 @@ export async function create(folder = "", promptOrFile = "", options = {}) {
   const handler = new CommandHandler(config)
   logConfiguration(config, handler.logger)
 
+  if (existsSync(folder)) {
+    UI.error(`Folder ${folder} already exists`)
+    process.exit(1)
+  }
+  
   // Create config directory
   // if (config.root) {
   const configDir = `${folder}/${SILK_DIR}`
